@@ -1,16 +1,20 @@
-﻿using System;
+﻿using Sora.EventArgs.SoraEvent;
+using Sora.Tool;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace Ritsukage.Commands
-{ 
+{
 
     public class CommandArgs
     {
         string rawInput;
         List<string> singleArg;
         private int index = 0;
+
         /// <summary>
         /// 将参数部分拆分成args部分
         /// 注意不支持转义
@@ -28,7 +32,8 @@ namespace Ritsukage.Commands
             while (i < len)
             {
                 char c = rawInput[i];
-                switch (c) {
+                switch (c)
+                {
                     case ' ':
                         {
                             this.singleArg.Add(sb.ToString());
@@ -37,15 +42,17 @@ namespace Ritsukage.Commands
                         }
                     case '\'':
                         {
-                            if (sb.Length == 0) {
+                            if (sb.Length == 0)
+                            {
                                 i += 1;
                                 while (i < len && rawInput[i] != '\'')
                                 {
                                     sb.Append(rawInput[i]);
                                     i += 1;
                                 }
-                            } else sb.Append(c);
-                           
+                            }
+                            else sb.Append(c);
+
                             break;
                         }
                     case '"':
@@ -70,7 +77,8 @@ namespace Ritsukage.Commands
                 }
                 i += 1;
             }
-            if (sb.Length > 0) {
+            if (sb.Length > 0)
+            {
                 singleArg.Add(sb.ToString());
             }
         }
@@ -82,6 +90,7 @@ namespace Ritsukage.Commands
             return s;
         }
     }
+
     interface ICommandParser
     {
         object Parse(CommandArgs args);
@@ -105,19 +114,29 @@ namespace Ritsukage.Commands
             this.failedCallback = cb;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class CommandGroup : System.Attribute
+    {
+    }
+
     [AttributeUsage(AttributeTargets.Method)]
     public class CommandInfo : System.Attribute
     {
         internal string startHeader = "/";
-        internal string name;
-        internal string[] alias;
+        internal string[] name;
         internal Command.FailedCallback failedCallback;
 
         public string StartHeader { get { return startHeader; } set { startHeader = value; } }
-        public string Name { get { return name; } set { name = value; } }
-        public string[] Alias { get => alias; set { alias = value; } }
+        public string[] Name { get { return name; } set { name = value; } }
         public Command.FailedCallback FailedCallback { get => failedCallback; set { failedCallback = value; } }
+
+        public CommandInfo(params string[] name)
+        {
+            Name = name;
+        }
     }
+
     public static class CommandManager
     {
         static Dictionary<Type, Ritsukage.Commands.ICommandParser> parsers;
@@ -128,22 +147,25 @@ namespace Ritsukage.Commands
             if (commands.TryGetValue(header, out var value))
             {
                 return value;
-            } else
+            }
+            else
             {
                 var d = new Dictionary<string, Command>();
                 commands.Add(header, d);
                 return d;
             }
         }
+
         private static object ParseArgument(Type type, CommandArgs args)
         {
             Exception e = null;
-            if(parsers.TryGetValue(type, out ICommandParser parser))
+            if (parsers.TryGetValue(type, out ICommandParser parser))
             {
                 try
                 {
                     return parser.Parse(args);
-                } catch (Exception ee)
+                }
+                catch (Exception ee)
                 {
                     e = ee;
                 }
@@ -151,7 +173,8 @@ namespace Ritsukage.Commands
             if (type == typeof(int))
             {
                 return int.Parse(args.Next());
-            } else if (type == typeof(bool))
+            }
+            else if (type == typeof(bool))
             {
                 string s = args.Next().ToLower();
                 if (s == "真" || s == "true" || s == "t")
@@ -163,7 +186,8 @@ namespace Ritsukage.Commands
                     return false;
                 }
                 else throw new ArgumentException($"{s} is not bool value.");
-            } else if (type == typeof(string))
+            }
+            else if (type == typeof(string))
             {
                 return args.Next();
             }
@@ -184,54 +208,77 @@ namespace Ritsukage.Commands
                     {
                         ts[i] = ps[i].ParameterType;
                     }
-                    var command = new Command(attrs.startHeader, attrs.name, method, ts, attrs.failedCallback);
+
+                    if (attrs.name.Length == 0)
+                        attrs.name = new[] { method.Name };
+
+                    var command = new Command(attrs.startHeader, attrs.name[0], method, ts, attrs.failedCallback);
 
                     var d = getFromHeader(attrs.startHeader);
-                    if (attrs.alias != null)
+                    foreach (var n in attrs.name)
                     {
-                        foreach (var n in attrs.alias)
-                        {
-                            d.Add(n, command);
-                        }
+                        d.Add(n.ToLower(), command);
                     }
-                    d.Add(attrs.name, command);
+                    ConsoleLog.Debug("Commands", $"Register command: {attrs.name} {command.method}");
                 }
             }
         }
 
-        public static object? ReceiveMessage(string msg)
+        public static void RegisterAllCommands()
         {
-            foreach (var node in commands)
+            ConsoleLog.Debug("Commands", "Start loading...");
+            Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
+            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is CommandGroup).Any()).ToArray();
+            foreach (var group in cosType)
             {
-                if (msg.StartsWith(node.Key))
+                ConsoleLog.Debug("Commands", $"Register commands group: {group.FullName}");
+                RegisterAllCommands(group);
+            }
+            ConsoleLog.Debug("Commands", "Finish.");
+        }
+
+        public static object? ReceiveMessage(BaseSoraEventArgs arg)
+        {
+            string msg = null;
+            if (arg is GroupMessageEventArgs a1)
+                msg = a1.Message.RawText;
+            else if (arg is PrivateMessageEventArgs a2)
+                msg = a2.Message.RawText;
+            if (!string.IsNullOrEmpty(msg))
+            {
+                ConsoleLog.Debug("Commands", "Parser: " + msg);
+                foreach (var node in commands)
                 {
-                    var caa = msg.Substring(node.Key.Length).Split(" ", 2);
-                    if(node.Value.TryGetValue(caa[0], out var command))
+                    if (msg.StartsWith(node.Key))
                     {
-                        var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
-                        object[] ps = new object[command.argTypes.Length];
-                        try
+                        var caa = msg[node.Key.Length..].Split(" ", 2);
+                        if (node.Value.TryGetValue(caa[0].ToLower(), out var command))
                         {
-                            for (int i = 0; i < ps.Length; ++i)
+                            var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
+                            object[] ps = new object[command.argTypes.Length];
+                            ps[0] = arg;
+                            try
                             {
-                                ps[i] = ParseArgument(command.argTypes[i], args);
+                                for (int i = 1; i < ps.Length; ++i)
+                                {
+                                    ps[i] = ParseArgument(command.argTypes[i], args);
+                                }
                             }
-                        } catch (Exception e)
-                        {
-                            if (command.failedCallback != null)
+                            catch (Exception e)
                             {
-                                command.failedCallback();
+                                ConsoleLog.Debug("Commands", $"{command.method} failed.");
+                                command.failedCallback?.Invoke();
+                                return null;
                             }
-                            return null;
+                            ConsoleLog.Debug("Commands", $"{command.method} has been invoked.");
+                            return command.method.Invoke(null, ps);
                         }
-                        return command.method.Invoke(null, ps);
+                        return null;
                     }
-                    return null;
                 }
             }
             return null;
         }
-
 
         static CommandManager()
         {

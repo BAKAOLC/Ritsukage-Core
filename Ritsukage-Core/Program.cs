@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Ritsukage.Commands;
 using Sora.Server;
 using Sora.Tool;
 using System;
@@ -25,10 +26,15 @@ namespace Ritsukage
             var cfg = Config.LoadConfig();
 #if DEBUG
             ConsoleLog.SetLogLevel(Fleck.LogLevel.Debug);
+            ConsoleLog.Debug("Main", "当前正在使用Debug模式");
 #else
             if (cfg.IsDebug)
+            {
                 ConsoleLog.SetLogLevel(Fleck.LogLevel.Debug);
-            ConsoleLog.SetLogLevel(Fleck.LogLevel.Info);
+                ConsoleLog.Debug("Main", "当前正在使用Debug模式");
+            }
+            else
+                ConsoleLog.SetLogLevel(Fleck.LogLevel.Info);
 #endif
             ConsoleLog.Debug("Main", "Config:\r\n" + JsonConvert.SerializeObject(cfg, Formatting.Indented));
             var config = new ServerConfig()
@@ -42,6 +48,7 @@ namespace Ritsukage
             {
                 Server = new(config);
                 CombineEvent(Server);
+                CommandManager.RegisterAllCommands();
                 await Server.StartServer();
             }
             catch
@@ -91,12 +98,26 @@ namespace Ritsukage
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 else
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
-                await Task.CompletedTask;
+                try
+                {
+                    await Task.Run(() => CommandManager.ReceiveMessage(e));
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLog.ErrorLogBuilder(ex);
+                }
             };
             server.Event.OnPrivateMessage += async (s, e) =>
             {
                 ConsoleLog.Info(e.EventName, $"[{e.LoginUid}] {e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
-                await Task.CompletedTask;
+                try
+                {
+                    await Task.Run(() => CommandManager.ReceiveMessage(e));
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLog.ErrorLogBuilder(ex);
+                }
             };
             #endregion
         }
