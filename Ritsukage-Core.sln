@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30621.155
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ritsukage-Core", "Ritsukage-Core\Ritsukage-Core.csproj", "{D469B96F-864C-4D4A-A109-5840840B83FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D469B96F-864C-4D4A-A109-5840840B83FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D469B96F-864C-4D4A-A109-5840840B83FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D469B96F-864C-4D4A-A109-5840840B83FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D469B96F-864C-4D4A-A109-5840840B83FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {61100DE6-5066-417F-8E36-3ED070F4EA04}
+	EndGlobalSection
+EndGlobal

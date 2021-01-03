@@ -1,0 +1,7 @@
+﻿{
+  "Host": "[::]", //要连接的目标IP
+  "Port": 23150, //要监听的目标端口
+  "AccessToken": "", //token
+  "HeartBeatTimeOut": 30000, //心跳超时间隔
+  "IsDebug": false //是否为Debug模式
+}

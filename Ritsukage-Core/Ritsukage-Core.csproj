@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>Ritsukage</RootNamespace>
+    <ApplicationIcon>1.ico</ApplicationIcon>
+    <Authors>BAKAOLC</Authors>
+    <Company>TeamOSY</Company>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Utils\**" />
+    <EmbeddedResource Remove="Utils\**" />
+    <None Remove="Utils\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="QRCoder" Version="1.4.1" />
+    <PackageReference Include="Sora" Version="0.4.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
