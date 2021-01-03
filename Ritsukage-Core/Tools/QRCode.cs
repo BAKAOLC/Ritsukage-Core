@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace Ritsukage.Tools
 {
-    class QRCodeTool
+    public static class QRCodeTool
     {
         public static Bitmap Generate(string content, int scale = 5)
         {

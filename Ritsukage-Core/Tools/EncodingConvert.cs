@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Ritsukage.Tools
 {
-    class EncodingConvert
+    public static class EncodingConvert
     {
         public static string Convert(Encoding srcEncoding, Encoding dstEncoding, string text)
             => dstEncoding.GetString(Encoding.Convert(srcEncoding, dstEncoding, srcEncoding.GetBytes(text)));

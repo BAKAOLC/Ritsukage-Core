@@ -1,0 +1,3 @@
+[submodule "Sora"]
+	path = Sora
+	url = https://github.com/BAKAOLC/Sora.git

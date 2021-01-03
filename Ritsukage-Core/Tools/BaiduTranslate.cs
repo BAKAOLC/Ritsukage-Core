@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Ritsukage.Tools
 {
-    class BaiduTranslate
+    public static class BaiduTranslate
     {
         public static string Translate(string appId, string secretKey, string salt, string str, string from = "en", string to = "zh")
         {

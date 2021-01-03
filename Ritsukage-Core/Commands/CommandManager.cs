@@ -91,10 +91,12 @@ namespace Ritsukage.Commands
         }
     }
 
-    interface ICommandParser
+    public interface ICommandParser
     {
         object Parse(CommandArgs args);
     }
+
+    public delegate void ArgumentErrorCallback(BaseSoraEventArgs e, Exception ex = null);
 
     public class Command
     {
@@ -102,10 +104,9 @@ namespace Ritsukage.Commands
         string name;
         internal MethodInfo method;
         internal Type[] argTypes;
-        public delegate void FailedCallback();
-        internal FailedCallback failedCallback;
+        internal ArgumentErrorCallback failedCallback;
 
-        internal Command(string s, string n, MethodInfo method, Type[] args, FailedCallback cb)
+        internal Command(string s, string n, MethodInfo method, Type[] args, ArgumentErrorCallback cb = null)
         {
             this.startHeader = s;
             this.name = n;
@@ -115,43 +116,53 @@ namespace Ritsukage.Commands
         }
     }
 
-    [AttributeUsage(AttributeTargets.Class)]
-    public class CommandGroup : System.Attribute
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class CommandGroupAttribute : Attribute
     {
     }
 
     [AttributeUsage(AttributeTargets.Method)]
-    public class CommandInfo : System.Attribute
+    public class CommandAttribute : Attribute
     {
         internal string startHeader = "/";
         internal string[] name;
-        internal Command.FailedCallback failedCallback;
 
         public string StartHeader { get { return startHeader; } set { startHeader = value; } }
         public string[] Name { get { return name; } set { name = value; } }
-        public Command.FailedCallback FailedCallback { get => failedCallback; set { failedCallback = value; } }
 
-        public CommandInfo(params string[] name)
+        public CommandAttribute(params string[] name)
         {
             Name = name;
         }
     }
 
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public class CommandArgumentErrorCallbackAttribute : Attribute
+    {
+        string callbackMethodName;
+        public string ArgumentErrorCallbackMethodName { get => callbackMethodName; set { callbackMethodName = value; } }
+
+        public CommandArgumentErrorCallbackAttribute(string methodName)
+        {
+            callbackMethodName = methodName;
+        }
+    }
+
     public static class CommandManager
     {
-        static Dictionary<Type, Ritsukage.Commands.ICommandParser> parsers;
-        static Dictionary<string, Dictionary<string, Command>> commands = new();
+        public static readonly Dictionary<Type, ICommandParser> Parsers = new();
+        public static readonly Dictionary<string, Dictionary<string, Command>> Commands = new();
 
         private static Dictionary<string, Command> getFromHeader(string header)
         {
-            if (commands.TryGetValue(header, out var value))
+            if (Commands.TryGetValue(header, out var value))
             {
                 return value;
             }
             else
             {
                 var d = new Dictionary<string, Command>();
-                commands.Add(header, d);
+                Commands.Add(header, d);
                 return d;
             }
         }
@@ -159,7 +170,7 @@ namespace Ritsukage.Commands
         private static object ParseArgument(Type type, CommandArgs args)
         {
             Exception e = null;
-            if (parsers.TryGetValue(type, out ICommandParser parser))
+            if (Parsers.TryGetValue(type, out ICommandParser parser))
             {
                 try
                 {
@@ -170,28 +181,42 @@ namespace Ritsukage.Commands
                     e = ee;
                 }
             }
-            if (type == typeof(int))
+            else
             {
-                return int.Parse(args.Next());
-            }
-            else if (type == typeof(bool))
-            {
-                string s = args.Next().ToLower();
-                if (s == "真" || s == "true" || s == "t")
+                if (type == typeof(byte))
+                    return byte.Parse(args.Next());
+                else if (type == typeof(short))
+                    return short.Parse(args.Next());
+                else if (type == typeof(ushort))
+                    return ushort.Parse(args.Next());
+                else if (type == typeof(int))
+                    return int.Parse(args.Next());
+                else if (type == typeof(uint))
+                    return uint.Parse(args.Next());
+                else if (type == typeof(long))
+                    return long.Parse(args.Next());
+                else if (type == typeof(ulong))
+                    return ulong.Parse(args.Next());
+                else if (type == typeof(float))
+                    return float.Parse(args.Next());
+                else if (type == typeof(double))
+                    return double.Parse(args.Next());
+                else if (type == typeof(bool))
                 {
-                    return true;
+                    string s = args.Next().ToLower();
+                    if (s == "真" || s == "true" || s == "t")
+                    {
+                        return true;
+                    }
+                    else if (s == "假" || s == "false" || s == "f")
+                    {
+                        return false;
+                    }
+                    else throw new ArgumentException($"{s} is not bool value.");
                 }
-                else if (s == "假" || s == "false" || s == "f")
-                {
-                    return false;
-                }
-                else throw new ArgumentException($"{s} is not bool value.");
+                else if (type == typeof(string))
+                    return args.Next();
             }
-            else if (type == typeof(string))
-            {
-                return args.Next();
-            }
-
             throw new ArgumentException($"the type of {type} cannot be parsed from string", e);
         }
 
@@ -199,7 +224,16 @@ namespace Ritsukage.Commands
         {
             foreach (var method in type.GetMethods())
             {
-                var attrs = method.GetCustomAttribute<CommandInfo>();
+                var attrs = method.GetCustomAttribute<CommandAttribute>();
+
+                var fcbn = method.GetCustomAttribute<CommandArgumentErrorCallbackAttribute>();
+
+                ArgumentErrorCallback fcb = null;
+
+                if (fcbn != null)
+                    fcb = type.GetMethods().Where(x => x.Name == fcbn.ArgumentErrorCallbackMethodName)?
+                        .FirstOrDefault()?.CreateDelegate<ArgumentErrorCallback>();
+
                 if (attrs != null)
                 {
                     var ps = method.GetParameters();
@@ -212,7 +246,7 @@ namespace Ritsukage.Commands
                     if (attrs.name.Length == 0)
                         attrs.name = new[] { method.Name };
 
-                    var command = new Command(attrs.startHeader, attrs.name[0], method, ts, attrs.failedCallback);
+                    var command = new Command(attrs.startHeader, attrs.name[0], method, ts, fcb);
 
                     var d = getFromHeader(attrs.startHeader);
                     foreach (var n in attrs.name)
@@ -228,7 +262,7 @@ namespace Ritsukage.Commands
         {
             ConsoleLog.Debug("Commands", "Start loading...");
             Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
-            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is CommandGroup).Any()).ToArray();
+            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is CommandGroupAttribute).Any()).ToArray();
             foreach (var group in cosType)
             {
                 ConsoleLog.Debug("Commands", $"Register commands group: {group.FullName}");
@@ -237,9 +271,9 @@ namespace Ritsukage.Commands
             ConsoleLog.Debug("Commands", "Finish.");
         }
 
-        public static object? ReceiveMessage(BaseSoraEventArgs arg)
+        public static void ReceiveMessage(BaseSoraEventArgs arg)
         {
-            string msg = null;
+            string msg = string.Empty;
             if (arg is GroupMessageEventArgs a1)
                 msg = a1.Message.RawText;
             else if (arg is PrivateMessageEventArgs a2)
@@ -247,7 +281,7 @@ namespace Ritsukage.Commands
             if (!string.IsNullOrEmpty(msg))
             {
                 ConsoleLog.Debug("Commands", "Parser: " + msg);
-                foreach (var node in commands)
+                foreach (var node in Commands)
                 {
                     if (msg.StartsWith(node.Key))
                     {
@@ -257,6 +291,7 @@ namespace Ritsukage.Commands
                             var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
                             object[] ps = new object[command.argTypes.Length];
                             ps[0] = arg;
+
                             try
                             {
                                 for (int i = 1; i < ps.Length; ++i)
@@ -266,23 +301,36 @@ namespace Ritsukage.Commands
                             }
                             catch (Exception e)
                             {
-                                ConsoleLog.Debug("Commands", $"{command.method} failed.");
-                                command.failedCallback?.Invoke();
-                                return null;
+                                ConsoleLog.ErrorLogBuilder(e);
+                                ConsoleLog.Debug("Commands", $"Failed to parse {command.method} arguments.");
+                                if (command.failedCallback != null)
+                                {
+                                    try
+                                    {
+                                        ConsoleLog.Debug("Commands", $"Try to execute {command.method} failed callback.");
+                                        command.failedCallback.Invoke(arg, e);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        ConsoleLog.ErrorLogBuilder(ex);
+                                        ConsoleLog.Debug("Commands", $"Failed to execute {command.method} failed callback.");
+                                    }
+                                }
+                                return;
                             }
-                            ConsoleLog.Debug("Commands", $"{command.method} has been invoked.");
-                            return command.method.Invoke(null, ps);
+
+                            ConsoleLog.Debug("Commands", $"Invoke {command.method}.");
+                            command.method.Invoke(null, ps);
+                            return;
                         }
-                        return null;
                     }
                 }
             }
-            return null;
         }
 
         static CommandManager()
         {
-            parsers = new();
+            Parsers = new();
         }
     }
 }

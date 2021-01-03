@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Sora.Tool;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Tools
 {
-    class Utils
+    public static class Utils
     {
         public static long GetTimeStamp()
             => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
@@ -137,6 +138,7 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
+                ConsoleLog.ErrorLogBuilder(e);
             }
             return "";
         }
@@ -167,6 +169,7 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
+                ConsoleLog.ErrorLogBuilder(e);
             }
             return "";
         }

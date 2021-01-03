@@ -6,7 +6,16 @@ namespace Ritsukage.Commands
     [CommandGroup]
     public static class Time
     {
-        [CommandInfo("时间", "time")]
+        [Command]
+        public static async void Ping(BaseSoraEventArgs e)
+        {
+            if (e is GroupMessageEventArgs gm)
+                await gm.Reply("Pong!");
+            else if (e is PrivateMessageEventArgs pm)
+                await pm.Reply("Pong!");
+        }
+
+        [Command("时间", "time")]
         public static async void Normal(BaseSoraEventArgs e)
         {
             string msg = DateTime.Now.ToString("yyyy年MM月dd日 HH时mm分ss秒");
@@ -14,11 +23,9 @@ namespace Ritsukage.Commands
                 await gm.Reply(msg);
             else if (e is PrivateMessageEventArgs pm)
                 await pm.Reply(msg);
-            else
-                throw new Exception("预料外的事件触发");
         }
 
-        [CommandInfo("北欧历")]
+        [Command("北欧历")]
         public static async void BOL(BaseSoraEventArgs e)
         {
             var day = Math.Floor((DateTime.Now - new DateTime(2019, 8, 1, 0, 0, 0)).TotalDays) + 1;
@@ -27,11 +34,9 @@ namespace Ritsukage.Commands
                 await gm.Reply(msg);
             else if (e is PrivateMessageEventArgs pm)
                 await pm.Reply(msg);
-            else
-                throw new Exception("预料外的事件触发");
         }
 
-        [CommandInfo("新北欧历")]
+        [Command("新北欧历")]
         public static async void NewBOL(BaseSoraEventArgs e)
         {
             var day = Math.Floor((DateTime.Now - new DateTime(2020, 6, 1, 0, 0, 0)).TotalDays) + 1;
@@ -40,8 +45,6 @@ namespace Ritsukage.Commands
                 await gm.Reply(msg);
             else if (e is PrivateMessageEventArgs pm)
                 await pm.Reply(msg);
-            else
-                throw new Exception("预料外的事件触发");
         }
     }
 }

@@ -51,8 +51,9 @@ namespace Ritsukage
                 CommandManager.RegisterAllCommands();
                 await Server.StartServer();
             }
-            catch
+            catch (Exception e)
             {
+                ConsoleLog.ErrorLogBuilder(e);
             }
         }
 
@@ -98,26 +99,14 @@ namespace Ritsukage
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 else
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
-                try
-                {
-                    await Task.Run(() => CommandManager.ReceiveMessage(e));
-                }
-                catch (Exception ex)
-                {
-                    ConsoleLog.ErrorLogBuilder(ex);
-                }
+
+                await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
             server.Event.OnPrivateMessage += async (s, e) =>
             {
                 ConsoleLog.Info(e.EventName, $"[{e.LoginUid}] {e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
-                try
-                {
-                    await Task.Run(() => CommandManager.ReceiveMessage(e));
-                }
-                catch (Exception ex)
-                {
-                    ConsoleLog.ErrorLogBuilder(ex);
-                }
+
+                await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
             #endregion
         }

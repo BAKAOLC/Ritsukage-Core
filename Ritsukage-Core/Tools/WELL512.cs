@@ -2,7 +2,7 @@
 
 namespace Ritsukage.Tools
 {
-    class WELL512
+    public class WELL512
     {
         private uint _seed;
         private uint _index = 0;

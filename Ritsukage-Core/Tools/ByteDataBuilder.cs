@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Ritsukage.Tools
 { 
-	class ByteDataBuilder
+	public class ByteDataBuilder
 	{
 		private readonly List<byte> data = new List<byte>();
 

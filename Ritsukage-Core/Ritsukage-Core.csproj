@@ -7,6 +7,9 @@
     <ApplicationIcon>1.ico</ApplicationIcon>
     <Authors>BAKAOLC</Authors>
     <Company>TeamOSY</Company>
+    <PackageProjectUrl>https://github.com/BAKAOLC/Ritsukage-Core</PackageProjectUrl>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +21,10 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
-    <PackageReference Include="Sora" Version="0.4.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sora\Sora\Sora.csproj" />
   </ItemGroup>
 
   <ItemGroup>
