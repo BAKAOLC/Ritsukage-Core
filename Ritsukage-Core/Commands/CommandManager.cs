@@ -1,7 +1,9 @@
-﻿using Sora.EventArgs.SoraEvent;
+﻿using Ritsukage.Tools;
+using Sora.EventArgs.SoraEvent;
 using Sora.Tool;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -203,16 +205,25 @@ namespace Ritsukage.Commands
                     return double.Parse(args.Next());
                 else if (type == typeof(bool))
                 {
-                    string s = args.Next().ToLower();
-                    if (s == "真" || s == "true" || s == "t")
+                    string original = args.Next();
+                    string s = original.ToLower();
+                    if (s == "真" || s == "true" || s == "t" || s == "1")
                     {
                         return true;
                     }
-                    else if (s == "假" || s == "false" || s == "f")
+                    else if (s == "假" || s == "false" || s == "f" || s == "0")
                     {
                         return false;
                     }
-                    else throw new ArgumentException($"{s} is not bool value.");
+                    else throw new ArgumentException($"{original} is not a bool value.");
+                }
+                else if (type == typeof(DateTime))
+                {
+                    return DateTimeReader.Parse(args.Next());
+                }
+                else if (type == typeof(TimeSpan))
+                {
+                    return TimeSpanReader.Parse(args.Next());
                 }
                 else if (type == typeof(string))
                     return args.Next();
