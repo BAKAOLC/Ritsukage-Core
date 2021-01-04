@@ -84,6 +84,8 @@ namespace Ritsukage.Tools
                 using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
                 retString = sr.ReadToEnd();
             }
+            response.Close();
+            response.Dispose();
             request.Abort();
             return retString;
         }
@@ -97,15 +99,19 @@ namespace Ritsukage.Tools
             stream.Write(byteResquest, 0, byteResquest.Length);
             stream.Close();
             using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string encoding = response.ContentEncoding;
-            if (encoding == null || encoding.Length < 1)
+            string retString;
+            if (response.ContentEncoding == "gzip")
             {
-                encoding = "UTF-8";
+                GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                retString = reader.ReadToEnd();
             }
-            using StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-            string retString = reader.ReadToEnd();
-            reader.Close();
-            reader.Dispose();
+            else
+            {
+                using Stream rs = response.GetResponseStream();
+                using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
+                retString = sr.ReadToEnd();
+            }
             response.Close();
             response.Dispose();
             request.Abort();

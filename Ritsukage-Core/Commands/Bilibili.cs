@@ -156,6 +156,12 @@ namespace Ritsukage.Commands
             }
 
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
+            if (roomid == 0)
+            {
+                Tip("用户直播间数据获取失败，请稍后重试");
+                return;
+            }
+
             var result = JObject.Parse(BiliLive.StartLive(roomid, 235, data.BilibiliCookie));
             if (!string.IsNullOrEmpty((string)result["message"]))
                 Tip("服务器返回消息：" + (string)result["message"]);
@@ -195,6 +201,12 @@ namespace Ritsukage.Commands
             }
 
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
+            if (roomid == 0)
+            {
+                Tip("用户直播间数据获取失败，请稍后重试");
+                return;
+            }
+
             var result = JObject.Parse(BiliLive.StopLive(roomid, data.BilibiliCookie));
             if (!string.IsNullOrEmpty((string)result["message"]))
                 Tip("服务器返回消息：" + (string)result["message"]);
@@ -231,6 +243,12 @@ namespace Ritsukage.Commands
             }
 
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
+            if (roomid == 0)
+            {
+                Tip("用户直播间数据获取失败，请稍后重试");
+                return;
+            }
+
             var result = JObject.Parse(BiliLive.UpdateLiveArea(roomid, area, data.BilibiliCookie));
             if (!string.IsNullOrEmpty((string)result["message"]))
                 Tip("服务器返回消息：" + (string)result["message"]);
@@ -267,6 +285,12 @@ namespace Ritsukage.Commands
             }
 
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
+            if (roomid == 0)
+            {
+                Tip("用户直播间数据获取失败，请稍后重试");
+                return;
+            }
+
             var result = JObject.Parse(BiliLive.UpdateLiveTitle(roomid, title, data.BilibiliCookie));
             if (!string.IsNullOrEmpty((string)result["message"]))
                 Tip("服务器返回消息：" + (string)result["message"]);

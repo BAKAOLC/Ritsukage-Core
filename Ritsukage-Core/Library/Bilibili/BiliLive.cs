@@ -119,9 +119,15 @@ namespace Ritsukage.Library.Bilibili
 
         public static int GetUserLiveRoom(int uid)
         {
-            var j = JObject.Parse(Utils.HttpGET("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + uid));
-            if ((int)j["code"] == 0)
-                return (int)j["data"]["roomid"];
+            try
+            {
+                var j = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/space/acc/info?jsonp=jsonp&mid=" + uid));
+                if ((int)j["code"] == 0)
+                    return (int)j["data"]["live_room"]?["roomid"];
+            }
+            catch
+            {
+            }
             return 0;
         }
     }
