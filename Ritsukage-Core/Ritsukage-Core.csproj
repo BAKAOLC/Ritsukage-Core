@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Sora\Sora\Sora.csproj" />
+    <ProjectReference Include="..\Sora\Sora\Sora.csproj" />
   </ItemGroup>
 
   <ItemGroup>
