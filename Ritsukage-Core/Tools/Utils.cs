@@ -27,7 +27,7 @@ namespace Ritsukage.Tools
         public static async Task<string> GetShortUrl(string url)
             => await Task.Run(() =>
             {
-                var data = JObject.Parse(GET("https://api.uomg.com/api/long2dwz?dwzapi=mrwso&url=" + UrlEncode(url)));
+                var data = JObject.Parse(HttpGET("https://api.uomg.com/api/long2dwz?dwzapi=mrwso&url=" + UrlEncode(url)));
                 if ((int)data["code"] == 1)
                     return (string)data["ae_url"];
                 return url;
@@ -36,7 +36,7 @@ namespace Ritsukage.Tools
         public static async Task<string> GetOriginalUrl(string url)
             => await Task.Run(() =>
             {
-                var data = JObject.Parse(GET("https://api.uomg.com/api/dwz2long?url=" + UrlEncode(url)));
+                var data = JObject.Parse(HttpGET("https://api.uomg.com/api/dwz2long?url=" + UrlEncode(url)));
                 if ((int)data["code"] == 1)
                     return (string)data["ae_url"];
                 return url;
@@ -51,7 +51,7 @@ namespace Ritsukage.Tools
             return stream;
         }
 
-        public static void SetHeaders(HttpWebRequest request, string os = "app", string cookie = "")
+        public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")
         {
             request.Accept = "application/json, text/plain, */*";
             request.Headers.Add("Accept-Encoding", "gzip, deflate, br");
@@ -67,7 +67,7 @@ namespace Ritsukage.Tools
                 request.Headers.Add("cookie", cookie);
         }
 
-        public static string GET(HttpWebRequest request)
+        public static string HttpGET(HttpWebRequest request)
         {
             request.Method = "GET";
             using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -88,7 +88,7 @@ namespace Ritsukage.Tools
             return retString;
         }
 
-        public static string POST(HttpWebRequest request, string content = "")
+        public static string HttpPOST(HttpWebRequest request, string content = "")
         {
             request.Method = "POST";
             request.ContentLength = content.Length;
@@ -112,7 +112,7 @@ namespace Ritsukage.Tools
             return retString;
         }
 
-        public static string GET(string Url, string postDataStr = "", long timeout = 20000,
+        public static string HttpGET(string Url, string postDataStr = "", long timeout = 20000,
             string cookie = "", string referer = "", string origin = "")
         {
             HttpWebRequest request = null;
@@ -128,12 +128,12 @@ namespace Ritsukage.Tools
                 }
                 request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : ("?" + postDataStr)));
                 request.Timeout = (int)timeout;
-                SetHeaders(request, "pc", cookie);
+                SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
                     request.Referer = referer;
                 if (!string.IsNullOrWhiteSpace(origin))
                     request.Headers.Add("Origin", origin);
-                return GET(request);
+                return HttpGET(request);
             }
             catch (Exception e)
             {
@@ -143,7 +143,7 @@ namespace Ritsukage.Tools
             return "";
         }
 
-        public static string POST(string Url, string postDataStr, long timeout = 20000,
+        public static string HttpPOST(string Url, string postDataStr, long timeout = 20000,
             string cookie = "", string referer = "", string origin = "")
         {
             HttpWebRequest request = null;
@@ -159,12 +159,12 @@ namespace Ritsukage.Tools
                 }
                 request = (HttpWebRequest)WebRequest.Create(Url);
                 request.Timeout = (int)timeout;
-                SetHeaders(request, "pc", cookie);
+                SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
                     request.Referer = referer;
                 if (!string.IsNullOrWhiteSpace(origin))
                     request.Headers.Add("Origin", origin);
-                return POST(request, postDataStr);
+                return HttpPOST(request, postDataStr);
             }
             catch (Exception e)
             {

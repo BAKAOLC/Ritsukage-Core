@@ -3,7 +3,6 @@ using Sora.EventArgs.SoraEvent;
 using Sora.Tool;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -102,7 +101,7 @@ namespace Ritsukage.Commands
 
     public class Command
     {
-        string startHeader = "/";
+        string startHeader = "+";
         string name;
         internal MethodInfo method;
         internal Type[] argTypes;
@@ -126,7 +125,7 @@ namespace Ritsukage.Commands
     [AttributeUsage(AttributeTargets.Method)]
     public class CommandAttribute : Attribute
     {
-        internal string startHeader = "/";
+        internal string startHeader = "+";
         internal string[] name;
 
         public string StartHeader { get { return startHeader; } set { startHeader = value; } }

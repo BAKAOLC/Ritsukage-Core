@@ -29,6 +29,11 @@ namespace Ritsukage
         public uint HeartBeatTimeOut = 30000;
 
         /// <summary>
+        /// 数据库储存位置
+        /// </summary>
+        public string DatabasePath = "data.db";
+
+        /// <summary>
         /// 是否使用调试模式
         /// </summary>
         public bool IsDebug = false;

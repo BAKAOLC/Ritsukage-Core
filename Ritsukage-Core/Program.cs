@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Ritsukage.Commands;
+using Ritsukage.Library.Data;
 using Sora.Server;
 using Sora.Tool;
 using System;
@@ -37,6 +38,9 @@ namespace Ritsukage
                 ConsoleLog.SetLogLevel(Fleck.LogLevel.Info);
 #endif
             ConsoleLog.Debug("Main", "Config:\r\n" + JsonConvert.SerializeObject(cfg, Formatting.Indented));
+
+            Database.Init(cfg.DatabasePath);
+
             var config = new ServerConfig()
             {
                 Location = cfg.Host,
