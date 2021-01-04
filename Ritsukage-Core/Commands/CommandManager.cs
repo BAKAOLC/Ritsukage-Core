@@ -85,6 +85,22 @@ namespace Ritsukage.Commands
             }
         }
 
+        public bool HasNext() {
+            return index < this.singleArg.Count;
+        }
+
+        public string PeekNext(int n = 0) {
+            return this.singleArg[this.index + n];
+        }
+
+        public void Skip(int n = 1) {
+            this.index += n;
+        }
+
+        public void Insert(string value) {
+            this.singleArg.Insert(this.index, value);
+        }
+
         public string Next()
         {
             string s = this.singleArg[this.index];
@@ -219,7 +235,7 @@ namespace Ritsukage.Commands
                 }
                 else if (type == typeof(DateTime))
                 {
-                    return DateTimeReader.Parse(args.Next());
+                    return DateTimeReader.Parse(args);
                 }
                 else if (type == typeof(TimeSpan))
                 {
