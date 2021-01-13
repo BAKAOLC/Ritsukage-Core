@@ -41,6 +41,8 @@ namespace Ritsukage.Tools
             return Convert.ToBase64String(arr);
         }
 
+        public string ToBase64File() => $"base64://" + ToBase64();
+
         public string ToBase64Source() => $"data:{DataUriScheme};base64," + ToBase64();
 
         public BaseImage DrawText(float x, float y, string text, string type = "黑体", float size = 9, int r = 0, int g = 0, int b = 0, float angle = 0)

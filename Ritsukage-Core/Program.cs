@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Ritsukage.Commands;
+using Ritsukage.Events;
 using Ritsukage.Library.Data;
 using Sora.Server;
 using Sora.Tool;
@@ -50,9 +51,10 @@ namespace Ritsukage
             };
             try
             {
+                EventManager.RegisterAllEvents();
+                CommandManager.RegisterAllCommands();
                 Server = new(config);
                 CombineEvent(Server);
-                CommandManager.RegisterAllCommands();
                 await Server.StartServer();
             }
             catch (Exception e)
@@ -112,6 +114,25 @@ namespace Ritsukage
 
                 await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
+            #endregion
+            #region Event Manager
+            server.Event.OnClientConnect += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnFileUpload += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnFriendAdd += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnFriendRecall += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnFriendRequest += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupAdminChange += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupCardUpdate += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupMemberChange += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupMemberMute += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupPoke += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupRecall += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnGroupRequest += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnHonorEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnLuckyKingEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnOfflineFileEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             #endregion
         }
     }

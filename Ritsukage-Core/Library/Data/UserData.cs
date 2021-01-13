@@ -2,23 +2,19 @@
 
 namespace Ritsukage.Library.Data
 {
-    [Table("UserData")]
+    [Table("userdata")]
     public class UserData
     {
-        [PrimaryKey, AutoIncrement]
-        [Column("id")]
+        [Column("id"), PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
-        [Indexed]
-        [Column("qq")]
+        [Column("qq"), Indexed]
         public long QQ { get; set; }
 
-        [Indexed]
-        [Column("discord")]
+        [Column("discord"), Indexed]
         public long Discord { get; set; }
 
-        [Indexed]
-        [Column("bilibili")]
+        [Column("bilibili"), Indexed]
         public int Bilibili { get; set; }
 
         [Column("coins")]

@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Ritsukage.Commands
 {
-
     public class CommandArgs
     {
         string rawInput;
@@ -101,51 +101,31 @@ namespace Ritsukage.Commands
 
     public class Command
     {
-        string startHeader = "+";
-        string name;
-        internal MethodInfo method;
-        internal Type[] argTypes;
-        internal ArgumentErrorCallback failedCallback;
+        public string StartHeader { get; init; } = "+";
+        public string Name { get; init; }
+        public PreconditionAttribute[] Preconditions { get; init; }
+        internal MethodInfo Method;
+        internal Type[] ArgTypes;
+        internal ArgumentErrorCallback FailedCallback;
 
-        internal Command(string s, string n, MethodInfo method, Type[] args, ArgumentErrorCallback cb = null)
+        internal Command(string s, string n, MethodInfo method, Type[] args, PreconditionAttribute[] preconditions, ArgumentErrorCallback cb = null)
         {
-            this.startHeader = s;
-            this.name = n;
-            this.method = method;
-            this.argTypes = args;
-            this.failedCallback = cb;
+            StartHeader = s;
+            Name = n;
+            Method = method;
+            ArgTypes = args;
+            Preconditions = preconditions;
+            FailedCallback = cb;
         }
-    }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class CommandGroupAttribute : Attribute
-    {
-    }
-
-    [AttributeUsage(AttributeTargets.Method)]
-    public class CommandAttribute : Attribute
-    {
-        internal string startHeader = "+";
-        internal string[] name;
-
-        public string StartHeader { get { return startHeader; } set { startHeader = value; } }
-        public string[] Name { get { return name; } set { name = value; } }
-
-        public CommandAttribute(params string[] name)
+        public async Task<bool> CheckPermission(BaseSoraEventArgs args)
         {
-            Name = name;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class CommandArgumentErrorCallbackAttribute : Attribute
-    {
-        string callbackMethodName;
-        public string ArgumentErrorCallbackMethodName { get => callbackMethodName; set { callbackMethodName = value; } }
-
-        public CommandArgumentErrorCallbackAttribute(string methodName)
-        {
-            callbackMethodName = methodName;
+            foreach (var p in Preconditions)
+            {
+                if (!await p.CheckPermissionsAsync(args))
+                    return false;
+            }
+            return true;
         }
     }
 
@@ -154,7 +134,7 @@ namespace Ritsukage.Commands
         public static readonly Dictionary<Type, ICommandParser> Parsers = new();
         public static readonly Dictionary<string, Dictionary<string, Command>> Commands = new();
 
-        private static Dictionary<string, Command> getFromHeader(string header)
+        private static Dictionary<string, Command> GetFromHeader(string header)
         {
             if (Commands.TryGetValue(header, out var value))
             {
@@ -230,11 +210,19 @@ namespace Ritsukage.Commands
             throw new ArgumentException($"the type of {type} cannot be parsed from string", e);
         }
 
-        public static void RegisterAllCommands(Type type)
+        public static void RegisterAllCommands(Type type, params PreconditionAttribute[] preconditions)
         {
             foreach (var method in type.GetMethods())
             {
                 var attrs = method.GetCustomAttribute<CommandAttribute>();
+
+                var list = new List<PreconditionAttribute>();
+                foreach (var a in preconditions)
+                    list.Add(a);
+                var p = method.GetCustomAttributes()?.Where(x => x is PreconditionAttribute)?.ToList();
+                if (p != null)
+                    foreach (PreconditionAttribute a in p)
+                        list.Add(a);
 
                 var fcbn = method.GetCustomAttribute<CommandArgumentErrorCallbackAttribute>();
 
@@ -253,17 +241,18 @@ namespace Ritsukage.Commands
                         ts[i] = ps[i].ParameterType;
                     }
 
-                    if (attrs.name.Length == 0)
-                        attrs.name = new[] { method.Name };
+                    var name = attrs.Name;
+                    if (name.Length == 0)
+                        name = new[] { method.Name };
 
-                    var command = new Command(attrs.startHeader, attrs.name[0], method, ts, fcb);
+                    var command = new Command(attrs.StartHeader, name[0], method, ts, list.ToArray(), fcb);
 
-                    var d = getFromHeader(attrs.startHeader);
-                    foreach (var n in attrs.name)
+                    var d = GetFromHeader(attrs.StartHeader);
+                    foreach (var n in name)
                     {
                         d.Add(n.ToLower(), command);
                     }
-                    ConsoleLog.Debug("Commands", $"Register command: {attrs.name} {command.method}");
+                    ConsoleLog.Debug("Commands", $"Register command: {name} for {command.Method}");
                 }
             }
         }
@@ -276,7 +265,12 @@ namespace Ritsukage.Commands
             foreach (var group in cosType)
             {
                 ConsoleLog.Debug("Commands", $"Register commands group: {group.FullName}");
-                RegisterAllCommands(group);
+                var list = new List<PreconditionAttribute>();
+                var p = group.GetCustomAttributes()?.Where(x => x is PreconditionAttribute)?.ToList();
+                if (p != null)
+                    foreach (PreconditionAttribute a in p)
+                        list.Add(a);
+                RegisterAllCommands(group, list.ToArray());
             }
             ConsoleLog.Debug("Commands", "Finish.");
         }
@@ -298,49 +292,47 @@ namespace Ritsukage.Commands
                         var caa = msg[node.Key.Length..].Split(" ", 2);
                         if (node.Value.TryGetValue(caa[0].ToLower(), out var command))
                         {
-                            var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
-                            object[] ps = new object[command.argTypes.Length];
-                            ps[0] = arg;
+                            if (command.CheckPermission(arg).Result)
+                            {
+                                var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
+                                object[] ps = new object[command.ArgTypes.Length];
+                                ps[0] = arg;
 
-                            try
-                            {
-                                for (int i = 1; i < ps.Length; ++i)
+                                try
                                 {
-                                    ps[i] = ParseArgument(command.argTypes[i], args);
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                ConsoleLog.ErrorLogBuilder(e);
-                                ConsoleLog.Debug("Commands", $"Failed to parse {command.method} arguments.");
-                                if (command.failedCallback != null)
-                                {
-                                    try
+                                    for (int i = 1; i < ps.Length; ++i)
                                     {
-                                        ConsoleLog.Debug("Commands", $"Try to execute {command.method} failed callback.");
-                                        command.failedCallback.Invoke(arg, e);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        ConsoleLog.ErrorLogBuilder(ex);
-                                        ConsoleLog.Debug("Commands", $"Failed to execute {command.method} failed callback.");
+                                        ps[i] = ParseArgument(command.ArgTypes[i], args);
                                     }
                                 }
+                                catch (Exception e)
+                                {
+                                    ConsoleLog.ErrorLogBuilder(e);
+                                    ConsoleLog.Debug("Commands", $"Failed to parse {command.Method} arguments.");
+                                    if (command.FailedCallback != null)
+                                    {
+                                        try
+                                        {
+                                            ConsoleLog.Debug("Commands", $"Try to execute {command.Method} failed callback.");
+                                            command.FailedCallback.Invoke(arg, e);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            ConsoleLog.ErrorLogBuilder(ex);
+                                            ConsoleLog.Debug("Commands", $"Failed to execute {command.Method} failed callback.");
+                                        }
+                                    }
+                                    return;
+                                }
+
+                                ConsoleLog.Debug("Commands", $"Invoke {command.Method}.");
+                                command.Method.Invoke(null, ps);
                                 return;
                             }
-
-                            ConsoleLog.Debug("Commands", $"Invoke {command.method}.");
-                            command.method.Invoke(null, ps);
-                            return;
                         }
                     }
                 }
             }
-        }
-
-        static CommandManager()
-        {
-            Parsers = new();
         }
     }
 }

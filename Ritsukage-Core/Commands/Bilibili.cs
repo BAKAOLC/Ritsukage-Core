@@ -81,7 +81,7 @@ namespace Ritsukage.Commands
                     else
                         Tip("登录任务已建立，请等待登录二维码的发送");
                     var qr = new MemoryImage(bitmap);
-                    var path = qr.SaveTempFile();
+                    var path = qr.ToBase64File();
                     await target.SendPrivateMessage(CQCode.CQImage(path), "\n请使用Bilibili客户端扫码登录");
                 },
                 async () => await target.SendPrivateMessage("检测到扫描事件，请在客户端中确认登录"),
