@@ -1,7 +1,7 @@
 ﻿using Sora.EventArgs.SoraEvent;
 using System;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     [CommandGroup]
     public static class Time

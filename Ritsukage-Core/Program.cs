@@ -1,31 +1,41 @@
 ﻿using Newtonsoft.Json;
-using Ritsukage.Commands;
-using Ritsukage.Events;
+using Ritsukage.Discord;
 using Ritsukage.Library.Data;
-using Sora.Server;
+using Ritsukage.QQ;
 using Sora.Tool;
 using System;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Ritsukage
 {
     class Program
     {
-        public static SoraWSServer Server { get; private set; }
+        public static QQService QQServer { get; private set; }
+        public static DiscordAPP DiscordServer { get; private set; }
 
-        static async Task Main(string[] args)
+        public static Config Config { get; private set; }
+
+        public static bool Working = false;
+
+#pragma warning disable IDE0060 // 删除未使用的参数
+        static void Main(string[] args)
+#pragma warning restore IDE0060 // 删除未使用的参数
         {
             Console.Title = "Ritsukage Core";
             ConsoleLog.Info("Main", "Loading...");
-            await Launch();
+            Launch();
+            while (Working)
+            {
+                Thread.Sleep(1000);
+            }
             Shutdown();
             ConsoleLog.Info("Main", "程序主逻辑已结束，按任意键结束程序");
             Console.ReadKey();
         }
 
-        static async Task Launch()
+        static void Launch()
         {
-            var cfg = Config.LoadConfig();
+            var cfg = Config = Config.LoadConfig();
 #if DEBUG
             ConsoleLog.SetLogLevel(Fleck.LogLevel.Debug);
             ConsoleLog.Debug("Main", "当前正在使用Debug模式");
@@ -40,26 +50,60 @@ namespace Ritsukage
 #endif
             ConsoleLog.Debug("Main", "Config:\r\n" + JsonConvert.SerializeObject(cfg, Formatting.Indented));
 
+            ConsoleLog.Info("Main", "初始化数据库中……");
             Database.Init(cfg.DatabasePath);
+            ConsoleLog.Info("Main", "数据库已装载");
 
-            var config = new ServerConfig()
+            if (cfg.Discord)
             {
-                Location = cfg.Host,
-                Port = cfg.Port,
-                AccessToken = cfg.AccessToken,
-                HeartBeatTimeOut = cfg.HeartBeatTimeOut
-            };
-            try
-            {
-                EventManager.RegisterAllEvents();
-                CommandManager.RegisterAllCommands();
-                Server = new(config);
-                CombineEvent(Server);
-                await Server.StartServer();
+                Working = true;
+                ConsoleLog.Info("Main", "已启用Discord功能");
+                new Thread(() =>
+                {
+                    try
+                    {
+                        DiscordServer = new(cfg.DiscordToken);
+                        DiscordServer.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleLog.Fatal("Main", "Discord功能启动失败");
+                        ConsoleLog.ErrorLogBuilder(ex);
+                        Working = false;
+                    }
+                })
+                {
+                    IsBackground = true
+                }.Start();
             }
-            catch (Exception e)
+
+            if (cfg.QQ)
             {
-                ConsoleLog.ErrorLogBuilder(e);
+                Working = true;
+                ConsoleLog.Info("Main", "已启用QQ功能");
+                new Thread(() =>
+                {
+                    try
+                    {
+                        QQServer = new(new()
+                        {
+                            Location = cfg.Host,
+                            Port = cfg.Port,
+                            AccessToken = cfg.AccessToken,
+                            HeartBeatTimeOut = cfg.HeartBeatTimeOut
+                        });
+                        QQServer.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleLog.Fatal("Main", "QQ功能启动失败");
+                        ConsoleLog.ErrorLogBuilder(ex);
+                        Working = false;
+                    }
+                })
+                {
+                    IsBackground = true
+                }.Start();
             }
         }
 
@@ -67,73 +111,18 @@ namespace Ritsukage
         {
             try
             {
-                Server?.Dispose();
+                QQServer?.Stop();
             }
             catch
             {
             }
-        }
-
-        static void CombineEvent(SoraWSServer server)
-        {
-            #region Server Connection Event
-            server.ConnManager.OnOpenConnectionAsync += async (s, e) =>
+            try
             {
-                ConsoleLog.Debug("Socket", $"New connection created from {s.ClientIpAddress}:{s.ClientPort} with {e.SelfId} {e.Role}");
-                await Task.CompletedTask;
-            };
-            server.ConnManager.OnHeartBeatTimeOut += async (s, e) =>
+                DiscordServer?.Stop();
+            }
+            catch
             {
-                ConsoleLog.Debug("Socket", $"Heartbeat timeout from {s.ClientIpAddress}:{s.ClientPort} with {e.SelfId} {e.Role}");
-                await Task.CompletedTask;
-            };
-            server.ConnManager.OnCloseConnectionAsync += async (s, e) =>
-            {
-                ConsoleLog.Debug("Socket", $"Connection closed from {s.ClientIpAddress}:{s.ClientPort} with {e.SelfId} {e.Role}");
-                await Task.CompletedTask;
-            };
-            server.Event.OnClientConnect += async (s, e) =>
-            {
-                ConsoleLog.Info("Socket", $"[{e.LoginUid}] Client type: {e.ClientType} {e.ClientVersionCode} connected.");
-                await Task.CompletedTask;
-            };
-            #endregion
-            #region Message Event
-            server.Event.OnGroupMessage += async (s, e) =>
-            {
-                if (e.IsAnonymousMessage)
-                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
-                else
-                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
-
-                await Task.Run(() => CommandManager.ReceiveMessage(e));
-            };
-            server.Event.OnPrivateMessage += async (s, e) =>
-            {
-                ConsoleLog.Info(e.EventName, $"[{e.LoginUid}] {e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
-
-                await Task.Run(() => CommandManager.ReceiveMessage(e));
-            };
-            #endregion
-            #region Event Manager
-            server.Event.OnClientConnect += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnFileUpload += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnFriendAdd += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnFriendRecall += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnFriendRequest += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupAdminChange += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupCardUpdate += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupMemberChange += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupMemberMute += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupPoke += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupRecall += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnGroupRequest += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnHonorEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnLuckyKingEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnOfflineFileEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            #endregion
+            }
         }
     }
 }

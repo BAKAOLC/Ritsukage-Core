@@ -1,8 +1,12 @@
 ﻿{
+  "QQ": false, //是否启用QQ相关功能
   "Host": "[::]", //要连接的目标IP
   "Port": 23150, //要监听的目标端口
   "AccessToken": "", //token
   "HeartBeatTimeOut": 30000, //心跳超时间隔
   "DatabasePath": "data.db", //数据库储存位置
+  "QQSuperUser": -1, //QQ相关功能超级权限用户
+  "Discord": false, //是否启用Discord相关功能
+  "DiscordToken": "", //Discord Bot Token
   "IsDebug": false //是否为Debug模式
 }

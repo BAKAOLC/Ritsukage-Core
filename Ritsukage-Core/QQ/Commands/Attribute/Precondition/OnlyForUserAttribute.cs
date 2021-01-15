@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     public class OnlyForUserAttribute : PreconditionAttribute
     {

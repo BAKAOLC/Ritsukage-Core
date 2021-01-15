@@ -9,6 +9,11 @@ namespace Ritsukage
         const string ConfigPath = "config.json";
 
         /// <summary>
+        /// 是否启用QQ相关功能
+        /// </summary>
+        public bool QQ = false;
+
+        /// <summary>
         /// 要连接的目标IP
         /// </summary>
         public string Host = "[::]";
@@ -32,6 +37,21 @@ namespace Ritsukage
         /// 数据库储存位置
         /// </summary>
         public string DatabasePath = "data.db";
+
+        /// <summary>
+        /// QQ相关功能超级权限者
+        /// </summary>
+        public long QQSuperUser = -1;
+
+        /// <summary>
+        /// 是否启用Discord相关功能
+        /// </summary>
+        public bool Discord = false;
+
+        /// <summary>
+        /// Discord Bot Token
+        /// </summary>
+        public string DiscordToken = "";
 
         /// <summary>
         /// 是否使用调试模式

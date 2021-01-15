@@ -1,12 +1,12 @@
 ﻿using Sora.EventArgs.SoraEvent;
 using Sora.Tool;
 
-namespace Ritsukage.Events
+namespace Ritsukage.QQ.Events
 {
     [EventGroup]
     public static class AddFriends
     {
-        [Event(typeof(FriendRequestEventArgs), 0)]
+        [Event(typeof(FriendRequestEventArgs))]
         public static async void Accept(object sender, FriendRequestEventArgs args)
         {
             var info = (await args.Sender.GetUserInfo()).userInfo;

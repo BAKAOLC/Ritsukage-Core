@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public abstract class PreconditionAttribute : Attribute

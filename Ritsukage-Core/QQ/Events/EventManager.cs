@@ -6,11 +6,16 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 
-namespace Ritsukage.Events
+namespace Ritsukage.QQ.Events
 {
     public static class EventManager
     {
-        private static Dictionary<Type, SortedList<int, MethodInfo>> Events = new();
+        static EventManager()
+        {
+            RegisterAllEvents();
+        }
+
+        private static readonly Dictionary<Type, List<MethodInfo>> Events = new();
 
         public static void Trigger(object sender, BaseSoraEventArgs args)
         {
@@ -20,7 +25,7 @@ namespace Ritsukage.Events
                 new Thread(() =>
                 {
                     foreach (var e in list)
-                        e.Value.Invoke(null, new object[] { sender, args });
+                        e.Invoke(null, new object[] { sender, args });
                 })
                 {
                     IsBackground = true
@@ -36,11 +41,11 @@ namespace Ritsukage.Events
                 if (attrs != null)
                 {
                     if (Events.TryGetValue(attrs.Handled, out var list))
-                        list.Add(attrs.Level, method);
+                        list.Add(method);
                     else
                         Events.Add(attrs.Handled, new()
                         {
-                            { attrs.Level, method }
+                            { method }
                         });
                     ConsoleLog.Debug("Events", $"Register event: {attrs.Handled} for {method}");
                 }

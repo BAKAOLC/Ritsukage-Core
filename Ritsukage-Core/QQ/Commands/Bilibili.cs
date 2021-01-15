@@ -9,7 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     [CommandGroup]
     public static class Bilibili

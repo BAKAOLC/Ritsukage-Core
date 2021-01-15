@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     public class CommandArgs
     {
@@ -131,6 +131,11 @@ namespace Ritsukage.Commands
 
     public static class CommandManager
     {
+        static CommandManager()
+        {
+            RegisterAllCommands();
+        }
+
         public static readonly Dictionary<Type, ICommandParser> Parsers = new();
         public static readonly Dictionary<string, Dictionary<string, Command>> Commands = new();
 

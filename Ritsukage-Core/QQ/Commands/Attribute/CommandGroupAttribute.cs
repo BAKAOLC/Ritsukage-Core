@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class CommandGroupAttribute : Attribute

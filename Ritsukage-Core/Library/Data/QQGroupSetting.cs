@@ -2,8 +2,8 @@
 
 namespace Ritsukage.Library.Data
 {
-    [Table("groupsetting")]
-    class GroupSetting
+    [Table("qqgroupsetting")]
+    class QQGroupSetting
     {
         [Column("group"), Indexed]
         public long Group { get; set; }

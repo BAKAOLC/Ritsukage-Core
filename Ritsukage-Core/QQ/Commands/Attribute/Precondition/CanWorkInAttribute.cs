@@ -1,7 +1,7 @@
 ﻿using Sora.EventArgs.SoraEvent;
 using System.Threading.Tasks;
 
-namespace Ritsukage.Commands
+namespace Ritsukage.QQ.Commands
 {
     public class CanWorkInAttribute : PreconditionAttribute
     {

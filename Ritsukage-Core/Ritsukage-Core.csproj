@@ -19,6 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="QQ\FriendList.cs~RF174a5a4.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
@@ -32,6 +38,11 @@
     <None Update="config.sample.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Discord\Commands\" />
+    <Folder Include="Discord\Events\" />
   </ItemGroup>
 
 </Project>
