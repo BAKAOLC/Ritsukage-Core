@@ -2,6 +2,7 @@
 using Ritsukage.Discord;
 using Ritsukage.Library.Data;
 using Ritsukage.QQ;
+using Sora.Enumeration;
 using Sora.Tool;
 using System;
 using System.Threading;
@@ -42,11 +43,11 @@ namespace Ritsukage
 #else
             if (cfg.IsDebug)
             {
-                ConsoleLog.SetLogLevel(Fleck.LogLevel.Debug);
+                ConsoleLog.SetLogLevel(LogLevel.Debug);
                 ConsoleLog.Debug("Main", "当前正在使用Debug模式");
             }
             else
-                ConsoleLog.SetLogLevel(Fleck.LogLevel.Info);
+                ConsoleLog.SetLogLevel(LogLevel.Info);
 #endif
             ConsoleLog.Debug("Main", "Config:\r\n" + JsonConvert.SerializeObject(cfg, Formatting.Indented));
 
