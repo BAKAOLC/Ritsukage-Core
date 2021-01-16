@@ -21,7 +21,10 @@ jobs:
       run: git submodule update --init --recursive
     - name: Install dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
+    - name: Build and Deploy
+      uses: JamesIves/github-pages-deploy-action@master
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        BRANCH: master
+        FOLDER: bin/Release/net5.0
+        BUILD_SCRIPT: dotnet build --configuration Release --no-restore
