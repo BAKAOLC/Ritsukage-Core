@@ -1,4 +1,5 @@
-﻿using Sora.Entities.Info;
+﻿using Ritsukage.Tools.Console;
+using Sora.Entities.Info;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace Ritsukage.QQ
 
         public static async void RefreshList(long bot, List<FriendInfo> list)
         {
+            ConsoleLog.Debug("QQ Friend List", $"Update list for bot {bot} with {list.Count} friend(s)");
             await Task.Run(() =>
             {
                 lock (_lock)

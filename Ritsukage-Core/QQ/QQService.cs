@@ -1,11 +1,11 @@
 ﻿using Ritsukage.QQ.Commands;
 using Ritsukage.QQ.Events;
+using Ritsukage.Tools.Console;
+using Sora.Entities.Base;
 using Sora.Server;
-using Sora.Tool;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +17,19 @@ namespace Ritsukage.QQ
 
         public QQService(ServerConfig config)
         {
+            CommandManager.Init();
+            EventManager.Init();
             Server = new(config);
             CombineEvent(Server);
+        }
+
+        readonly ConcurrentDictionary<long, SoraApi> Apis = new();
+        public long[] GetBotList() => Apis.Select(x => x.Key)?.ToArray();
+        public SoraApi GetSoraApi(long bot)
+        {
+            if (Apis.TryGetValue(bot, out var api))
+                return api;
+            return null;
         }
 
         public void Start()
@@ -31,7 +42,7 @@ namespace Ritsukage.QQ
                 }
                 catch (Exception e)
                 {
-                    ConsoleLog.ErrorLogBuilder(e);
+                    ConsoleLog.Error("Sora", ConsoleLog.ErrorLogBuilder(e));
                 }
             })
             {
@@ -50,7 +61,7 @@ namespace Ritsukage.QQ
             }
         }
 
-        static void CombineEvent(SoraWSServer server)
+        void CombineEvent(SoraWSServer server)
         {
             #region Server Connection Event
             server.ConnManager.OnOpenConnectionAsync += async (s, e) =>
@@ -92,6 +103,12 @@ namespace Ritsukage.QQ
             };
             #endregion
             #region Event Manager
+            server.Event.OnClientConnect += (s, e) =>
+            {
+                Apis[e.LoginUid] = e.SoraApi;
+                ConsoleLog.Debug("Sora", $"Update api for bot {e.LoginUid}");
+                return ValueTask.CompletedTask;
+            };
             server.Event.OnClientConnect += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnFileUpload += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnFriendAdd += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));

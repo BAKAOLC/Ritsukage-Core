@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
 using Ritsukage.Discord;
 using Ritsukage.Library.Data;
+using Ritsukage.Library.Subscribe;
 using Ritsukage.QQ;
-using Sora.Enumeration;
-using Sora.Tool;
+using Ritsukage.Tools.Console;
 using System;
 using System.Threading;
 
@@ -38,7 +38,7 @@ namespace Ritsukage
         {
             var cfg = Config = Config.LoadConfig();
 #if DEBUG
-            ConsoleLog.SetLogLevel(Fleck.LogLevel.Debug);
+            ConsoleLog.SetLogLevel(LogLevel.Debug);
             ConsoleLog.Debug("Main", "当前正在使用Debug模式");
 #else
             if (cfg.IsDebug)
@@ -55,6 +55,10 @@ namespace Ritsukage
             Database.Init(cfg.DatabasePath);
             ConsoleLog.Info("Main", "数据库已装载");
 
+            ConsoleLog.Info("Main", "订阅系统启动中……");
+            SubscribeManager.Init();
+            ConsoleLog.Info("Main", "订阅系统已装载");
+
             if (cfg.Discord)
             {
                 Working = true;
@@ -69,7 +73,7 @@ namespace Ritsukage
                     catch (Exception ex)
                     {
                         ConsoleLog.Fatal("Main", "Discord功能启动失败");
-                        ConsoleLog.ErrorLogBuilder(ex);
+                        ConsoleLog.Error("Main", ConsoleLog.ErrorLogBuilder(ex));
                         Working = false;
                     }
                 })
@@ -98,7 +102,7 @@ namespace Ritsukage
                     catch (Exception ex)
                     {
                         ConsoleLog.Fatal("Main", "QQ功能启动失败");
-                        ConsoleLog.ErrorLogBuilder(ex);
+                        ConsoleLog.Error("Main", ConsoleLog.ErrorLogBuilder(ex));
                         Working = false;
                     }
                 })

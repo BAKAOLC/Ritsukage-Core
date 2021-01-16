@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using Sora.Tool;
+using Ritsukage.Tools.Console;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -144,7 +144,7 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }
@@ -175,7 +175,7 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }

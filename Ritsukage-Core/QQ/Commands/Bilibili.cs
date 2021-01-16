@@ -2,11 +2,14 @@
 using Ritsukage.Library.Bilibili;
 using Ritsukage.Library.Data;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using Sora.Entities;
 using Sora.Entities.CQCodes;
+using Sora.Enumeration.EventParamsType;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
@@ -14,44 +17,6 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup]
     public static class Bilibili
     {
-        [Command]
-        [CommandArgumentErrorCallback("AVBVConverterFallback")]
-        public static async void AV2BV(BaseSoraEventArgs e, long av)
-        {
-            string msg;
-            try
-            {
-                msg = $"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}";
-            }
-            catch (Exception ex)
-            {
-                msg = ex.Message;
-            }
-            if (e is GroupMessageEventArgs gm)
-                await gm.Reply(msg);
-            else if (e is PrivateMessageEventArgs pm)
-                await pm.Reply(msg);
-        }
-
-        [Command]
-        [CommandArgumentErrorCallback("AVBVConverterFallback")]
-        public static async void BV2AV(BaseSoraEventArgs e, string bv)
-        {
-            string msg;
-            try
-            {
-                msg = $"[Bilibili][BV→AV] {bv} → {BilibiliAVBVConverter.ToAV(bv)}";
-            }
-            catch (Exception ex)
-            {
-                msg = ex.Message;
-            }
-            if (e is GroupMessageEventArgs gm)
-                await gm.Reply(msg);
-            else if (e is PrivateMessageEventArgs pm)
-                await pm.Reply(msg);
-        }
-
         [Command]
         public static async void Login(BaseSoraEventArgs e)
         {
@@ -100,8 +65,13 @@ namespace Ritsukage.QQ.Commands
                             {
                                 if (x.Result > 0)
                                     await target.SendPrivateMessage("记录数据已更新");
+                                else if (x.IsFaulted && x.Exception != null)
+                                    await target.SendPrivateMessage(new StringBuilder()
+                                        .AppendLine("记录数据因异常导致更新失败，错误信息：")
+                                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                        .ToString());
                                 else
-                                    await target.SendPrivateMessage("记录数据未能成功更新");
+                                    await target.SendPrivateMessage("记录数据因未知原因导致成功失败，请稍后重试");
                             });
                         }
                         else
@@ -116,8 +86,13 @@ namespace Ritsukage.QQ.Commands
                             {
                                 if (x.Result > 0)
                                     await target.SendPrivateMessage("记录数据已添加");
+                                else if (x.IsFaulted && x.Exception != null)
+                                    await target.SendPrivateMessage(new StringBuilder()
+                                        .AppendLine("记录数据因异常导致更新失败，错误信息：")
+                                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                        .ToString());
                                 else
-                                    await target.SendPrivateMessage("记录数据未能成功添加");
+                                    await target.SendPrivateMessage("记录数据因未知原因导致成功失败，请稍后重试");
                             });
                         }
                     }
@@ -298,17 +273,126 @@ namespace Ritsukage.QQ.Commands
                 Tip("已成功更换直播分区");
         }
 
-        public static async void AVBVConverterFallback(BaseSoraEventArgs e, Exception ex = null)
+        [Command("订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        public static async void AddLiveListener(BaseSoraEventArgs e, int roomid)
+        {
+            if (e is GroupMessageEventArgs gm)
+            {
+                var t = await Database.Data.Table<SubscribeList>().ToListAsync();
+                if (t != null && t.Count > 0)
+                {
+                    SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "bilibili live"
+                    && x.Target == roomid.ToString() && x.Listener == gm.SourceGroup.Id.ToString())?.FirstOrDefault();
+                    if (data != null)
+                    {
+                        await gm.Reply("本群已订阅该目标，请检查输入是否正确");
+                        return;
+                    }
+                }
+                await Database.Data.InsertAsync(new SubscribeList()
+                {
+                    Platform = "qq group",
+                    Type = "bilibili live",
+                    Target = roomid.ToString(),
+                    Listener = gm.SourceGroup.Id.ToString()
+                }).ContinueWith(async x =>
+                {
+                    if (x.Result > 0)
+                        await gm.Reply("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
+                    else if (x.IsFaulted && x.Exception != null)
+                        await gm.Reply(new StringBuilder()
+                            .AppendLine("订阅项目因异常导致添加失败，错误信息：")
+                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .ToString());
+                    else
+                        await gm.Reply("订阅项目因未知原因导致添加失败，请稍后重试");
+                });
+            }
+        }
+
+        [Command("取消订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        public static async void RemoveLiveListener(BaseSoraEventArgs e, int roomid)
+        {
+            if (e is GroupMessageEventArgs gm)
+            {
+                var t = await Database.Data.Table<SubscribeList>().ToListAsync();
+                if (t != null && t.Count > 0)
+                {
+                    SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "bilibili live"
+                    && x.Target == roomid.ToString() && x.Listener == gm.SourceGroup.Id.ToString())?.FirstOrDefault();
+                    if (data == null)
+                    {
+                        await gm.Reply("本群未订阅该目标，请检查输入是否正确");
+                        return;
+                    }
+                    await Database.Data.DeleteAsync(data).ContinueWith(async x =>
+                    {
+                        if (x.Result > 0)
+                            await gm.Reply("订阅项目已移除");
+                        else if (x.IsFaulted && x.Exception != null)
+                            await gm.Reply(new StringBuilder()
+                                .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                                .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                .ToString());
+                        else
+                            await gm.Reply("订阅项目因未知原因导致移除失败，请稍后重试");
+                    });
+                }
+                else
+                    await gm.Reply("本群未订阅该目标，请检查输入是否正确");
+            }
+        }
+
+        [Command]
+        public static async void AV2BV(BaseSoraEventArgs e, long av)
         {
             string msg;
-            if (ex is ArgumentOutOfRangeException)
-                msg = $"未填写参数，请重新输入";
-            else
-                msg = $"错误的参数指定，请检查参数是否正确({ex.Message})";
+            try
+            {
+                msg = $"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}";
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+            }
             if (e is GroupMessageEventArgs gm)
                 await gm.Reply(msg);
             else if (e is PrivateMessageEventArgs pm)
                 await pm.Reply(msg);
+        }
+        [Command]
+        public static async void AV2BV(BaseSoraEventArgs e)
+        {
+            if (e is GroupMessageEventArgs gm)
+                await gm.Reply("参数错误，请重新输入");
+            else if (e is PrivateMessageEventArgs pm)
+                await pm.Reply("参数错误，请重新输入");
+        }
+
+        [Command]
+        public static async void BV2AV(BaseSoraEventArgs e, string bv)
+        {
+            string msg;
+            try
+            {
+                msg = $"[Bilibili][BV→AV] {bv} → {BilibiliAVBVConverter.ToAV(bv)}";
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+            }
+            if (e is GroupMessageEventArgs gm)
+                await gm.Reply(msg);
+            else if (e is PrivateMessageEventArgs pm)
+                await pm.Reply(msg);
+        }
+        [Command]
+        public static async void BV2AV(BaseSoraEventArgs e)
+        {
+            if (e is GroupMessageEventArgs gm)
+                await gm.Reply("参数错误，请重新输入");
+            else if (e is PrivateMessageEventArgs pm)
+                await pm.Reply("参数错误，请重新输入");
         }
     }
 }

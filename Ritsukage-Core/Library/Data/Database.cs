@@ -1,4 +1,8 @@
-﻿using SQLite;
+﻿using Ritsukage.Tools.Console;
+using SQLite;
+using System;
+using System.Linq;
+using System.Reflection;
 
 namespace Ritsukage.Library.Data
 {
@@ -16,7 +20,16 @@ namespace Ritsukage.Library.Data
 
         static void InitTables()
         {
-            Data.CreateTableAsync<UserData>();
+            ConsoleLog.Debug("Database", "Start loading...");
+            Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
+            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true)
+            .Where(a => a is TableAttribute).Any()).ToArray();
+            foreach (var group in cosType)
+            {
+                ConsoleLog.Debug("Database", $"Register database table: {group.FullName}");
+                Data.CreateTableAsync(group);
+            }
+            ConsoleLog.Debug("Database", "Finish.");
         }
     }
 }

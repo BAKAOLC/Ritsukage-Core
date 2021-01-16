@@ -2,25 +2,25 @@
 
 namespace Ritsukage.Library.Data
 {
-    [Table("userdata")]
+    [Table("UserData")]
     public class UserData
     {
-        [Column("id"), PrimaryKey, AutoIncrement]
+        [Column("ID"), PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
-        [Column("qq"), Indexed]
+        [Column("QQ"), Indexed]
         public long QQ { get; set; }
 
-        [Column("discord"), Indexed]
+        [Column("Discord"), Indexed]
         public long Discord { get; set; }
 
-        [Column("bilibili"), Indexed]
+        [Column("Bilibili"), Indexed]
         public int Bilibili { get; set; }
 
-        [Column("coins")]
+        [Column("Coins")]
         public long Coins { get; set; }
 
-        [Column("bilibili.cookie")]
+        [Column("Bilibili.Cookie")]
         public string BilibiliCookie { get; set; }
     }
 }
