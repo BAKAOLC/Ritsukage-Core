@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace RitsukageBot.Discord.Commands
+namespace Ritsukage.Discord.Commands
 {
     public class Time : ModuleBase<SocketCommandContext>
     {

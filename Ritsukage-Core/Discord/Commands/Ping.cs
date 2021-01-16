@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace RitsukageBot.Discord.Commands
+namespace Ritsukage.Discord.Commands
 {
     public class Ping : ModuleBase<SocketCommandContext>
     {

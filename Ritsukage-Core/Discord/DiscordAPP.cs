@@ -3,7 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Ritsukage.Discord.Services;
-using Sora.Tool;
+using Ritsukage.Tools.Console;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -58,7 +58,7 @@ namespace Ritsukage.Discord
                 catch (Exception e)
                 {
                     repeat = true;
-                    ConsoleLog.ErrorLogBuilder(e);
+                    ConsoleLog.Error("Discord", ConsoleLog.ErrorLogBuilder(e));
                     ConsoleLog.Info("Discord", "已断开连接，五秒后将重新登陆");
                     Thread.Sleep(5000);
                 }
@@ -101,7 +101,7 @@ namespace Ritsukage.Discord
                 case LogSeverity.Error:
                     ConsoleLog.Fatal("Discord", $"[{msg.Source}] " + msg.Message.ToString());
                     if (msg.Severity == LogSeverity.Error)
-                        ConsoleLog.ErrorLogBuilder(msg.Exception);
+                        ConsoleLog.Error("Discord", $"[{msg.Source}] " + ConsoleLog.ErrorLogBuilder(msg.Exception));
                     break;
                 case LogSeverity.Warning:
                     ConsoleLog.Warning("Discord", $"[{msg.Source}] " + msg.Message.ToString());

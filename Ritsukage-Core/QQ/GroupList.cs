@@ -1,4 +1,5 @@
-﻿using Sora.Entities.Info;
+﻿using Ritsukage.Tools.Console;
+using Sora.Entities.Info;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace Ritsukage.QQ
 
         public static async void RefreshList(long bot, List<GroupInfo> list)
         {
+            ConsoleLog.Debug("QQ Group List", $"Update list for bot {bot} with {list.Count} group(s)");
             await Task.Run(() =>
             {
                 ConcurrentDictionary<long, GroupInfo> data = new();
@@ -24,6 +26,7 @@ namespace Ritsukage.QQ
 
         public static async void RefreshMemberList(long group, List<GroupMemberInfo> list)
         {
+            ConsoleLog.Debug("QQ Group List", $"Update list for group {group} with {list.Count} member(s)");
             await Task.Run(() =>
             {
                 ConcurrentDictionary<long, GroupMemberInfo> data = new();

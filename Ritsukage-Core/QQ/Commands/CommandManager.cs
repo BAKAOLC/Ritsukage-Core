@@ -1,6 +1,6 @@
 ﻿using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using Sora.EventArgs.SoraEvent;
-using Sora.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +12,10 @@ namespace Ritsukage.QQ.Commands
 {
     public class CommandArgs
     {
-        string rawInput;
-        List<string> singleArg;
+        readonly List<string> SingleArg;
         private int index = 0;
+
+        public int Length => SingleArg.Count;
 
         /// <summary>
         /// 将参数部分拆分成args部分
@@ -25,8 +26,7 @@ namespace Ritsukage.QQ.Commands
         /// <param name="rawInput">args部分【不带空格情况】</param>
         public CommandArgs(string rawInput)
         {
-            this.rawInput = rawInput;
-            this.singleArg = new();
+            this.SingleArg = new();
             int len = rawInput.Length;
             int i = 0;
             var sb = new StringBuilder();
@@ -37,7 +37,7 @@ namespace Ritsukage.QQ.Commands
                 {
                     case ' ':
                         {
-                            this.singleArg.Add(sb.ToString());
+                            this.SingleArg.Add(sb.ToString());
                             sb = new();
                             break;
                         }
@@ -79,17 +79,12 @@ namespace Ritsukage.QQ.Commands
                 i += 1;
             }
             if (sb.Length > 0)
-            {
-                singleArg.Add(sb.ToString());
-            }
+                SingleArg.Add(sb.ToString());
         }
 
-        public string Next()
-        {
-            string s = this.singleArg[this.index];
-            this.index += 1;
-            return s;
-        }
+        public void Reset() => index = 0;
+
+        public string Next() => SingleArg[index++];
     }
 
     public interface ICommandParser
@@ -106,16 +101,14 @@ namespace Ritsukage.QQ.Commands
         public PreconditionAttribute[] Preconditions { get; init; }
         internal MethodInfo Method;
         internal Type[] ArgTypes;
-        internal ArgumentErrorCallback FailedCallback;
 
-        internal Command(string s, string n, MethodInfo method, Type[] args, PreconditionAttribute[] preconditions, ArgumentErrorCallback cb = null)
+        internal Command(string s, string n, MethodInfo method, Type[] args, PreconditionAttribute[] preconditions)
         {
             StartHeader = s;
             Name = n;
             Method = method;
             ArgTypes = args;
             Preconditions = preconditions;
-            FailedCallback = cb;
         }
 
         public async Task<bool> CheckPermission(BaseSoraEventArgs args)
@@ -131,24 +124,38 @@ namespace Ritsukage.QQ.Commands
 
     public static class CommandManager
     {
-        static CommandManager()
+        static bool _init = false;
+        public static void Init()
         {
+            if (_init) return;
+            _init = true;
             RegisterAllCommands();
         }
 
         public static readonly Dictionary<Type, ICommandParser> Parsers = new();
-        public static readonly Dictionary<string, Dictionary<string, Command>> Commands = new();
+        public static readonly Dictionary<string, Dictionary<string, List<Command>>> Commands = new();
 
-        private static Dictionary<string, Command> GetFromHeader(string header)
+        private static Dictionary<string, List<Command>> GetFromHeader(string header)
         {
             if (Commands.TryGetValue(header, out var value))
-            {
                 return value;
-            }
             else
             {
-                var d = new Dictionary<string, Command>();
+                var d = new Dictionary<string, List<Command>>();
                 Commands.Add(header, d);
+                return d;
+            }
+        }
+
+        private static List<Command> GetCommandList(string header, string command)
+        {
+            var head = GetFromHeader(header);
+            if (head.TryGetValue(command, out var value))
+                return value;
+            else
+            {
+                var d = new List<Command>();
+                head.Add(command, d);
                 return d;
             }
         }
@@ -192,23 +199,15 @@ namespace Ritsukage.QQ.Commands
                     string original = args.Next();
                     string s = original.ToLower();
                     if (s == "真" || s == "true" || s == "t" || s == "1")
-                    {
                         return true;
-                    }
                     else if (s == "假" || s == "false" || s == "f" || s == "0")
-                    {
                         return false;
-                    }
                     else throw new ArgumentException($"{original} is not a bool value.");
                 }
                 else if (type == typeof(DateTime))
-                {
                     return DateTimeReader.Parse(args.Next());
-                }
                 else if (type == typeof(TimeSpan))
-                {
                     return TimeSpanReader.Parse(args.Next());
-                }
                 else if (type == typeof(string))
                     return args.Next();
             }
@@ -229,35 +228,25 @@ namespace Ritsukage.QQ.Commands
                     foreach (PreconditionAttribute a in p)
                         list.Add(a);
 
-                var fcbn = method.GetCustomAttribute<CommandArgumentErrorCallbackAttribute>();
-
-                ArgumentErrorCallback fcb = null;
-
-                if (fcbn != null)
-                    fcb = type.GetMethods().Where(x => x.Name == fcbn.ArgumentErrorCallbackMethodName)?
-                        .FirstOrDefault()?.CreateDelegate<ArgumentErrorCallback>();
-
                 if (attrs != null)
                 {
                     var ps = method.GetParameters();
                     var ts = new Type[ps.Length];
                     for (int i = 0; i < ps.Length; ++i)
-                    {
                         ts[i] = ps[i].ParameterType;
-                    }
 
                     var name = attrs.Name;
                     if (name.Length == 0)
                         name = new[] { method.Name };
 
-                    var command = new Command(attrs.StartHeader, name[0], method, ts, list.ToArray(), fcb);
+                    var command = new Command(attrs.StartHeader, name[0], method, ts, list.ToArray());
 
-                    var d = GetFromHeader(attrs.StartHeader);
                     foreach (var n in name)
                     {
-                        d.Add(n.ToLower(), command);
+                        ConsoleLog.Debug("Commands", $"Register command: {n} for {command.Method}");
+                        GetCommandList(attrs.StartHeader, n.ToLower()).Add(command);
                     }
-                    ConsoleLog.Debug("Commands", $"Register command: {name} for {command.Method}");
+
                 }
             }
         }
@@ -280,7 +269,7 @@ namespace Ritsukage.QQ.Commands
             ConsoleLog.Debug("Commands", "Finish.");
         }
 
-        public static void ReceiveMessage(BaseSoraEventArgs arg)
+        public static async void ReceiveMessage(BaseSoraEventArgs arg)
         {
             string msg = string.Empty;
             if (arg is GroupMessageEventArgs a1)
@@ -295,44 +284,30 @@ namespace Ritsukage.QQ.Commands
                     if (msg.StartsWith(node.Key))
                     {
                         var caa = msg[node.Key.Length..].Split(" ", 2);
-                        if (node.Value.TryGetValue(caa[0].ToLower(), out var command))
+                        if (node.Value.TryGetValue(caa[0].ToLower(), out var commandlist))
                         {
-                            if (command.CheckPermission(arg).Result)
+                            ConsoleLog.Debug("Commands", $"found {commandlist.Count} command(s) for {caa[0]}");
+                            var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
+                            foreach (var command in commandlist.OrderByDescending(x => x.ArgTypes.Length).ToArray())
                             {
-                                var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
-                                object[] ps = new object[command.ArgTypes.Length];
-                                ps[0] = arg;
-
-                                try
+                                if (args.Length >= (command.ArgTypes.Length - 1) && await command.CheckPermission(arg))
                                 {
-                                    for (int i = 1; i < ps.Length; ++i)
+                                    object[] ps = new object[command.ArgTypes.Length];
+                                    ps[0] = arg;
+                                    try
                                     {
-                                        ps[i] = ParseArgument(command.ArgTypes[i], args);
+                                        ConsoleLog.Debug("Commands", $"Try to parse parameters for {command.Method}.");
+                                        args.Reset();
+                                        for (int i = 1; i < ps.Length; ++i)
+                                            ps[i] = ParseArgument(command.ArgTypes[i], args);
+                                        ConsoleLog.Debug("Commands", $"Invoke {command.Method}.");
+                                        command.Method.Invoke(null, ps);
+                                        return;
+                                    }
+                                    catch
+                                    {
                                     }
                                 }
-                                catch (Exception e)
-                                {
-                                    ConsoleLog.ErrorLogBuilder(e);
-                                    ConsoleLog.Debug("Commands", $"Failed to parse {command.Method} arguments.");
-                                    if (command.FailedCallback != null)
-                                    {
-                                        try
-                                        {
-                                            ConsoleLog.Debug("Commands", $"Try to execute {command.Method} failed callback.");
-                                            command.FailedCallback.Invoke(arg, e);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            ConsoleLog.ErrorLogBuilder(ex);
-                                            ConsoleLog.Debug("Commands", $"Failed to execute {command.Method} failed callback.");
-                                        }
-                                    }
-                                    return;
-                                }
-
-                                ConsoleLog.Debug("Commands", $"Invoke {command.Method}.");
-                                command.Method.Invoke(null, ps);
-                                return;
                             }
                         }
                     }

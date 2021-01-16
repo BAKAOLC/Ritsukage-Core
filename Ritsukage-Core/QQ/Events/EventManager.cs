@@ -1,5 +1,5 @@
-﻿using Sora.EventArgs.SoraEvent;
-using Sora.Tool;
+﻿using Ritsukage.Tools.Console;
+using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +10,11 @@ namespace Ritsukage.QQ.Events
 {
     public static class EventManager
     {
-        static EventManager()
+        static bool _init = false;
+        public static void Init()
         {
+            if (_init) return;
+            _init = true;
             RegisterAllEvents();
         }
 

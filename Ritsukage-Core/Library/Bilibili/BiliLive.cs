@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Net;
 
@@ -31,7 +32,7 @@ namespace Ritsukage.Library.Bilibili
             catch (Exception e)
             {
                 request?.Abort();
-                Sora.Tool.ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("Bilibili", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }
@@ -52,7 +53,7 @@ namespace Ritsukage.Library.Bilibili
             catch (Exception e)
             {
                 request?.Abort();
-                Sora.Tool.ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("Bilibili", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }
@@ -72,7 +73,7 @@ namespace Ritsukage.Library.Bilibili
             catch (Exception e)
             {
                 request?.Abort();
-                Sora.Tool.ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("Bilibili", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }
@@ -92,7 +93,7 @@ namespace Ritsukage.Library.Bilibili
             catch (Exception e)
             {
                 request?.Abort();
-                Sora.Tool.ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("Bilibili", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }
@@ -112,7 +113,7 @@ namespace Ritsukage.Library.Bilibili
             catch (Exception e)
             {
                 request?.Abort();
-                Sora.Tool.ConsoleLog.ErrorLogBuilder(e);
+                ConsoleLog.Error("Bilibili", ConsoleLog.ErrorLogBuilder(e));
             }
             return "";
         }

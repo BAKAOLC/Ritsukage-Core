@@ -2,7 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Sora.Tool;
+using Ritsukage.Tools.Console;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -57,9 +57,9 @@ namespace Ritsukage.Discord.Services
             {
                 case LogSeverity.Critical:
                 case LogSeverity.Error:
-                    ConsoleLog.Fatal("Discord Commands", $"[{msg.Source}] " + msg.Message.ToString());
+                    ConsoleLog.Error("Discord Commands", $"[{msg.Source}] " + msg.Message.ToString());
                     if (msg.Severity == LogSeverity.Error)
-                        ConsoleLog.ErrorLogBuilder(msg.Exception);
+                        ConsoleLog.Error("Discord Commands", $"[{msg.Source}] " + ConsoleLog.ErrorLogBuilder(msg.Exception));
                     break;
                 case LogSeverity.Warning:
                     ConsoleLog.Warning("Discord Commands", $"[{msg.Source}] " + msg.Message.ToString());

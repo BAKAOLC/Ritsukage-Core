@@ -2,10 +2,13 @@
 
 namespace Ritsukage.Library.Data
 {
-    [Table("qqgroupsetting")]
-    class QQGroupSetting
+    [Table("QQGroupSetting")]
+    public class QQGroupSetting
     {
-        [Column("group"), Indexed]
+        [Column("ID"), PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
+
+        [Column("Group"), Indexed]
         public long Group { get; set; }
     }
 }

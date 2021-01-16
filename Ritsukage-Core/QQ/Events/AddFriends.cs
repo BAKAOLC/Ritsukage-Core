@@ -1,5 +1,5 @@
 ﻿using Sora.EventArgs.SoraEvent;
-using Sora.Tool;
+using Ritsukage.Tools.Console;
 
 namespace Ritsukage.QQ.Events
 {
