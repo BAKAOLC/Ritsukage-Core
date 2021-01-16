@@ -25,7 +25,10 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+<<<<<<< HEAD:.github/workflows/ci.yml
     - uses: toolmantim/release-drafter@v5.2.0
       name: Draft
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+=======
+>>>>>>> master:.github/workflows/dotnet-core-test.yml
