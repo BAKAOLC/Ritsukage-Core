@@ -2,6 +2,7 @@
 using Ritsukage.Tools;
 using System;
 using System.Globalization;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -75,19 +76,25 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 方法
         public User GetUserInfo() => User.Get(UserId);
 
+        public string BaseToString()
+            => new StringBuilder()
+            .AppendLine("标题：" + Title)
+            .AppendLine("直播间ID：" + Id)
+            .AppendLine("当前分区：" + ParentAreaName + "·" + AreaName)
+            .AppendLine(LiveStatus switch
+            {
+                LiveStatus.Live => "当前正在直播",
+                LiveStatus.Round => "当前正在轮播",
+                _ => "当前未开播"
+            })
+            .AppendLine("当前人气值：" + Online)
+            .Append(Url)
+            .ToString();
         public override string ToString()
-            => string.IsNullOrWhiteSpace(UserCoverUrl) ? KeyFrame : UserCoverUrl + "\n"
-                + "标题：" + Title + "\n"
-                + "直播间ID：" + Id + "\n"
-                + "当前分区：" + ParentAreaName + "·" + AreaName + "\n"
-                + LiveStatus switch
-                {
-                    LiveStatus.Live => "当前正在直播",
-                    LiveStatus.Round => "当前正在轮播",
-                    _ => "当前未开播"
-                } + "\n"
-                + "当前人气值：" + Online + "\n"
-                + Url;
+            => new StringBuilder()
+            .AppendLine(string.IsNullOrWhiteSpace(UserCoverUrl) ? KeyFrame : UserCoverUrl)
+            .Append(BaseToString())
+            .ToString();
         #endregion
 
         #region 构造

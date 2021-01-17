@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
 using System;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -76,14 +77,20 @@ namespace Ritsukage.Library.Bilibili.Model
 
         public Video GetOriginalVideo() => Video.Get(BV);
 
+        public string BaseToString()
+            => new StringBuilder()
+            .AppendLine(Title + "    作者：" + Author + "    时长：" + Duration.ToString())
+            .AppendLine(Intro)
+            .AppendLine("原视频：" + BV)
+            .AppendLine($"播放：{Statistic.Play}  收藏：{Statistic.Collect}  评论：{Statistic.Comment}  分享：{Statistic.Share}")
+            .AppendLine("发布时间：" + UploadTime.ToString("yyyy-MM-dd hh:mm:ss"))
+            .Append(Url)
+            .ToString();
         public override string ToString()
-            => CoverUrl + "\n"
-                + Title + "    作者：" + Author + "    时长：" + Duration.ToString() + "\n"
-                + Intro + "\n"
-                + "原视频：" + BV + "\n"
-                + $"播放：{Statistic.Play}  收藏：{Statistic.Collect}  评论：{Statistic.Comment}  分享：{Statistic.Share}" + "\n"
-                + "发布时间：" + UploadTime.ToString("yyyy-MM-dd hh:mm:ss") + "\n"
-                + Url;
+            => new StringBuilder()
+            .AppendLine(CoverUrl)
+            .Append(BaseToString())
+            .ToString();
         #endregion
 
         #region 构造

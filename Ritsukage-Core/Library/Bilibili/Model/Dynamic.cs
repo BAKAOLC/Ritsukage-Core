@@ -2,6 +2,7 @@
 using Ritsukage.Tools;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -17,6 +18,31 @@ namespace Ritsukage.Library.Bilibili.Model
         public int Reply { get => Card == null ? 0 : Card.Reply; }
         public int Like;
         public DateTime Time;
+        public string[] Pictures
+        {
+            get
+            {
+                if (OriginalCard != null)
+                {
+                    if (OriginalCard.Content.Pictures != null)
+                        return OriginalCard.Content.Pictures;
+                    else if (OriginalCard.Video != null)
+                        return new[] { OriginalCard.Video.PicUrl };
+                    else if (OriginalCard.Audio != null)
+                        return new[] { OriginalCard.Audio.CoverUrl };
+                }
+                else
+                {
+                    if (Card.Content.Pictures != null)
+                        return Card.Content.Pictures;
+                    else if (Card.Video != null)
+                        return new[] { Card.Video.PicUrl };
+                    else if (Card.Audio != null)
+                        return new[] { Card.Audio.CoverUrl };
+                }
+                return Array.Empty<string>();
+            }
+        }
         public DynamicCard Card;
         public DynamicCard OriginalCard = null;
 
@@ -28,20 +54,49 @@ namespace Ritsukage.Library.Bilibili.Model
 
         public Dynamic GetOriginal() => OriginalCard == null ? null : Get(OriginalCard.Id);
 
+        public string GetInfo()
+            => new StringBuilder()    
+            .AppendLine($"动态UP：{UserName}(UID:{UserId})")    
+            .AppendLine("发布时间：" + Time.ToString("yyyy-MM-dd hh:mm:ss"))    
+            .Append($"查看数：{View}  转发：{Repost}  评论：{Reply}  点赞：{Like}")
+            .ToString();
+        public string BaseToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(GetInfo());
+            if (OriginalCard == null)
+                sb.AppendLine(Card.BaseToString());
+            else if (Card.Vote == null)
+            {
+                sb.AppendLine(Card.BaseToString());
+                sb.AppendLine(OriginalCard.BaseToString());
+            }
+            else
+            {
+                sb.AppendLine(Card.BaseToStringWithNoVote());
+                sb.AppendLine(OriginalCard.BaseToString());
+            }
+            sb.Append(Url);
+            return sb.ToString();
+        }
         public override string ToString()
         {
-            string dynamic;
+            var sb = new StringBuilder();
+            sb.AppendLine(GetInfo());
             if (OriginalCard == null)
-                dynamic = Card.ToString();
+                sb.AppendLine(Card.ToString());
             else if (Card.Vote == null)
-                dynamic = Card.ToString() + "\n" + OriginalCard.ToString();
+            {
+                sb.AppendLine(Card.ToString());
+                sb.AppendLine(OriginalCard.ToString());
+            }
             else
-                dynamic = Card.ToStringWithNoVote() + "\n" + OriginalCard.ToString();
-            return "动态UP：" + UserName + $"(UID:{UserId})" + "\n"
-                + "发布时间：" + Time.ToString("yyyy-MM-dd hh:mm:ss") + "\n"
-                + $"查看数：{View}  转发：{Repost}  评论：{Reply}  点赞：{Like}" + "\n"
-                + dynamic + "\n"
-                + Url;
+            {
+                sb.AppendLine(Card.ToStringWithNoVote());
+                sb.AppendLine(OriginalCard.ToString());
+            }
+            sb.Append(Url);
+            return sb.ToString();
         }
         #endregion
 
@@ -245,24 +300,75 @@ namespace Ritsukage.Library.Bilibili.Model
 
         public bool IsForwarded = false;
 
+        public string BaseToStringWithNoVote()
+        {
+            var sb = new StringBuilder();
+            sb.Append((IsForwarded ? "//@" + OwnerName + "：" : "") + (Content != null ? Content.BaseToString() : ""));
+            if (Video != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发布了视频：");
+                sb.Append(Video.BaseToString());
+            }
+            if (Article != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发布了专栏：");
+                sb.Append(Article.ToString());
+            }
+            if (Audio != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发布了音频：");
+                sb.Append(Audio.BaseToString());
+            }
+            return sb.ToString();
+        }
+        public string BaseToString()
+        {
+            var sb = new StringBuilder(BaseToStringWithNoVote());
+            if (Vote != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发起了投票：");
+                sb.Append(Vote.BaseToString());
+            }
+            return sb.ToString();
+        }
         public string ToStringWithNoVote()
         {
-            string result = (IsForwarded ? "//@" + OwnerName + "：" : "")
-                + (Content != null ? Content.ToString() : "");
+            var sb = new StringBuilder();
+            sb.Append((IsForwarded ? "//@" + OwnerName + "：" : "") + (Content != null ? Content.ToString() : ""));
             if (Video != null)
-                result += "\n[]> 发布了视频：\n" + Video.ToString();
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发布了视频：");
+                sb.Append(Video.ToString());
+            }
             if (Article != null)
-                result += "\n[]> 发布了专栏：\n" + Article.ToString();
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发布了专栏：");
+                sb.Append(Article.ToString());
+            }
             if (Audio != null)
-                result += "\n[]> 发布了音频：\n" + Audio.ToString();
-            return result;
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发布了音频：");
+                sb.Append(Audio.ToString());
+            }
+            return sb.ToString();
         }
         public override string ToString()
         {
-            string result = ToStringWithNoVote();
+            var sb = new StringBuilder(ToStringWithNoVote());
             if (Vote != null)
-                result += "\n[]> 发起了投票：\n" + Vote.ToString();
-            return result;
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发起了投票：");
+                sb.Append(Vote.ToString());
+            }
+            return sb.ToString();
         }
     }
 
@@ -277,7 +383,21 @@ namespace Ritsukage.Library.Bilibili.Model
         /// </summary>
         public string[] Pictures;
 
-        public override string ToString() => Text + (Pictures != null ? ("\n" + string.Join("\n", Pictures)) : "");
+        public string BaseToString() => Text;
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append(Text);
+            if (Pictures != null)
+            {
+                foreach (var pic in Pictures)
+                {
+                    sb.AppendLine();
+                    sb.Append(pic);
+                }
+            }
+            return sb.ToString();
+        }
     }
 
     public enum DynamicCardType

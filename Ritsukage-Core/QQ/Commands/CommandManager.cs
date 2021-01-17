@@ -1,5 +1,8 @@
 ﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using Sora.Entities;
+using Sora.Entities.Base;
+using Sora.Entities.Info;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections.Generic;
@@ -272,10 +275,17 @@ namespace Ritsukage.QQ.Commands
         public static async void ReceiveMessage(BaseSoraEventArgs arg)
         {
             string msg = string.Empty;
+            SoraMessage m = null;
             if (arg is GroupMessageEventArgs a1)
+            {
                 msg = a1.Message.RawText;
+                m = new(a1);
+            }
             else if (arg is PrivateMessageEventArgs a2)
+            {
                 msg = a2.Message.RawText;
+                m = new(a2);
+            }
             if (!string.IsNullOrEmpty(msg))
             {
                 ConsoleLog.Debug("Commands", "Parser: " + msg);
@@ -293,7 +303,7 @@ namespace Ritsukage.QQ.Commands
                                 if (args.Length >= (command.ArgTypes.Length - 1) && await command.CheckPermission(arg))
                                 {
                                     object[] ps = new object[command.ArgTypes.Length];
-                                    ps[0] = arg;
+                                    ps[0] = m;
                                     try
                                     {
                                         ConsoleLog.Debug("Commands", $"Try to parse parameters for {command.Method}.");
@@ -314,5 +324,131 @@ namespace Ritsukage.QQ.Commands
                 }
             }
         }
+    }
+
+    public class SoraMessage
+    {
+        /// <summary>
+        /// 源事件
+        /// </summary>
+        public BaseSoraEventArgs Event { get; init; }
+
+        /// <summary>
+        /// 当前事件的API执行实例
+        /// </summary>
+        public SoraApi SoraApi => Event.SoraApi;
+
+        /// <summary>
+        /// 当前事件名
+        /// </summary>
+        public string EventName => Event.EventName;
+
+        /// <summary>
+        /// 事件产生时间
+        /// </summary>
+        public DateTime Time => Event.Time;
+
+        /// <summary>
+        /// 接收当前事件的机器人UID
+        /// </summary>
+        public long LoginUid => Event.LoginUid;
+
+        /// <summary>
+        /// 消息内容
+        /// </summary>
+        public Message Message { get; init; }
+
+        /// <summary>
+        /// 是否为群聊消息
+        /// </summary>
+        public bool IsGroupMessage { get; init; }
+
+        /// <summary>
+        /// 消息发送者实例
+        /// </summary>
+        public User Sender { get; init; }
+
+        /// <summary>
+        /// 消息来源群组实例
+        /// </summary>
+        public Group SourceGroup { get; init; }
+
+        /// <summary>
+        /// 发送者信息
+        /// </summary>
+        public GroupSenderInfo GroupSenderInfo { get; init; }
+
+        /// <summary>
+        /// 发送者信息
+        /// </summary>
+        public PrivateSenderInfo PrivateSenderInfo { get; init; }
+
+        /// <summary>
+        /// 是否来源于匿名群成员
+        /// </summary>
+        public bool IsAnonymousMessage { get; init; }
+
+        /// <summary>
+        /// 匿名用户实例
+        /// </summary>
+        public Anonymous Anonymous { get; init; }
+
+        public SoraMessage(GroupMessageEventArgs args)
+        {
+            Event = args;
+            Message = args.Message;
+            IsGroupMessage = true;
+            Sender = args.Sender;
+            SourceGroup = args.SourceGroup;
+            GroupSenderInfo = args.SenderInfo;
+            IsAnonymousMessage = args.IsAnonymousMessage;
+            Anonymous = args.Anonymous;
+        }
+
+        public SoraMessage(PrivateMessageEventArgs args)
+        {
+            Event = args;
+            Message = args.Message;
+            IsGroupMessage = false;
+            Sender = args.Sender;
+            PrivateSenderInfo = args.SenderInfo;
+            IsAnonymousMessage = false;
+        }
+
+        public async ValueTask Recall()
+        {
+            if (Event is GroupMessageEventArgs gm)
+                await gm.RecallSourceMessage();
+        }
+
+        public async ValueTask Repeat()
+        {
+            if (Event is GroupMessageEventArgs gm)
+                await gm.Repeat();
+            else if (Event is PrivateMessageEventArgs pm)
+                await pm.Repeat();
+        }
+
+        public async ValueTask Reply(params object[] msg)
+        {
+            if (Event is GroupMessageEventArgs gm)
+                await gm.Reply(msg);
+            else if (Event is PrivateMessageEventArgs pm)
+                await pm.Reply(msg);
+        }
+
+        public async ValueTask AutoAtReply(params object[] msg)
+        {
+            if (Event is GroupMessageEventArgs gm)
+            {
+                msg = (new object[] { gm.Sender.CQCodeAt() }).Concat(msg).ToArray();
+                await gm.Reply(msg);
+            }
+            else if (Event is PrivateMessageEventArgs pm)
+                await pm.Reply(msg);
+        }
+
+        public async ValueTask SendPrivateMessage(params object[] msg)
+            => await Sender.SendPrivateMessage(msg);
     }
 }

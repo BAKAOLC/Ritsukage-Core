@@ -1,4 +1,6 @@
-﻿using Ritsukage.Library.Bilibili.Model;
+﻿using Discord;
+using Discord.WebSocket;
+using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
@@ -98,6 +100,23 @@ namespace Ritsukage.Library.Subscribe.Listener
                             }
                         }
                     }
+                    if (Program.Config.Discord && Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
+                    {
+                        var dcmsg = GetDiscordMessageChain(b);
+                        var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)?.ToArray();
+                        if (channels != null && channels.Length > 0)
+                        {
+                            foreach (var id in channels)
+                            {
+                                if (ulong.TryParse(id, out var cid))
+                                {
+                                    ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
+                                    var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                    await channel?.SendMessageAsync(dcmsg);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -161,6 +180,50 @@ namespace Ritsukage.Library.Subscribe.Listener
                     .ToString());
             }
             return msgs.ToArray();
+        }
+        
+        static string GetDiscordMessageChain(BilibiliLiveCheckResult result)
+        {
+            if (result.UpdateType == BilibiliLiveUpdateType.Initialization)
+                return new StringBuilder()
+                    .AppendLine(result.Cover)
+                    .AppendLine($"{result.User} 直播状态初始化")
+                    .AppendLine("标题：" + result.Title)
+                    .AppendLine("直播间ID：" + result.RoomId)
+                    .AppendLine("当前分区：" + result.Area)
+                    .AppendLine("当前气人值：" + result.Online)
+                    .AppendLine(GetLiveStatus(result.Status))
+                    .Append(result.Url)
+                    .ToString();
+            else if (result.UpdateType == BilibiliLiveUpdateType.LiveStatus)
+            {
+                if (result.Status == LiveStatus.Cancel)
+                    return $"{result.User} 下播莉……";
+                else if (result.Status == LiveStatus.Round)
+                    return $"{result.User} 下播莉(轮播中)……";
+                else
+                    return new StringBuilder()
+                        .AppendLine(result.Cover)
+                        .AppendLine($"{result.User} 直播开始啦")
+                        .AppendLine("标题：" + result.Title)
+                        .AppendLine("直播间ID：" + result.RoomId)
+                        .AppendLine("当前分区：" + result.Area)
+                        .AppendLine("当前气人值：" + result.Online)
+                        .AppendLine(GetLiveStatus(result.Status))
+                        .Append(result.Url)
+                        .ToString();
+            }
+            else if (result.UpdateType == BilibiliLiveUpdateType.Title)
+                return new StringBuilder()
+                    .AppendLine($"{result.User} 更换了直播标题")
+                    .AppendLine("标题：" + result.Title)
+                    .AppendLine("直播间ID：" + result.RoomId)
+                    .AppendLine("当前分区：" + result.Area)
+                    .AppendLine("当前气人值：" + result.Online)
+                    .AppendLine(GetLiveStatus(result.Status))
+                    .Append(result.Url)
+                    .ToString();
+            return "";
         }
     }
 }

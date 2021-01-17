@@ -64,6 +64,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                         {
                             updated = BilibiliLiveUpdateType.LiveStatus;
                             status["LiveStatus"] = (int)room.LiveStatus;
+                            status["Title"] = room.Title;
                         }
                         else if (room.LiveStatus == LiveStatus.Live && (string)status["Title"] != room.Title)
                         {
