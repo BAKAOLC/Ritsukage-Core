@@ -37,7 +37,7 @@ namespace Ritsukage.Discord.Commands
             if (user != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + user.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 用户{uid}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 用户{uid}信息获取失败");
         }
 
         [Command("获取b站直播间信息")]
@@ -55,7 +55,7 @@ namespace Ritsukage.Discord.Commands
             if (room != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili Live]\n" + room.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili Live] 直播间{roomid}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili Live] 直播间{roomid}信息获取失败");
         }
 
         [Command("获取b站视频信息")]
@@ -73,7 +73,7 @@ namespace Ritsukage.Discord.Commands
             if (video != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + video.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 视频av{av}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 视频av{av}信息获取失败");
         }
 
         [Command("获取b站视频信息")]
@@ -91,7 +91,7 @@ namespace Ritsukage.Discord.Commands
             if (video != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + video.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 视频{bv}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 视频{bv}信息获取失败");
         }
 
         [Command("获取b站音频信息")]
@@ -109,7 +109,7 @@ namespace Ritsukage.Discord.Commands
             if (audio != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + audio.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 音频au{id}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 音频au{id}信息获取失败");
         }
 
         [Command("获取b站专栏信息")]
@@ -127,7 +127,7 @@ namespace Ritsukage.Discord.Commands
             if (article != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + article.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 专栏cv{id}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 专栏cv{id}信息获取失败");
         }
         
         [Command("获取b站动态信息")]
@@ -145,7 +145,7 @@ namespace Ritsukage.Discord.Commands
             if (dynamic != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + dynamic.ToString());
             else
-                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 动态{id}不存在");
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili] 动态{id}信息获取失败");
         }
 
         [Command("订阅b站直播")]
