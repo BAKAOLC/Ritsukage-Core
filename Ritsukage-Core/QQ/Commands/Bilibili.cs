@@ -104,7 +104,7 @@ namespace Ritsukage.QQ.Commands
                     .ToString());
             }
             else
-                await e.Reply($"[Bilibili] 用户{uid}不存在");
+                await e.Reply($"[Bilibili] 用户{uid}信息获取失败");
         }
 
         [Command("获取b站直播间信息")]
@@ -127,7 +127,7 @@ namespace Ritsukage.QQ.Commands
                     .ToString());
             }
             else
-                await e.Reply($"[Bilibili Live] 直播间{roomid}不存在");
+                await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
         }
 
         [Command("获取b站视频信息")]
@@ -152,7 +152,7 @@ namespace Ritsukage.QQ.Commands
                     .ToString());
             }
             else
-                await e.Reply($"[Bilibili] 视频{bv}不存在");
+                await e.Reply($"[Bilibili] 视频{bv}信息获取失败");
         }
 
         [Command("获取b站动态信息")]
@@ -180,7 +180,7 @@ namespace Ritsukage.QQ.Commands
                 await e.Reply(msg.ToArray());
             }
             else
-                await e.Reply($"[Bilibili] 动态{id}不存在");
+                await e.Reply($"[Bilibili] 动态{id}信息获取失败");
         }
 
         [Command("开启直播")]
@@ -199,13 +199,20 @@ namespace Ritsukage.QQ.Commands
                 await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
                 return;
             }
-            var result = JObject.Parse(BiliLive.StartLive(roomid, 235, data.BilibiliCookie));
-            if (!string.IsNullOrEmpty((string)result["message"]))
-                await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
-            else
+            try
             {
-                await e.AutoAtReply("开播成功");
-                await e.SendPrivateMessage($"rtmp地址: {(string)result["data"]["rtmp"]["addr"]}\n推流码: {(string)result["data"]["rtmp"]["code"]}");
+                var result = JObject.Parse(BiliLive.StartLive(roomid, 235, data.BilibiliCookie));
+                if (!string.IsNullOrEmpty((string)result["message"]))
+                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                else
+                {
+                    await e.AutoAtReply("开播成功");
+                    await e.SendPrivateMessage($"rtmp地址: {(string)result["data"]["rtmp"]["addr"]}\n推流码: {(string)result["data"]["rtmp"]["code"]}");
+                }
+            }
+            catch
+            {
+                await e.AutoAtReply("操作失败");
             }
         }
 
@@ -225,11 +232,18 @@ namespace Ritsukage.QQ.Commands
                 await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
                 return;
             }
-            var result = JObject.Parse(BiliLive.StopLive(roomid, data.BilibiliCookie));
-            if (!string.IsNullOrEmpty((string)result["message"]))
-                await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
-            else
-                await e.AutoAtReply("已停止直播");
+            try
+            {
+                var result = JObject.Parse(BiliLive.StopLive(roomid, data.BilibiliCookie));
+                if (!string.IsNullOrEmpty((string)result["message"]))
+                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                else
+                    await e.AutoAtReply("已停止直播");
+            }
+            catch
+            {
+                await e.AutoAtReply("操作失败");
+            }
         }
 
         [Command("设置直播分区")]
@@ -248,11 +262,18 @@ namespace Ritsukage.QQ.Commands
                 await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
                 return;
             }
-            var result = JObject.Parse(BiliLive.UpdateLiveArea(roomid, area, data.BilibiliCookie));
-            if (!string.IsNullOrEmpty((string)result["message"]))
-                await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
-            else
-                await e.AutoAtReply("已成功更换直播分区");
+            try
+            {
+                var result = JObject.Parse(BiliLive.UpdateLiveArea(roomid, area, data.BilibiliCookie));
+                if (!string.IsNullOrEmpty((string)result["message"]))
+                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                else
+                    await e.AutoAtReply("已成功更换直播分区");
+            }
+            catch
+            {
+                await e.AutoAtReply("操作失败");
+            }
         }
 
         [Command("设置直播标题")]
@@ -271,11 +292,18 @@ namespace Ritsukage.QQ.Commands
                 await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
                 return;
             }
-            var result = JObject.Parse(BiliLive.UpdateLiveTitle(roomid, title, data.BilibiliCookie));
-            if (!string.IsNullOrEmpty((string)result["message"]))
-                await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
-            else
-                await e.AutoAtReply("已成功更换直播分区");
+            try
+            {
+                var result = JObject.Parse(BiliLive.UpdateLiveTitle(roomid, title, data.BilibiliCookie));
+                if (!string.IsNullOrEmpty((string)result["message"]))
+                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                else
+                    await e.AutoAtReply("已成功更换直播分区");
+            }
+            catch
+            {
+                await e.AutoAtReply("操作失败");
+            }
         }
 
         [Command("订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]

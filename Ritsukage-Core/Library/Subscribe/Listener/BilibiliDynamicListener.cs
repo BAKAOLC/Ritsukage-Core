@@ -61,6 +61,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 foreach (var c in Checker.ToArray())
                 {
                     Broadcast(await c.Check());
+                    await Task.Delay(5000);
                 }
             });
         }
@@ -76,7 +77,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 {
                     if (Program.Config.QQ)
                     {
-                        var qqmsg = GetQQMessageChain(b);
+                        var qqmsg = await GetQQMessageChain(b);
                         var bots = Program.QQServer.GetBotList();
                         var qqgroups = records.Where(x => x.Platform == "qq group")?.Select(x => x.Listener)?.ToArray();
                         if (qqgroups != null && qqgroups.Length > 0)
@@ -102,7 +103,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                     }
                     if (Program.Config.Discord && Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
                     {
-                        var dcmsg = GetDiscordMessageChain(b);
+                        var dcmsg = await GetDiscordMessageChain(b);
                         var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)?.ToArray();
                         if (channels != null && channels.Length > 0)
                         {
@@ -122,7 +123,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             }
         }
 
-        static object[][] GetQQMessageChain(BilibiliDynamicCheckResult result)
+        static async Task<object[][]> GetQQMessageChain(BilibiliDynamicCheckResult result)
         {
             List<object[]> records = new();
             foreach (var dynamic in result.Dynamics)
@@ -135,15 +136,19 @@ namespace Ritsukage.Library.Subscribe.Listener
                 }
                 msg.Add(dynamic.BaseToString());
                 records.Add(msg.ToArray());
+                await Task.Delay(3000);
             }
             return records.ToArray();
         }
         
-        static string[] GetDiscordMessageChain(BilibiliDynamicCheckResult result)
+        static async Task<string[]> GetDiscordMessageChain(BilibiliDynamicCheckResult result)
         {
             List<string> records = new();
             foreach (var dynamic in result.Dynamics)
+            {
                 records.Add(dynamic.ToString());
+                await Task.Delay(3000);
+            }
             return records.ToArray();
         }
     }

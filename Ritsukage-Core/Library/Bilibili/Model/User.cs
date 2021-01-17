@@ -74,21 +74,20 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 构造
         public static User Get(int id)
         {
-            var info1 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/space/acc/info?jsonp=jsonp&mid=" + id));
-            if (((int)info1["code"]) != 0)
-                throw new Exception((string)info1["message"]);
-            var info2 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/relation/stat?jsonp=jsonp&vmid=" + id));
+            var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
+            if (((int)info["code"]) != 0)
+                throw new Exception((string)info["message"]);
             return new User()
             {
-                Id = (int)info1["data"]["mid"],
-                Name = (string)info1["data"]["name"],
-                Sex = (string)info1["data"]["sex"],
-                FaceUrl = (string)info1["data"]["face"],
-                Sign = (string)info1["data"]["sign"],
-                Level = (int)info1["data"]["level"],
-                Birthday = (string)info1["data"]["birthday"],
-                Following = (int)info2["data"]["following"],
-                Follower = (int)info2["data"]["follower"],
+                Id = (int)info["data"]["card"]["mid"],
+                Name = (string)info["data"]["card"]["name"],
+                Sex = (string)info["data"]["card"]["sex"],
+                FaceUrl = (string)info["data"]["card"]["face"],
+                Sign = (string)info["data"]["card"]["sign"],
+                Level = (int)info["data"]["card"]["level_info"]["current_level"],
+                Birthday = (string)info["data"]["card"]["birthday"],
+                Following = (int)info["data"]["card"]["attention"],
+                Follower = (int)info["data"]["card"]["fans"],
             };
         }
         #endregion

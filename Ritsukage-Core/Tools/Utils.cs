@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using PyLibSharp.Requests;
 using Ritsukage.Tools.Console;
 using System;
 using System.IO;
@@ -54,6 +55,33 @@ namespace Ritsukage.Tools
             return stream;
         }
 
+        public static string HttpGET(string url, string postDataStr = "", int timeout = 20000,
+            string cookie = "", string referer = "", string origin = "")
+        {
+            ReqParams @params = new();
+            @params.Timeout = timeout;
+            if (!string.IsNullOrWhiteSpace(cookie))
+                @params.Header.Add(HttpRequestHeader.Cookie, cookie);
+            if (!string.IsNullOrWhiteSpace(referer))
+                @params.Header.Add(HttpRequestHeader.Referer, referer);
+            if (!string.IsNullOrWhiteSpace(origin))
+                @params.CustomHeader.Add("Origin", origin);
+            try
+            {
+                return Requests.Get(url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)), @params).Text;
+            }
+            catch (AggregateException ex)
+            {
+                foreach (var e in ex.InnerExceptions)
+                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
+            }
+            catch (Exception e)
+            {
+                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
+            }
+            return string.Empty;
+        }
+
         public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")
         {
             request.Accept = "application/json, text/plain, */*";
@@ -69,7 +97,6 @@ namespace Ritsukage.Tools
             if (cookie != "")
                 request.Headers.Add("cookie", cookie);
         }
-
         public static string HttpGET(HttpWebRequest request)
         {
             request.Method = "GET";
@@ -92,7 +119,6 @@ namespace Ritsukage.Tools
             request.Abort();
             return retString;
         }
-
         public static string HttpPOST(HttpWebRequest request, string content = "")
         {
             request.Method = "POST";
@@ -120,40 +146,8 @@ namespace Ritsukage.Tools
             request.Abort();
             return retString;
         }
-
-        public static string HttpGET(string Url, string postDataStr = "", long timeout = 20000,
-            string cookie = "", string referer = "", string origin = "")
-        {
-            HttpWebRequest request = null;
-            try
-            {
-                if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-                {
-                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) =>
-                    {
-                        return true;
-                    });
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                }
-                request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : ("?" + postDataStr)));
-                request.Timeout = (int)timeout;
-                SetHttpHeaders(request, "pc", cookie);
-                if (!string.IsNullOrWhiteSpace(referer))
-                    request.Referer = referer;
-                if (!string.IsNullOrWhiteSpace(origin))
-                    request.Headers.Add("Origin", origin);
-                return HttpGET(request);
-            }
-            catch (Exception e)
-            {
-                request?.Abort();
-                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
-            }
-            return "";
-        }
-
         public static string HttpPOST(string Url, string postDataStr, long timeout = 20000,
-            string cookie = "", string referer = "", string origin = "")
+           string cookie = "", string referer = "", string origin = "")
         {
             HttpWebRequest request = null;
             try
@@ -180,7 +174,7 @@ namespace Ritsukage.Tools
                 request?.Abort();
                 ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
             }
-            return "";
+            return string.Empty;
         }
     }
 }

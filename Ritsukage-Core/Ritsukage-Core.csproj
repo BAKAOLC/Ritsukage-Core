@@ -13,19 +13,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Utils\**" />
-    <EmbeddedResource Remove="Utils\**" />
-    <None Remove="Utils\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="QQ\FriendList.cs~RF174a5a4.TMP" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="PyLibSharp" Version="1.2.3" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
   </ItemGroup>

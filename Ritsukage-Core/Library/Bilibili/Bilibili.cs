@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
-using Ritsukage.Tools.Console;
 using System;
 using System.Drawing;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,34 +17,11 @@ namespace Ritsukage.Library.Bilibili
         public static string NewLoginRequest() => Utils.HttpGET(GetLoginUrl);
 
         public static string GetLoginInfo(string oauthKey)
-        {
-            string content = $"oauthKey={oauthKey}&gourl=https%3A%2F%2Fwww.bilibili.com%2F";
-            return Utils.HttpPOST(GetLoginInfoUrl, content);
-        }
+            => Utils.HttpPOST(GetLoginInfoUrl, $"oauthKey={oauthKey}&gourl=https%3A%2F%2Fwww.bilibili.com%2F");
 
         private const string PostDynamicUrl = "https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/create";
         public static string SendDynamic(string msg, string cookie = "")
-        {
-            HttpWebRequest request = null;
-            try
-            {
-                request = (HttpWebRequest)WebRequest.Create(PostDynamicUrl);
-                Utils.SetHttpHeaders(request, "app", cookie);
-                request.Host = "api.vc.bilibili.com";
-                request.Referer = "https://t.bilibili.com/";
-                request.Headers.Add("Origin", "https://t.bilibili.com");
-                long t = Utils.GetTimeStamp();
-                string jct = GetJCT(cookie);
-                string content = $"dynamic_id=0&type=4&rid=0&content={Utils.UrlEncode(msg)}&extension=%7B%22emoji_type%22%3A1%7D&at_uids=&ctrl=%5B%5D&csrf_token={jct}";
-                return Utils.HttpPOST(request, content);
-            }
-            catch (Exception e)
-            {
-                request?.Abort();
-                ConsoleLog.Error("Bilibili", ConsoleLog.ErrorLogBuilder(e));
-            }
-            return "";
-        }
+            => Utils.HttpPOST(PostDynamicUrl, $"dynamic_id=0&type=4&rid=0&content={Utils.UrlEncode(msg)}&extension=%7B%22emoji_type%22%3A1%7D&at_uids=&ctrl=%5B%5D&csrf_token={GetJCT(cookie)}", 20000, cookie, "https://t.bilibili.com/", "https://t.bilibili.com");
 
         private readonly static Regex RemoveEmptyChars = new Regex(@"\s");
         private readonly static Regex MatchJCT = new Regex("(?<=bili_jct=)[^;]+");
