@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
 using System;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -20,11 +21,14 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 方法
         public User GetUserInfo() => User.Get(UserId);
 
-        public override string ToString() => Title + "\n"
-                + "作者：" + UserName + $"(UID:{UserId})" + "\n"
-                + $"观看：{Statistic.View}  收藏：{Statistic.Favorite}  点赞：{Statistic.Like}" + "\n"
-                + $"投币：{Statistic.Coin}  评论：{Statistic.Reply}  分享：{Statistic.Share}" + "\n"
-                + Url;
+        public override string ToString()
+            => new StringBuilder()
+            .AppendLine(Title)
+            .AppendLine("作者：" + UserName + $"(UID:{UserId})")
+            .AppendLine($"观看：{Statistic.View}  收藏：{Statistic.Favorite}  点赞：{Statistic.Like}")
+            .AppendLine($"投币：{Statistic.Coin}  评论：{Statistic.Reply}  分享：{Statistic.Share}")
+            .Append(Url)
+            .ToString();
         #endregion
 
         #region 构造

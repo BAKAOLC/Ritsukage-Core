@@ -3,6 +3,7 @@ using Ritsukage.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -84,15 +85,22 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 方法
         public User GetUserInfo() => User.Get(UserId);
 
+        public string BaseToString()
+            => new StringBuilder()
+            .AppendLine(Title)
+            .AppendLine($"av{AV}  {BV}{(string.IsNullOrEmpty(AreaName) ? "" : ("  分区：" + AreaName))}")
+            .AppendLine($"UP：{UserName}(https://space.bilibili.com/{UserId})")
+            .AppendLine($"播放量：{Statistic.View} 弹幕：{Statistic.Danmaku} 评论：{Statistic.Reply}")
+            .AppendLine($"收藏：{Statistic.Favorite} 投币：{Statistic.Coin} 分享：{Statistic.Share} 点赞：{Statistic.Like}")
+            .AppendLine("发布时间：" + PubDate.ToString("yyyy-MM-dd hh:mm:ss"))
+            .AppendLine(Desc)
+            .Append(Url)
+            .ToString();
         public override string ToString()
-            => PicUrl + "\n"
-                + Title + "    av" + AV + "  " + BV + "\n"
-                + "UP：" + UserName + $"(https://space.bilibili.com/{UserId})" + "\n"
-                + (string.IsNullOrEmpty(AreaName) ? "" : ("分区：" + AreaName + "\n"))
-                + $"播放量：{Statistic.View} 弹幕：{Statistic.Danmaku} 评论：{Statistic.Reply}" + "\n"
-                + $" 收藏：{Statistic.Favorite} 投币：{Statistic.Coin} 分享：{Statistic.Share} 点赞：{Statistic.Like}" + "\n"
-                + "发布时间：" + PubDate.ToString("yyyy-MM-dd hh:mm:ss") + "\n"
-                + Desc;
+            => new StringBuilder()
+            .AppendLine(PicUrl)
+            .Append(BaseToString())
+            .ToString();
         #endregion
 
         #region 构造

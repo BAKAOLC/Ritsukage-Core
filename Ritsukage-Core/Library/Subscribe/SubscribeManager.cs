@@ -15,7 +15,8 @@ namespace Ritsukage.Library.Subscribe
         {
             if (_init) return;
             _init = true;
-            Listeners.Add(new BilibiliLiveListener(), 60000);
+            Listeners.Add(new BilibiliLiveListener(), 30000);
+            Listeners.Add(new BilibiliDynamicListener(), 60000);
             CreateListenerThread();
         }
 

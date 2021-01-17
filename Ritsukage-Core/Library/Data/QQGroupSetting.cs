@@ -10,5 +10,8 @@ namespace Ritsukage.Library.Data
 
         [Column("Group"), Indexed]
         public long Group { get; set; }
+
+        [Column("SmartBilibiliLink")]
+        public bool SmartBilibiliLink { get; set; }
     }
 }

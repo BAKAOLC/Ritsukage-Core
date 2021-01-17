@@ -16,7 +16,7 @@ namespace Ritsukage.QQ.Commands
         public override Task<bool> CheckPermissionsAsync(BaseSoraEventArgs args)
         {
             if (args is GroupMessageEventArgs a)
-                return Task.FromResult(a.Sender.Id == Program.Config.QQSuperUser || GroupList.GetMemberInfo(a.SourceGroup.Id, a.Sender.Id).Role >= Role);
+                return Task.FromResult(a.Sender.Id == Program.Config.QQSuperUser || a.SenderInfo.Role >= Role);
             else
                 return Task.FromResult(false);
         }

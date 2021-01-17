@@ -41,7 +41,7 @@ namespace Ritsukage.Tools
             return Convert.ToBase64String(arr);
         }
 
-        public string ToBase64File() => $"base64://" + ToBase64();
+        public string ToBase64File() => "base64://" + ToBase64();
 
         public string ToBase64Source() => $"data:{DataUriScheme};base64," + ToBase64();
 

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
 using System;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -48,16 +49,37 @@ namespace Ritsukage.Library.Bilibili.Model
         public VoteOption[] Options;
 
         #region 方法
+        public string BaseToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("投票：" + Title);
+            if (!string.IsNullOrWhiteSpace(Desc))
+                sb.AppendLine(Desc);
+            sb.AppendLine("参与人数：" + Join);
+            sb.AppendLine("截止时间：" + EndTime.ToString("yyyy-MM-dd hh:mm:ss"));
+            sb.Append("投票选项" + (ChooseNumber == 1 ? "(单选)" : $"(多选，最多可选择{ChooseNumber}项)："));
+            for (var i = 0; i < Options.Length; i++)
+            {
+                sb.AppendLine();
+                sb.AppendLine("    * " + Options[i].BaseToString());
+            }
+            return sb.ToString();
+        }
         public override string ToString()
         {
-            string result = "投票：" + Title + "\n"
-                + (string.IsNullOrWhiteSpace(Desc) ? "" : (Desc + "\n"))
-            + "参与人数：" + Join + "\n"
-            + "截止时间：" + EndTime.ToString("yyyy-MM-dd hh:mm:ss") + "\n"
-            + "投票选项" + (ChooseNumber == 1 ? "(单选)" : $"(多选，最多可选择{ChooseNumber}项)：");
+            var sb = new StringBuilder();
+            sb.AppendLine("投票：" + Title);
+            if (!string.IsNullOrWhiteSpace(Desc))
+                sb.AppendLine(Desc);
+            sb.AppendLine("参与人数：" + Join);
+            sb.AppendLine("截止时间：" + EndTime.ToString("yyyy-MM-dd hh:mm:ss"));
+            sb.Append("投票选项" + (ChooseNumber == 1 ? "(单选)" : $"(多选，最多可选择{ChooseNumber}项)："));
             for (var i = 0; i < Options.Length; i++)
-                result += "\n    * " + Options[i].ToString();
-            return result;
+            {
+                sb.AppendLine();
+                sb.AppendLine("    * " + Options[i].ToString());
+            }
+            return sb.ToString();
         }
         #endregion
 
@@ -108,6 +130,7 @@ namespace Ritsukage.Library.Bilibili.Model
         /// </summary>
         public string ImageUrl;
 
+        public string BaseToString() => Desc;
         public override string ToString() => Desc + (string.IsNullOrWhiteSpace(ImageUrl) ? "" : ("    " + ImageUrl));
     }
 }

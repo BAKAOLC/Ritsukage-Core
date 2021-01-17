@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
 using System;
+using System.Text;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -53,14 +54,21 @@ namespace Ritsukage.Library.Bilibili.Model
 
         public Dynamic[] GetDynamicList(ulong offset = 0) => Dynamic.GetDynamicList(Id, offset);
 
-        public override string ToString()
+        public string BaseToString()
         {
             var birth = string.IsNullOrWhiteSpace(Birthday) ? "保密" : Birthday;
-            return FaceUrl + "\n"
-                + $"{Name} (UID:{Id}) Lv{Level}" + "\n"
-                + $"性别：{Sex}  生日：{birth}  关注：{Following}  粉丝：{Follower}" + "\n"
-                + Sign;
+            return new StringBuilder()
+                .AppendLine($"{Name} (UID:{Id}) Lv{Level}")
+                .AppendLine($"性别：{Sex}  生日：{birth}  关注：{Following}  粉丝：{Follower}")
+                .Append(Sign)
+                .ToString();
         }
+        public override string ToString()
+            => new StringBuilder()
+            .AppendLine(FaceUrl)
+            .Append(BaseToString())
+            .ToString();
+
         #endregion
 
         #region 构造
