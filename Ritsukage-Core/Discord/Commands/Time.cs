@@ -6,7 +6,7 @@ namespace Ritsukage.Discord.Commands
 {
     public class Time : ModuleBase<SocketCommandContext>
     {
-        [Command("time"), Alias("时间")]
+        [Command("时间"), Alias("time")]
         public async Task Normal() => await ReplyAsync(DateTime.Now.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
 
         [Command("北欧历")]
@@ -26,7 +26,7 @@ namespace Ritsukage.Discord.Commands
         static long GetEorzeaHour(long unix) => unix / 175 % 24;
         static long GetEorzeaMinute(long unix) => Convert.ToInt64(60 * ((double)unix / 175 % 1));
 
-        [Command("et"), Alias("艾欧泽亚时间")]
+        [Command("艾欧泽亚时间"), Alias("et")]
         public async Task ET()
         {
             long unix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
