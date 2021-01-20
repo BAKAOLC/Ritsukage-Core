@@ -59,6 +59,12 @@ namespace Ritsukage
             SubscribeManager.Init();
             ConsoleLog.Info("Main", "订阅系统已装载");
 
+            if (!string.IsNullOrWhiteSpace(Config.Roll_Api_Id) && !string.IsNullOrWhiteSpace(Config.Roll_Api_Secret))
+            {
+                Library.Roll.RollApi.Init(Config.Roll_Api_Id, Config.Roll_Api_Secret);
+                ConsoleLog.Info("Main", "Roll Api 已初始化");
+            }
+
             if (cfg.Discord)
             {
                 Working = true;

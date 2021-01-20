@@ -87,7 +87,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 LiveStatus.Round => "当前正在轮播",
                 _ => "当前未开播"
             })
-            .AppendLine("当前人气值：" + Online)
+            .AppendLine("当前气人值：" + Online)
             .Append(Url)
             .ToString();
         public override string ToString()

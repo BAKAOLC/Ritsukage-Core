@@ -127,7 +127,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 CID = (long)data["cid"],
                 PicUrl = (string)data["pic"],
                 Title = (string)data["title"],
-                Desc = RemoveEmptyLine(((string)data["desc"]).Replace("<br/>", "\n").Replace("\r", "")),
+                Desc = RemoveEmptyLine(((string)data["desc"]).Replace("<br/>", Environment.NewLine)),
                 Count = (int)data["videos"],
                 PubDate = DateTimeOffset.FromUnixTimeSeconds((long)data["pubdate"]).LocalDateTime,
                 CopyRight = (int)data["copyright"] == 1 ? true : false,

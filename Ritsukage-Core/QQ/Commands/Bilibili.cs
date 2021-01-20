@@ -54,7 +54,7 @@ namespace Ritsukage.QQ.Commands
                                         .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
-                                    await e.SendPrivateMessage("记录数据因未知原因导致成功失败，请稍后重试");
+                                    await e.SendPrivateMessage("记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
                         else
@@ -75,7 +75,7 @@ namespace Ritsukage.QQ.Commands
                                         .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
-                                    await e.SendPrivateMessage("记录数据因未知原因导致成功失败，请稍后重试");
+                                    await e.SendPrivateMessage("记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
                     }
@@ -432,6 +432,83 @@ namespace Ritsukage.QQ.Commands
             }
             else
                 await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+        }
+
+        [Command("启用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        public static async void EnableAutoLink(SoraMessage e)
+        {
+            var t = await Database.Data.Table<QQGroupSetting>().ToListAsync();
+            if (t != null && t.Count > 0)
+            {
+                var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
+                if (data != null)
+                {
+                    if (data.SmartBilibiliLink)
+                    {
+                        await e.AutoAtReply("本群已启用该功能，无需再次启用");
+                        return;
+                    }
+                    data.SmartBilibiliLink = true;
+                    await Database.Data.UpdateAsync(data).ContinueWith(async x =>
+                    {
+                        if (x.Result > 0)
+                            await e.AutoAtReply("本群已成功启用b站链接智能解析功能");
+                        else if (x.IsFaulted && x.Exception != null)
+                            await e.AutoAtReply(new StringBuilder()
+                                .AppendLine("因异常导致功能启用失败，错误信息：")
+                                .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                .ToString());
+                        else
+                            await e.AutoAtReply("因未知原因导致功能启用失败，请稍后重试");
+                    });
+                }
+            }
+            await Database.Data.InsertAsync(new QQGroupSetting()
+            {
+                Group = e.SourceGroup.Id,
+                SmartBilibiliLink = true
+            }).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.AutoAtReply("本群已成功启用b站链接智能解析功能");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.AutoAtReply(new StringBuilder()
+                        .AppendLine("因异常导致功能启用失败，错误信息：")
+                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.AutoAtReply("因未知原因导致功能启用失败，请稍后重试");
+            });
+        }
+
+        [Command("禁用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        public static async void DisableAutoLink(SoraMessage e)
+        {
+            var t = await Database.Data.Table<QQGroupSetting>().ToListAsync();
+            if (t != null && t.Count > 0)
+            {
+                var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
+                if (data == null || !data.SmartBilibiliLink)
+                {
+                    await e.AutoAtReply("本群未启用该功能，无需禁用");
+                    return;
+                }
+                data.SmartBilibiliLink = false;
+                await Database.Data.UpdateAsync(data).ContinueWith(async x =>
+                {
+                    if (x.Result > 0)
+                        await e.AutoAtReply("本群已成功禁用b站链接智能解析功能");
+                    else if (x.IsFaulted && x.Exception != null)
+                        await e.AutoAtReply(new StringBuilder()
+                            .AppendLine("因异常导致功能禁用失败，错误信息：")
+                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .ToString());
+                    else
+                        await e.AutoAtReply("因未知原因导致功能禁用失败，请稍后重试");
+                });
+            }
+            else
+                await e.AutoAtReply("本群未启用该功能，无需禁用");
         }
 
         [Command]

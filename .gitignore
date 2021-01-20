@@ -6,3 +6,6 @@ TestResults
 /**/bin
 /**/obj
 /Ritsukage-Core/Commands/RitsukageLive.cs
+/Ritsukage-Core/Library/Data/LuaSTGDove.cs
+/Ritsukage-Core/QQ/Commands/LuaSTG.cs
+/Ritsukage-Core/QQ/Events/LuaSTG.cs

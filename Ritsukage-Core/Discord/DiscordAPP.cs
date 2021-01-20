@@ -29,6 +29,7 @@ namespace Ritsukage.Discord
             Client.Ready += ReadyAsync;
             Client.MessageReceived += MessageReceivedAsync;
             Command = Service.GetRequiredService<CommandService>();
+            _ = Service.GetRequiredService<FirstCommingRole>();
             _ = Service.GetRequiredService<CommandHandling>().InitializeAsync();
         }
 

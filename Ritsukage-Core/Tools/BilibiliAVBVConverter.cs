@@ -27,8 +27,8 @@ namespace Ritsukage.Tools
             return string.Join("", result);
         }
 
-        static Regex BVCheck1 = new Regex("^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$");
-        static Regex BVCheck2 = new Regex("^1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$");
+        static readonly Regex BVCheck1 = new Regex("^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$");
+        static readonly Regex BVCheck2 = new Regex("^1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$");
 
         public static long ToAV(string bv)
         {

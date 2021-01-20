@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ritsukage.Tools;
+using System;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -18,7 +19,7 @@ namespace Ritsukage.QQ.Commands
         [Command("艾欧泽亚时间", "et")]
         public static async void ET(SoraMessage e)
         {
-            long unix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long unix = DateTimeOffset.FromUnixTimeSeconds(Utils.GetNetworkTimeStamp()).ToUniversalTime().ToUnixTimeSeconds();
             await e.Reply($"当前为艾欧泽亚时间：ET {GetEorzeaHour(unix),2:D2}:{GetEorzeaMinute(unix),2:D2}");
         }
 
