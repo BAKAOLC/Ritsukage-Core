@@ -1,15 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Ritsukage.Tools
 {
     public static class Hitokoto
     {
         const string API = "https://v1.hitokoto.cn/";
+        const string API2 = "http://api.lkblog.net/ws/api.php";
 
         static readonly Dictionary<string, (string, string)> MessageFrom = new()
         {
@@ -22,7 +21,7 @@ namespace Ritsukage.Tools
             { "g", ("Other", "其他") },
         };
 
-        public static HitokotaObject Get()
+        public static HitokotoObject Get()
         {
             var data = JObject.Parse(Utils.HttpGET(API));
             return new()
@@ -37,9 +36,15 @@ namespace Ritsukage.Tools
                 CreatedAt = new DateTime(1970, 1, 1, 8, 0, 0, 0).AddSeconds((long)data["created_at"])
             };
         }
+
+        public static string GetAnother()
+        {
+            var data = JObject.Parse(Utils.HttpGET(API2));
+            return (string)data["data"];
+        }
     }
 
-    public struct HitokotaObject
+    public struct HitokotoObject
     {
         public int Id { get; init; }
         public string Message { get; init; }

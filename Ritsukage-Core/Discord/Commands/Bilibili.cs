@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.Rest;
 using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
@@ -276,21 +277,24 @@ namespace Ritsukage.Discord.Commands
         public async Task Login()
         {
             var msg = await ReplyAsync("请求已接受，请稍后……");
-            RestUserMessage qr = null;
+            var dm = await Context.User.GetOrCreateDMChannelAsync();
+            IUserMessage qr = null;
+            IUserMessage dmmsg = null;
             Library.Bilibili.Bilibili.QRCodeLoginRequest(
                 async (bitmap) =>
                 {
                     using var stream = new MemoryStream();
                     bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                     stream.Seek(0, SeekOrigin.Begin);
-                    qr = await Context.Channel.SendFileAsync(stream, "1.jpg");
+                    qr = await dm.SendFileAsync(stream, "1.jpg");
                     bitmap.Dispose();
                     stream.Dispose();
-                    await msg.ModifyAsync(x => x.Content = "请在5分钟内使用Bilibili客户端扫描二维码进行登录");
+                    dmmsg = await dm.SendMessageAsync("请在5分钟内使用Bilibili客户端扫描二维码进行登录");
+                    await msg.ModifyAsync(x => x.Content = "登陆事件已建立，请前往私聊继续操作");
                 },
                 async () =>
                 {
-                    await msg.ModifyAsync(x => x.Content = "已检测到扫描事件，请在Bilibili客户端中确认登录");
+                    await dmmsg.ModifyAsync(x => x.Content = "已检测到扫描事件，请在Bilibili客户端中确认登录");
                 },
                 async (cookie) =>
                 {
@@ -307,14 +311,14 @@ namespace Ritsukage.Discord.Commands
                             await Database.Data.UpdateAsync(data).ContinueWith(async x =>
                             {
                                 if (x.Result > 0)
-                                    await msg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
+                                    await dmmsg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
                                 else if (x.IsFaulted && x.Exception != null)
-                                    await msg.ModifyAsync(y => y.Content = ":x: " + new StringBuilder()
+                                    await dmmsg.ModifyAsync(y => y.Content = ":x: " + new StringBuilder()
                                         .AppendLine("记录数据因异常导致更新失败，错误信息：")
                                         .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
-                                    await msg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致成功失败，请稍后重试");
+                                    await dmmsg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
                         else
@@ -328,25 +332,27 @@ namespace Ritsukage.Discord.Commands
                             await Database.Data.InsertAsync(data).ContinueWith(async x =>
                             {
                                 if (x.Result > 0)
-                                    await msg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
+                                    await dmmsg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
                                 else if (x.IsFaulted && x.Exception != null)
-                                    await msg.ModifyAsync(y => y.Content = ":x: " + new StringBuilder()
+                                    await dmmsg.ModifyAsync(y => y.Content = ":x: " + new StringBuilder()
                                         .AppendLine("记录数据因异常导致更新失败，错误信息：")
                                         .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
-                                    await msg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致成功失败，请稍后重试");
+                                    await dmmsg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
-                        await msg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
+                        await dmmsg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
                     }
                     else
-                        await msg.ModifyAsync(x => x.Content = ":x: 登录失败：未能匹配到用户UID");
+                        await dmmsg.ModifyAsync(x => x.Content = ":x: 登录失败：未能匹配到用户UID");
+                    await msg.ModifyAsync(x => x.Content = ":o: 事件已结束");
                 },
                 async (errMsg) =>
                 {
                     await qr?.DeleteAsync();
-                    await msg.ModifyAsync(x => x.Content = ":x: 登录失败：" + errMsg);
+                    await msg?.ModifyAsync(x => x.Content = ":x: 登录失败：" + errMsg);
+                    await dmmsg?.ModifyAsync(x => x.Content = ":x: 登录失败：" + errMsg);
                 });
         }
     }

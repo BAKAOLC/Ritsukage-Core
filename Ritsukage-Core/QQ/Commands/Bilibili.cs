@@ -54,7 +54,7 @@ namespace Ritsukage.QQ.Commands
                                         .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
-                                    await e.SendPrivateMessage("记录数据因未知原因导致成功失败，请稍后重试");
+                                    await e.SendPrivateMessage("记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
                         else
@@ -75,7 +75,7 @@ namespace Ritsukage.QQ.Commands
                                         .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
-                                    await e.SendPrivateMessage("记录数据因未知原因导致成功失败，请稍后重试");
+                                    await e.SendPrivateMessage("记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
                     }

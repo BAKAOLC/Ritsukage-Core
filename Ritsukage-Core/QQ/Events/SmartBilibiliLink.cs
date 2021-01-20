@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Events
 {
@@ -23,6 +22,7 @@ namespace Ritsukage.QQ.Events
         }
 
         const int DelayTime = 10;
+        static readonly object _lock = new();
         static readonly Dictionary<long, Dictionary<string, Dictionary<string, DateTime>>> Delay = new();
 
         static readonly Regex Regex_ShortLink = new Regex(@"^(https?://b23\.tv/)(?<data>[0-9a-zA-Z]+)");
@@ -37,13 +37,17 @@ namespace Ritsukage.QQ.Events
 
         static async void Trigger(GroupMessageEventArgs args)
         {
-            if (!Delay.TryGetValue(args.SourceGroup.Id, out Dictionary<string, Dictionary<string, DateTime>> record))
+            Dictionary<string, Dictionary<string, DateTime>> record;
+            lock (_lock)
             {
-                Delay.Add(args.SourceGroup.Id, record = new()
+                if (!Delay.TryGetValue(args.SourceGroup.Id, out record))
                 {
-                    { "video", new() },
-                    { "live", new() }
-                });
+                    Delay.Add(args.SourceGroup.Id, record = new()
+                    {
+                        { "video", new() },
+                        { "live", new() }
+                    });
+                }
             }
             Match m;
             string baseStr = args.Message.RawText;
@@ -171,10 +175,10 @@ namespace Ritsukage.QQ.Events
                         var bv = m.Groups["bv"].Value;
                         try
                         {
-                            if (!record["video"].ContainsKey(baseStr) || (DateTime.Now - record["video"][bv]).TotalSeconds >= DelayTime)
+                            if (!record["video"].ContainsKey(bv) || (DateTime.Now - record["video"][bv]).TotalSeconds >= DelayTime)
                             {
                                 record["video"][bv] = DateTime.Now;
-                                var video = Video.Get(baseStr);
+                                var video = Video.Get(bv);
                                 SendVideoInfo(args, video);
                             }
                         }

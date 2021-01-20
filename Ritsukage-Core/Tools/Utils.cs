@@ -20,6 +20,16 @@ namespace Ritsukage.Tools
         public static long GetTimeStamp()
             => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
 
+        const string TaobaoTimeStampApi = "http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp";
+        public static long GetNetworkTimeStamp()
+        {
+            var data = HttpGET(TaobaoTimeStampApi);
+            if (string.IsNullOrWhiteSpace(data))
+                if (long.TryParse((string)JToken.Parse(data)["data"]["t"], out var t))
+                    return t;
+            return GetTimeStamp();
+        }
+
         public static string UrlRemoveParam(string url)
         {
             var m = Regex.Match(url, @"^[^\?]+");

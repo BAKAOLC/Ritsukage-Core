@@ -1,13 +1,28 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.IO;
 
 namespace Ritsukage
 {
-    class Config
+    public class Config
     {
         const string ConfigPath = "config.json";
 
+        /// <summary>
+        /// 数据库储存位置
+        /// </summary>
+        public string DatabasePath = "data.db";
+
+        /// <summary>
+        /// 是否使用调试模式
+        /// </summary>
+        public bool IsDebug = false;
+
+        #region Roll Api
+        public string Roll_Api_Id = string.Empty;
+        public string Roll_Api_Secret = string.Empty;
+        #endregion
+
+        #region QQ
         /// <summary>
         /// 是否启用QQ相关功能
         /// </summary>
@@ -26,7 +41,7 @@ namespace Ritsukage
         /// <summary>
         /// token
         /// </summary>
-        public string AccessToken = "";
+        public string AccessToken = string.Empty;
 
         /// <summary>
         /// 心跳超时间隔
@@ -34,15 +49,12 @@ namespace Ritsukage
         public uint HeartBeatTimeOut = 30000;
 
         /// <summary>
-        /// 数据库储存位置
-        /// </summary>
-        public string DatabasePath = "data.db";
-
-        /// <summary>
         /// QQ相关功能超级权限者
         /// </summary>
         public long QQSuperUser = -1;
+        #endregion
 
+        #region Discord
         /// <summary>
         /// 是否启用Discord相关功能
         /// </summary>
@@ -51,12 +63,8 @@ namespace Ritsukage
         /// <summary>
         /// Discord Bot Token
         /// </summary>
-        public string DiscordToken = "";
-
-        /// <summary>
-        /// 是否使用调试模式
-        /// </summary>
-        public bool IsDebug = false;
+        public string DiscordToken = string.Empty;
+        #endregion
 
         public static Config LoadConfig()
         {

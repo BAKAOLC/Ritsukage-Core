@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Ritsukage.Tools;
 using System;
 using System.Threading.Tasks;
 
@@ -29,7 +30,7 @@ namespace Ritsukage.Discord.Commands
         [Command("艾欧泽亚时间"), Alias("et")]
         public async Task ET()
         {
-            long unix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long unix = DateTimeOffset.FromUnixTimeSeconds(Utils.GetNetworkTimeStamp()).ToUniversalTime().ToUnixTimeSeconds();
             await ReplyAsync($"当前为艾欧泽亚时间：ET {GetEorzeaHour(unix),2:D2}:{GetEorzeaMinute(unix),2:D2}");
         }
     }

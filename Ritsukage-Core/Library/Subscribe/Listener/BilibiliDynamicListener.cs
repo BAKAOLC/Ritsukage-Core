@@ -112,9 +112,17 @@ namespace Ritsukage.Library.Subscribe.Listener
                                 if (ulong.TryParse(id, out var cid))
                                 {
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
-                                    var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
-                                    foreach (var m in dcmsg)
-                                        await channel?.SendMessageAsync(m);
+                                    try
+                                    {
+                                        var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                        foreach (var m in dcmsg)
+                                        {
+                                            await channel?.SendMessageAsync(m);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
                                 }
                             }
                         }
