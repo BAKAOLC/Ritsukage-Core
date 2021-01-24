@@ -174,7 +174,7 @@ namespace Ritsukage.Discord.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await ReplyAsync(new StringBuilder()
                             .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await ReplyAsync("订阅项目因未知原因导致添加失败，请稍后重试");
@@ -202,7 +202,7 @@ namespace Ritsukage.Discord.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await ReplyAsync(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await ReplyAsync("订阅项目因未知原因导致移除失败，请稍后重试");
@@ -236,7 +236,7 @@ namespace Ritsukage.Discord.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await ReplyAsync(new StringBuilder()
                             .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await ReplyAsync("订阅项目因未知原因导致添加失败，请稍后重试");
@@ -264,7 +264,7 @@ namespace Ritsukage.Discord.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await ReplyAsync(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await ReplyAsync("订阅项目因未知原因导致移除失败，请稍后重试");
@@ -314,7 +314,7 @@ namespace Ritsukage.Discord.Commands
                                 else if (x.IsFaulted && x.Exception != null)
                                     await dmmsg.ModifyAsync(y => y.Content = ":x: " + new StringBuilder()
                                         .AppendLine("记录数据因异常导致更新失败，错误信息：")
-                                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
                                     await dmmsg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致更新失败，请稍后重试");
@@ -335,7 +335,7 @@ namespace Ritsukage.Discord.Commands
                                 else if (x.IsFaulted && x.Exception != null)
                                     await dmmsg.ModifyAsync(y => y.Content = ":x: " + new StringBuilder()
                                         .AppendLine("记录数据因异常导致更新失败，错误信息：")
-                                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
                                     await dmmsg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致更新失败，请稍后重试");

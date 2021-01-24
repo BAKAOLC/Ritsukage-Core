@@ -36,7 +36,7 @@ namespace Ritsukage.QQ.Commands
                 else if (x.IsFaulted && x.Exception != null)
                     await e.AutoAtReply(new StringBuilder()
                         .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
                     await e.AutoAtReply("订阅项目因未知原因导致添加失败，请稍后重试");
@@ -63,7 +63,7 @@ namespace Ritsukage.QQ.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await e.AutoAtReply(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");

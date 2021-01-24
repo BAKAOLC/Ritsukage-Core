@@ -5,8 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -181,6 +179,8 @@ namespace Ritsukage.Tools
             {
                 request?.Abort();
                 ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
+                if (e.InnerException != null)
+                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e.InnerException));
             }
             return string.Empty;
         }
@@ -208,6 +208,8 @@ namespace Ritsukage.Tools
             {
                 request?.Abort();
                 ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
+                if (e.InnerException != null)
+                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e.InnerException));
             }
             return string.Empty;
         }
