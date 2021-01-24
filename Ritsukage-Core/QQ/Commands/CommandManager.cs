@@ -1,4 +1,5 @@
-﻿using Ritsukage.Tools;
+﻿using Ritsukage.Library.Service;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using Sora.Entities;
 using Sora.Entities.Base;
@@ -450,5 +451,17 @@ namespace Ritsukage.QQ.Commands
 
         public async ValueTask SendPrivateMessage(params object[] msg)
             => await Sender.SendPrivateMessage(msg);
+
+        public async Task<UserCoins> GetCoins()
+            => await CoinsService.GetUserCoins("qq", Sender.Id);
+
+        public async Task<bool> CheckCoins(long count, bool disableFree = false)
+            => await CoinsService.CheckUserCoins("qq", Sender.Id, count, disableFree);
+
+        public async Task<UserCoins> AddCoins(long count)
+            => await CoinsService.AddUserCoins("qq", Sender.Id, count);
+
+        public async Task<UserCoins> RemoveCoins(long count, bool disableFree = false)
+            => await CoinsService.RemoveUserCoins("qq", Sender.Id, count, disableFree);
     }
 }

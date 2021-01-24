@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Linq;
 
 namespace Ritsukage.Library.Roll.Model
 {
@@ -16,7 +15,7 @@ namespace Ritsukage.Library.Roll.Model
         }
 
         public override string ToString()
-            => Date + Environment.NewLine + Title;
+            => Date + "  " + Title;
 
         public static HistoryToday[] Get()
         {
@@ -44,7 +43,7 @@ namespace Ritsukage.Library.Roll.Model
                 _recentDate = DateTime.Today.Date;
                 return _recent = data;
             }
-            throw new Exception("最近节日获取失败");
+            throw new Exception("历史上的今天获取失败");
         }
     }
 }

@@ -17,6 +17,9 @@ namespace Ritsukage.Tools
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
 
+        public static DateTime GetDateTime(long ts)
+            => new DateTime(1970, 1, 1, 8, 0, 0, 0).AddSeconds(ts);
+
         public static long GetTimeStamp()
             => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
 
@@ -99,8 +102,14 @@ namespace Ritsukage.Tools
             string retString;
             if (response.ContentEncoding == "gzip")
             {
-                GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
                 using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                retString = reader.ReadToEnd();
+            }
+            else if (response.ContentEncoding == "br")
+            {
+                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
                 retString = reader.ReadToEnd();
             }
             else
@@ -126,8 +135,14 @@ namespace Ritsukage.Tools
             string retString;
             if (response.ContentEncoding == "gzip")
             {
-                GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
                 using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                retString = reader.ReadToEnd();
+            }
+            else if (response.ContentEncoding == "br")
+            {
+                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
                 retString = reader.ReadToEnd();
             }
             else
@@ -150,10 +165,7 @@ namespace Ritsukage.Tools
             {
                 if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
                 {
-                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) =>
-                    {
-                        return true;
-                    });
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 }
                 request = (HttpWebRequest)WebRequest.Create(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)));
@@ -180,10 +192,7 @@ namespace Ritsukage.Tools
             {
                 if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
                 {
-                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) =>
-                    {
-                        return true;
-                    });
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 }
                 request = (HttpWebRequest)WebRequest.Create(Url);

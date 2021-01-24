@@ -6,7 +6,7 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup]
     public static class HistoryToday
     {
-        [Command("历史上的今天", "historytoday")]
+        [Command("历史上的今天", "historytoday"), NeedCoins(8)]
         public static async void Normal(SoraMessage e)
         {
             try
@@ -18,6 +18,7 @@ namespace Ritsukage.QQ.Commands
                 for (var i = 1; i < h.Length; i++)
                     sb.AppendLine().Append(h[i].ToString());
                 await e.Reply(sb.ToString());
+                await e.RemoveCoins(8);
             }
             catch
             {

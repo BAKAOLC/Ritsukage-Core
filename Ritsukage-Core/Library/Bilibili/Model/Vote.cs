@@ -99,7 +99,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 Desc = (string)info["data"]["info"]["desc"],
                 ChooseNumber = (int)info["data"]["info"]["choice_cnt"],
                 Join = (int)info["data"]["info"]["cnt"],
-                EndTime = DateTimeOffset.FromUnixTimeSeconds((long)info["data"]["info"]["endtime"]).LocalDateTime,
+                EndTime = Utils.GetDateTime((long)info["data"]["info"]["endtime"]),
             };
             var options = (JArray)info["data"]["info"]["options"];
             vote.Options = new VoteOption[options.Count];

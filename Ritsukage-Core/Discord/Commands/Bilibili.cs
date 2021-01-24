@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.Rest;
 using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Tools;

@@ -33,7 +33,7 @@ namespace Ritsukage.Tools
                 SourceEN = MessageFrom[(string)data["type"]].Item1,
                 SourceCN = MessageFrom[(string)data["type"]].Item2,
                 Reviewer = (int)data["reviewer"],
-                CreatedAt = new DateTime(1970, 1, 1, 8, 0, 0, 0).AddSeconds((long)data["created_at"])
+                CreatedAt = Utils.GetDateTime((long)data["created_at"])
             };
         }
 

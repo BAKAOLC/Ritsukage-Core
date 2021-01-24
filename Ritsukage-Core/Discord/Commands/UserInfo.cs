@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using Ritsukage.Library.Data;
+using Ritsukage.Library.Service;
 using Ritsukage.Tools.Console;
 using System;
 using System.Linq;
@@ -63,6 +64,13 @@ namespace Ritsukage.Discord.Commands
             }
             sb.AppendLine("```");
             await msg.ModifyAsync(x => x.Content = sb.ToString());
+        }
+
+        [Command("coins")]
+        public async Task Coins()
+        {
+            var c = await Context.User.GetCoins();
+            await ReplyAsync($"当前持有幻币 {c.Total} 枚{Environment.NewLine}(其中 {c.FreeCoins} 枚幻币为当日免费幻币)");
         }
     }
 }
