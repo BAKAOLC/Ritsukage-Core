@@ -58,6 +58,24 @@ namespace Ritsukage.Discord.Commands
                 await msg.ModifyAsync(x => x.Content = $"[Bilibili Live] 直播间{roomid}信息获取失败");
         }
 
+        [Command("获取b站直播间推流地址")]
+        public async Task LiveRoomStream(int roomid)
+        {
+            var msg = await ReplyAsync($"[Bilibili Live]正在搜索中……(Room ID: {roomid})");
+            LiveStream stream = null;
+            try
+            {
+                stream = LiveStream.Get(roomid);
+            }
+            catch
+            {
+            }
+            if (stream != null)
+                await msg.ModifyAsync(x => x.Content = "[Bilibili Live]\n" + stream.ToString());
+            else
+                await msg.ModifyAsync(x => x.Content = $"[Bilibili Live] 直播间{roomid}信息获取失败");
+        }
+
         [Command("获取b站视频信息")]
         public async Task VideoInfo(int av)
         {

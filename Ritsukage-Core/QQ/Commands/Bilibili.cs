@@ -130,6 +130,37 @@ namespace Ritsukage.QQ.Commands
                 await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
         }
 
+        [Command("获取b站直播间推流地址")]
+        public static async void LiveRoomStream(SoraMessage e, int roomid)
+        {
+            LiveStream stream = null;
+            try
+            {
+                stream = LiveStream.Get(roomid);
+            }
+            catch
+            {
+            }
+            if (stream != null)
+            {
+                if (stream.LiveStatus != LiveStatus.Live)
+                {
+                    await e.Reply($"[Bilibili Live] 直播间{roomid}当前未开播");
+                }
+                else
+                {
+                    var thread = stream.Thread.OrderByDescending(x => x.Quality).First();
+                    var s = new StringBuilder("[Bilibili Live]")
+                        .AppendLine().Append($"房间号：{stream.Id}")
+                        .AppendLine().Append($"{thread.Quality}")
+                        .AppendLine().Append($"{thread.Url.First()}");
+                    await e.Reply(s.ToString());
+                }
+            }
+            else
+                await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
+        }
+
         [Command("获取b站视频信息")]
         public static async void VideoInfo(SoraMessage e, string bv)
         {
