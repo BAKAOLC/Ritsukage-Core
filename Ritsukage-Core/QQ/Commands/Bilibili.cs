@@ -153,7 +153,7 @@ namespace Ritsukage.QQ.Commands
                     var s = new StringBuilder("[Bilibili Live]")
                         .AppendLine().Append($"房间号：{stream.Id}")
                         .AppendLine().Append($"{thread.Quality}")
-                        .AppendLine().Append($"{thread.Url.First()}");
+                        .AppendLine().Append($"{await Utils.GetShortUrl(thread.Url.First())}");
                     await e.Reply(s.ToString());
                 }
             }
@@ -162,15 +162,15 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取b站视频信息")]
-        public static async void VideoInfo(SoraMessage e, string bv)
+        public static async void VideoInfo(SoraMessage e, string id)
         {
             Video video = null;
             try
             {
-                if (long.TryParse(bv, out var av))
+                if (long.TryParse(id, out var av))
                     video = Video.Get(av);
                 else
-                    video = Video.Get(bv);
+                    video = Video.Get(id);
             }
             catch
             {
@@ -183,7 +183,46 @@ namespace Ritsukage.QQ.Commands
                     .ToString());
             }
             else
-                await e.Reply($"[Bilibili] 视频{bv}信息获取失败");
+                await e.Reply($"[Bilibili] 视频{id}信息获取失败");
+        }
+
+        [Command("获取b站音频信息")]
+        public static async void AudioInfo(SoraMessage e, int id)
+        {
+            Audio audio = null;
+            try
+            {
+                audio = Audio.Get(id);
+            }
+            catch
+            {
+            }
+            if (audio != null)
+            {
+                await e.Reply(CQCode.CQImage(audio.CoverUrl), new StringBuilder()
+                    .AppendLine()
+                    .AppendLine(audio.BaseToString())
+                    .ToString());
+            }
+            else
+                await e.Reply($"[Bilibili] 音频{id}信息获取失败");
+        }
+
+        [Command("获取b站专栏信息")]
+        public static async void ArticleInfo(SoraMessage e, int id)
+        {
+            Article article = null;
+            try
+            {
+                article = Article.Get(id);
+            }
+            catch
+            {
+            }
+            if (article != null)
+                await e.Reply(article.ToString());
+            else
+                await e.Reply($"[Bilibili] 专栏{id}信息获取失败");
         }
 
         [Command("获取b站动态信息")]

@@ -18,9 +18,20 @@ namespace Ritsukage
         public bool IsDebug = false;
 
         #region Roll Api
+        /// <summary>
+        /// Roll Api Id (https://github.com/MZCretin/RollToolsApi)
+        /// </summary>
         public string Roll_Api_Id = string.Empty;
+        /// <summary>
+        /// Roll Api Secret
+        /// </summary>
         public string Roll_Api_Secret = string.Empty;
         #endregion
+
+        /// <summary>
+        /// 缩链API(http://suolink.cn/) Token(用于短链接)
+        /// </summary>
+        public string SuoLinkToken = "";
 
         #region QQ
         /// <summary>

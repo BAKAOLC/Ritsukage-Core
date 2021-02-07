@@ -14,7 +14,7 @@ namespace Ritsukage.QQ.Commands
                 var trans = NBNHHSH.Get(origin);
                 if (trans.Length > 0)
                 {
-                    await e.Reply($"{origin} 的意思可能为" + Environment.NewLine + string.Join(" ", trans));
+                    await e.Reply($"{origin} 的意思可能为" + Environment.NewLine + string.Join(" | ", trans));
                     return;
                 }
             }

@@ -15,7 +15,7 @@ namespace Ritsukage.Discord.Commands
                 var trans = NBNHHSH.Get(origin);
                 if (trans.Length > 0)
                 {
-                    await ReplyAsync($"{origin} 的意思可能为" + Environment.NewLine + string.Join(" ", trans));
+                    await ReplyAsync($"{origin} 的意思可能为" + Environment.NewLine + string.Join(" | ", trans));
                     return;
                 }
             }

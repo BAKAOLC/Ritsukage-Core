@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Ritsukage.Tools.Console;
 
 namespace Ritsukage.Tools
 {
@@ -8,11 +9,11 @@ namespace Ritsukage.Tools
 
         public static string[] Get(string origin)
         {
-            var result = Utils.HttpPOST(API, new JObject()
+            var result = Utils.HttpPOST(API, new JObject
             {
-                { "text", origin }
-            }.ToString());
-            var data = JObject.Parse(result);
+                ["text"] = origin
+            }.ToString(), 20000, null, null, null, "application/json");
+            var data = JArray.Parse(result)[0];
             var trans = (JArray)data["trans"];
             var s = new string[trans.Count];
             for (var i = 0; i < trans.Count; i++)
