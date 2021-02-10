@@ -57,7 +57,6 @@ namespace Ritsukage.QQ.Commands
                                 }
                             }
                             else sb.Append(c);
-
                             break;
                         }
                     case '"':
@@ -213,7 +212,7 @@ namespace Ritsukage.QQ.Commands
                 else if (type == typeof(TimeSpan))
                     return TimeSpanReader.Parse(args.Next());
                 else if (type == typeof(string))
-                    return args.Next();
+                    return SoraMessage.Escape(args.Next());
             }
             throw new ArgumentException($"the type of {type} cannot be parsed from string", e);
         }
@@ -463,5 +462,7 @@ namespace Ritsukage.QQ.Commands
 
         public async Task<UserCoins> RemoveCoins(long count, bool disableFree = false)
             => await CoinsService.RemoveUserCoins("qq", Sender.Id, count, disableFree);
+
+        public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
     }
 }
