@@ -8,10 +8,8 @@ namespace Ritsukage.Tools
         private uint _index = 0;
         private readonly uint[] _state = new uint[16];
 
-        private uint GetMillisecond()
-        {
-            return Convert.ToUInt32(DateTimeOffset.Now.ToUnixTimeMilliseconds() % (Convert.ToInt64(uint.MaxValue) + 1));
-        }
+        private static uint GetMillisecond()
+            => Convert.ToUInt32(DateTimeOffset.Now.ToUnixTimeMilliseconds() % (Convert.ToInt64(uint.MaxValue) + 1));
 
         public WELL512(uint seed) => SetSeed(seed);
         public WELL512() => SetSeed(GetMillisecond());

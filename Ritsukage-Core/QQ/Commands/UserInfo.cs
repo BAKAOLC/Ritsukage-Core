@@ -61,5 +61,12 @@ namespace Ritsukage.QQ.Commands
             }
             await e.Reply(sb.ToString());
         }
+
+        [Command("coins")]
+        public static async void Coins(SoraMessage e)
+        {
+            var c = await e.GetCoins();
+            await e.AutoAtReply($"当前持有幻币 {c.Total} 枚{Environment.NewLine}(其中 {c.FreeCoins} 枚幻币为当日免费幻币)");
+        }
     }
 }

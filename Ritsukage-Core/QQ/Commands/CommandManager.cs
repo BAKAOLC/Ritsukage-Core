@@ -1,4 +1,5 @@
-﻿using Ritsukage.Tools;
+﻿using Ritsukage.Library.Service;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using Sora.Entities;
 using Sora.Entities.Base;
@@ -56,7 +57,6 @@ namespace Ritsukage.QQ.Commands
                                 }
                             }
                             else sb.Append(c);
-
                             break;
                         }
                     case '"':
@@ -212,7 +212,7 @@ namespace Ritsukage.QQ.Commands
                 else if (type == typeof(TimeSpan))
                     return TimeSpanReader.Parse(args.Next());
                 else if (type == typeof(string))
-                    return args.Next();
+                    return SoraMessage.Escape(args.Next());
             }
             throw new ArgumentException($"the type of {type} cannot be parsed from string", e);
         }
@@ -450,5 +450,19 @@ namespace Ritsukage.QQ.Commands
 
         public async ValueTask SendPrivateMessage(params object[] msg)
             => await Sender.SendPrivateMessage(msg);
+
+        public async Task<UserCoins> GetCoins()
+            => await CoinsService.GetUserCoins("qq", Sender.Id);
+
+        public async Task<bool> CheckCoins(long count, bool disableFree = false)
+            => await CoinsService.CheckUserCoins("qq", Sender.Id, count, disableFree);
+
+        public async Task<UserCoins> AddCoins(long count)
+            => await CoinsService.AddUserCoins("qq", Sender.Id, count);
+
+        public async Task<UserCoins> RemoveCoins(long count, bool disableFree = false)
+            => await CoinsService.RemoveUserCoins("qq", Sender.Id, count, disableFree);
+
+        public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
     }
 }

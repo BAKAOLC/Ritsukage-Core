@@ -120,7 +120,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 View = (int)data["desc"]["view"],
                 Repost = (int)data["desc"]["repost"],
                 Like = (int)data["desc"]["like"],
-                Time = DateTimeOffset.FromUnixTimeSeconds((long)data["desc"]["timestamp"]).LocalDateTime,
+                Time = Utils.GetDateTime((long)data["desc"]["timestamp"]),
             };
             #region 动态自身解析
             dynamic.Card = new DynamicCard()

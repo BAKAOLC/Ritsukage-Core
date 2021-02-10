@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -123,13 +122,16 @@ namespace Ritsukage.Library.Bilibili.Model
             var video = new Video()
             {
                 AV = (long)data["aid"],
-                BV = (string)data["bvid"],
+                BV = (string)data["bvid"] ?? BilibiliAVBVConverter.ToBV((long)data["aid"]),
                 CID = (long)data["cid"],
                 PicUrl = (string)data["pic"],
                 Title = (string)data["title"],
-                Desc = RemoveEmptyLine(((string)data["desc"]).Replace("<br/>", Environment.NewLine)),
+                Desc = RemoveEmptyLine(((string)data["desc"])
+                .Replace("\r", string.Empty)
+                .Replace("\n", Environment.NewLine)
+                .Replace("<br/>", Environment.NewLine)),
                 Count = (int)data["videos"],
-                PubDate = DateTimeOffset.FromUnixTimeSeconds((long)data["pubdate"]).LocalDateTime,
+                PubDate = Utils.GetDateTime((long)data["pubdate"]),
                 CopyRight = (int)data["copyright"] == 1 ? true : false,
                 AreaId = (int)data["tid"],
                 AreaName = (string)data["tname"],
@@ -168,7 +170,7 @@ namespace Ritsukage.Library.Bilibili.Model
 
         #region 静态方法
         static string RemoveEmptyLine(string text)
-            => string.Join("", text.Split("\n", StringSplitOptions.RemoveEmptyEntries)
+            => string.Join(Environment.NewLine, text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
                 .GroupBy(x => x).Select(x => x.Key).ToArray());
         #endregion
     }

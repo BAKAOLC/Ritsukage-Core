@@ -5,8 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,6 +14,12 @@ namespace Ritsukage.Tools
     public static class Utils
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
+
+        public static DateTime GetDateTime(long ts)
+            => new DateTime(1970, 1, 1, 8, 0, 0, 0).AddSeconds(ts);
+
+        public static DateTime GetDateTime(double ts)
+            => new DateTime(1970, 1, 1, 8, 0, 0, 0).AddSeconds(ts);
 
         public static long GetTimeStamp()
             => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
@@ -48,25 +52,38 @@ namespace Ritsukage.Tools
 
         public static string GetQQHeadImageUrl(long qq) => "http://q.qlogo.cn/headimg_dl?spec=640&img_type=png&dst_uin=" + qq;
 
-        public static string GetQQGroupHeadImageUrl(long group) => "http://p.qlogo.cn/gh/" + group + "/" + group + "/";
+        public static string GetQQGroupHeadImageUrl(long group) => $"http://p.qlogo.cn/gh/{group}/{group}/";
 
         public static async Task<string> GetShortUrl(string url)
             => await Task.Run(() =>
             {
-                var data = JObject.Parse(HttpGET("https://v1.alapi.cn/api/url?url=" + UrlEncode(url)));
-                if ((int)data["code"] == 200)
-                    return (string)data["data"]["short_url"];
+                if (!string.IsNullOrWhiteSpace(Program.Config.SuoLinkToken))
+                {
+                    var data = JObject.Parse(HttpGET($"http://api.suolink.cn/api.htm?format=json&key={Program.Config.SuoLinkToken}&expireDate={DateTime.Now.AddDays(3).Date:yyyy-MM-dd}&url=" + UrlEncode(url)));
+                    return (string)data["url"];
+                }
                 return url;
             });
 
         public static async Task<string> GetOriginalUrl(string url)
-            => await Task.Run(() =>
+            => await Task.Run(() => ExpandShortUrl(url));
+        private static string ExpandShortUrl(string shortUrl)
+        {
+            string nativeUrl = shortUrl;
+            try
             {
-                var data = JObject.Parse(HttpGET("https://v1.alapi.cn/api/url/query?url=" + UrlEncode(url)));
-                if ((int)data["code"] == 200)
-                    return (string)data["data"]["long_url"];
-                return url;
-            });
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(shortUrl);
+                req.AllowAutoRedirect = false;  // 禁止自动跳转
+                HttpWebResponse response = (HttpWebResponse)req.GetResponse();
+                if (response.StatusCode == HttpStatusCode.Found)
+                    nativeUrl = response.Headers["Location"];
+            }
+            catch
+            {
+                nativeUrl = shortUrl;
+            }
+            return nativeUrl;
+        }
 
         public static async Task<Stream> GetFileAsync(string url)
         {
@@ -99,8 +116,14 @@ namespace Ritsukage.Tools
             string retString;
             if (response.ContentEncoding == "gzip")
             {
-                GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
                 using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                retString = reader.ReadToEnd();
+            }
+            else if (response.ContentEncoding == "br")
+            {
+                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
                 retString = reader.ReadToEnd();
             }
             else
@@ -114,9 +137,11 @@ namespace Ritsukage.Tools
             request.Abort();
             return retString;
         }
-        public static string HttpPOST(HttpWebRequest request, string content = "")
+        public static string HttpPOST(HttpWebRequest request, string content = "", string contentType = "")
         {
             request.Method = "POST";
+            if (!string.IsNullOrWhiteSpace(contentType))
+                request.ContentType = contentType;
             request.ContentLength = content.Length;
             byte[] byteResquest = Encoding.UTF8.GetBytes(content);
             using Stream stream = request.GetRequestStream();
@@ -126,8 +151,14 @@ namespace Ritsukage.Tools
             string retString;
             if (response.ContentEncoding == "gzip")
             {
-                GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
                 using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                retString = reader.ReadToEnd();
+            }
+            else if (response.ContentEncoding == "br")
+            {
+                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
                 retString = reader.ReadToEnd();
             }
             else
@@ -150,10 +181,7 @@ namespace Ritsukage.Tools
             {
                 if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
                 {
-                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) =>
-                    {
-                        return true;
-                    });
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 }
                 request = (HttpWebRequest)WebRequest.Create(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)));
@@ -169,21 +197,20 @@ namespace Ritsukage.Tools
             {
                 request?.Abort();
                 ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
+                if (e.InnerException != null)
+                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e.InnerException));
             }
             return string.Empty;
         }
         public static string HttpPOST(string Url, string postDataStr, long timeout = 20000,
-           string cookie = "", string referer = "", string origin = "")
+           string cookie = "", string referer = "", string origin = "", string contentType = "")
         {
             HttpWebRequest request = null;
             try
             {
                 if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
                 {
-                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) =>
-                    {
-                        return true;
-                    });
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 }
                 request = (HttpWebRequest)WebRequest.Create(Url);
@@ -193,12 +220,14 @@ namespace Ritsukage.Tools
                     request.Referer = referer;
                 if (!string.IsNullOrWhiteSpace(origin))
                     request.Headers.Add("Origin", origin);
-                return HttpPOST(request, postDataStr);
+                return HttpPOST(request, postDataStr, contentType);
             }
             catch (Exception e)
             {
                 request?.Abort();
                 ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
+                if (e.InnerException != null)
+                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e.InnerException));
             }
             return string.Empty;
         }

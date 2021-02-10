@@ -1,4 +1,5 @@
 ﻿using SQLite;
+using System;
 
 namespace Ritsukage.Library.Data
 {
@@ -19,6 +20,12 @@ namespace Ritsukage.Library.Data
 
         [Column("Coins")]
         public long Coins { get; set; }
+
+        [Column("FreeCoins")]
+        public long FreeCoins { get; set; }
+
+        [Column("FreeCoinsDate")]
+        public DateTime FreeCoinsDate { get; set; }
 
         [Column("Bilibili.Cookie")]
         public string BilibiliCookie { get; set; }

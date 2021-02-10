@@ -51,7 +51,7 @@ namespace Ritsukage.QQ.Commands
                                 else if (x.IsFaulted && x.Exception != null)
                                     await e.SendPrivateMessage(new StringBuilder()
                                         .AppendLine("记录数据因异常导致更新失败，错误信息：")
-                                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
                                     await e.SendPrivateMessage("记录数据因未知原因导致更新失败，请稍后重试");
@@ -72,7 +72,7 @@ namespace Ritsukage.QQ.Commands
                                 else if (x.IsFaulted && x.Exception != null)
                                     await e.SendPrivateMessage(new StringBuilder()
                                         .AppendLine("记录数据因异常导致更新失败，错误信息：")
-                                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                         .ToString());
                                 else
                                     await e.SendPrivateMessage("记录数据因未知原因导致更新失败，请稍后重试");
@@ -130,16 +130,47 @@ namespace Ritsukage.QQ.Commands
                 await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
         }
 
+        [Command("获取b站直播间推流地址")]
+        public static async void LiveRoomStream(SoraMessage e, int roomid)
+        {
+            LiveStream stream = null;
+            try
+            {
+                stream = LiveStream.Get(roomid);
+            }
+            catch
+            {
+            }
+            if (stream != null)
+            {
+                if (stream.LiveStatus != LiveStatus.Live)
+                {
+                    await e.Reply($"[Bilibili Live] 直播间{roomid}当前未开播");
+                }
+                else
+                {
+                    var thread = stream.Thread.OrderByDescending(x => x.Quality).First();
+                    var s = new StringBuilder("[Bilibili Live]")
+                        .AppendLine().Append($"房间号：{stream.Id}")
+                        .AppendLine().Append($"{thread.Quality}")
+                        .AppendLine().Append($"{await Utils.GetShortUrl(thread.Url.First())}");
+                    await e.Reply(s.ToString());
+                }
+            }
+            else
+                await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
+        }
+
         [Command("获取b站视频信息")]
-        public static async void VideoInfo(SoraMessage e, string bv)
+        public static async void VideoInfo(SoraMessage e, string id)
         {
             Video video = null;
             try
             {
-                if (long.TryParse(bv, out var av))
+                if (long.TryParse(id, out var av))
                     video = Video.Get(av);
                 else
-                    video = Video.Get(bv);
+                    video = Video.Get(id);
             }
             catch
             {
@@ -152,7 +183,46 @@ namespace Ritsukage.QQ.Commands
                     .ToString());
             }
             else
-                await e.Reply($"[Bilibili] 视频{bv}信息获取失败");
+                await e.Reply($"[Bilibili] 视频{id}信息获取失败");
+        }
+
+        [Command("获取b站音频信息")]
+        public static async void AudioInfo(SoraMessage e, int id)
+        {
+            Audio audio = null;
+            try
+            {
+                audio = Audio.Get(id);
+            }
+            catch
+            {
+            }
+            if (audio != null)
+            {
+                await e.Reply(CQCode.CQImage(audio.CoverUrl), new StringBuilder()
+                    .AppendLine()
+                    .AppendLine(audio.BaseToString())
+                    .ToString());
+            }
+            else
+                await e.Reply($"[Bilibili] 音频{id}信息获取失败");
+        }
+
+        [Command("获取b站专栏信息")]
+        public static async void ArticleInfo(SoraMessage e, int id)
+        {
+            Article article = null;
+            try
+            {
+                article = Article.Get(id);
+            }
+            catch
+            {
+            }
+            if (article != null)
+                await e.Reply(article.ToString());
+            else
+                await e.Reply($"[Bilibili] 专栏{id}信息获取失败");
         }
 
         [Command("获取b站动态信息")]
@@ -333,7 +403,7 @@ namespace Ritsukage.QQ.Commands
                 else if (x.IsFaulted && x.Exception != null)
                     await e.AutoAtReply(new StringBuilder()
                         .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
                     await e.AutoAtReply("订阅项目因未知原因导致添加失败，请稍后重试");
@@ -360,7 +430,7 @@ namespace Ritsukage.QQ.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await e.AutoAtReply(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
@@ -397,7 +467,7 @@ namespace Ritsukage.QQ.Commands
                 else if (x.IsFaulted && x.Exception != null)
                     await e.AutoAtReply(new StringBuilder()
                         .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
                     await e.AutoAtReply("订阅项目因未知原因导致添加失败，请稍后重试");
@@ -424,7 +494,7 @@ namespace Ritsukage.QQ.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await e.AutoAtReply(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
@@ -456,7 +526,7 @@ namespace Ritsukage.QQ.Commands
                         else if (x.IsFaulted && x.Exception != null)
                             await e.AutoAtReply(new StringBuilder()
                                 .AppendLine("因异常导致功能启用失败，错误信息：")
-                                .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                 .ToString());
                         else
                             await e.AutoAtReply("因未知原因导致功能启用失败，请稍后重试");
@@ -474,7 +544,7 @@ namespace Ritsukage.QQ.Commands
                 else if (x.IsFaulted && x.Exception != null)
                     await e.AutoAtReply(new StringBuilder()
                         .AppendLine("因异常导致功能启用失败，错误信息：")
-                        .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
                     await e.AutoAtReply("因未知原因导致功能启用失败，请稍后重试");
@@ -501,7 +571,7 @@ namespace Ritsukage.QQ.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await e.AutoAtReply(new StringBuilder()
                             .AppendLine("因异常导致功能禁用失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await e.AutoAtReply("因未知原因导致功能禁用失败，请稍后重试");

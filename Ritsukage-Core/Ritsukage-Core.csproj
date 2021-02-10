@@ -13,9 +13,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Library\Roll\Model\HistoryToday.cs~RFc9704f4.TMP" />
+    <None Remove="Tools\Utils.cs~RFe53c63.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Toolkit.Parsers" Version="6.1.1" />
+    <PackageReference Include="NeteaseCloudMusicApi" Version="3.25.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Octokit" Version="0.48.0" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
   </ItemGroup>

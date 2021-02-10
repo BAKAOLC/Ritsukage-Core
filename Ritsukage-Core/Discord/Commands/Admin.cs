@@ -28,7 +28,7 @@ namespace Ritsukage.Discord.Commands
                         else if (x.IsFaulted && x.Exception != null)
                             await ReplyAsync(":x: " + new StringBuilder()
                                 .AppendLine("因异常导致设置失败，错误信息：")
-                                .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                                .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                 .ToString());
                         else
                             await ReplyAsync(":x: 因未知原因导致设置失败，请稍后重试");
@@ -46,7 +46,7 @@ namespace Ritsukage.Discord.Commands
                     else if (x.IsFaulted && x.Exception != null)
                         await ReplyAsync(":x: " + new StringBuilder()
                             .AppendLine("因异常导致设置失败，错误信息：")
-                            .AppendLine(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
                         await ReplyAsync(":x: 因未知原因导致设置失败，请稍后重试");

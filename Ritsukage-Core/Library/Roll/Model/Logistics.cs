@@ -115,7 +115,7 @@ namespace Ritsukage.Library.Roll.Model
         }
 
         public override string ToString()
-            => Time + "    " + Desc;
+            => Time + "  " + Desc;
     }
 
     public enum LogisticsStatus

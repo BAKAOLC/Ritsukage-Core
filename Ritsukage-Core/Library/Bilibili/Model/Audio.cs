@@ -115,7 +115,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 CoverUrl = (string)data["cover"],
                 Intro = (string)data["intro"],
                 Lyric = (string)data["lyric"],
-                UploadTime = DateTimeOffset.FromUnixTimeSeconds((long)data["passtime"]).LocalDateTime,
+                UploadTime = Utils.GetDateTime((long)data["passtime"]),
                 Duration = new TimeSpan(0, 0, (int)data["duration"]),
                 Coin = (int)data["coin_num"],
                 Statistic = new AudioStatistic()
