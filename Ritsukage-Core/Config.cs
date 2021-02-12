@@ -13,6 +13,11 @@ namespace Ritsukage
         public string DatabasePath = "data.db";
 
         /// <summary>
+        /// 诗词数据库储存位置
+        /// </summary>
+        public string PoetryDatabasePath = "";
+
+        /// <summary>
         /// 是否使用调试模式
         /// </summary>
         public bool IsDebug = false;

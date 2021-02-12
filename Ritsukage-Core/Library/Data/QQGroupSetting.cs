@@ -2,7 +2,7 @@
 
 namespace Ritsukage.Library.Data
 {
-    [Table("QQGroupSetting")]
+    [Table("QQGroupSetting"), AutoInitTable]
     public class QQGroupSetting
     {
         [Column("ID"), PrimaryKey, AutoIncrement]

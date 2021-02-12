@@ -35,5 +35,20 @@ namespace Ritsukage.QQ.Commands
             }
             await e.RemoveCoins(2);
         }
+
+        [Command("诗歌搜索"), NeedCoins(2)]
+        public static async void SearchOrigin(SoraMessage e, string poem)
+        {
+            try
+            {
+                var result = await Tools.Poem.GetOrigin(poem);
+                await e.Reply(result);
+                await e.RemoveCoins(2);
+            }
+            catch (Exception ex)
+            {
+                await e.Reply(ex.Message);
+            }
+        }
     }
 }

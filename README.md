@@ -9,6 +9,9 @@
 	<h4 align="center">
         使用框架：<a href="https://github.com/Yukari316/Sora">Sora</a> & <a href="https://github.com/discord-net/Discord.Net">Discord.Net</a>
 	</h4>
+	<h4 align="center">
+        帮助文档：<a href="https://github.com/BAKAOLC/Ritsukage-Core/wiki/%E7%AE%80%E4%BB%8B">Wiki</a>
+	</h4>
     <h4 align="center">
         <img src="https://img.shields.io/badge/OneBot-v11-black?style=for-the-badge">
         <img src="https://img.shields.io/github/license/BAKAOLC/Ritsukage-Core?style=for-the-badge&color=blueviolet">

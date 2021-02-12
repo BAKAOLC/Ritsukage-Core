@@ -40,14 +40,15 @@ namespace Ritsukage.Library.Netease.CloudMusic
             return new(json["songs"][0]);
         }
 
-        public static async Task<SongUrl> GetSongUrl(long id)
+        public static async Task<SongUrl> GetSongUrl(long id, int br = 999000)
         {
             bool success;
             JObject json;
             using var api = new BaseApi();
             (success, json) = await api.RequestAsync(Providers.SongUrl, new()
             {
-                { "id", id.ToString() }
+                { "id", id.ToString() },
+                { "br", br.ToString() }
             });
             if (!success)
                 return new();

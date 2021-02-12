@@ -1,3 +1,6 @@
 [submodule "Sora"]
 	path = Sora
 	url = https://github.com/BAKAOLC/Sora.git
+[submodule "PoetryDatabase"]
+	path = PoetryDatabase
+	url = https://github.com/BAKAOLC/PoetryDatabase.git
