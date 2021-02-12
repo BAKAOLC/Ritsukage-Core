@@ -23,7 +23,7 @@ namespace Ritsukage.Library.Data
             ConsoleLog.Debug("Database", "Start loading...");
             Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
             Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true)
-            .Where(a => a is TableAttribute).Any()).ToArray();
+            .Where(a => a is AutoInitTableAttribute).Any()).ToArray();
             foreach (var group in cosType)
             {
                 ConsoleLog.Debug("Database", $"Register database table: {group.FullName}");
@@ -32,4 +32,8 @@ namespace Ritsukage.Library.Data
             ConsoleLog.Debug("Database", "Finish.");
         }
     }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class AutoInitTableAttribute : Attribute
+    {}
 }

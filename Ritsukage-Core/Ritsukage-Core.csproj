@@ -8,8 +8,9 @@
     <Authors>BAKAOLC</Authors>
     <Company>TeamOSY</Company>
     <PackageProjectUrl>https://github.com/BAKAOLC/Ritsukage-Core</PackageProjectUrl>
-    <AssemblyVersion>0.0.1.0</AssemblyVersion>
-    <FileVersion>0.0.1.0</FileVersion>
+    <AssemblyVersion>0.0.2.0</AssemblyVersion>
+    <FileVersion>0.0.2.0</FileVersion>
+    <Version>0.0.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

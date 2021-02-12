@@ -1,9 +1,12 @@
 ﻿{
   "DatabasePath": "data.db", //数据库储存位置
+  "PoetryDatabasePath": "", //诗词数据库储存位置
   "IsDebug": false, //是否为Debug模式
   "Roll_Api_Id": "", //Roll Api Id (https://github.com/MZCretin/RollToolsApi)
   "Roll_Api_Secret": "", //Roll Api Secret
   "SuoLinkToken": "", //缩链API(http://suolink.cn/) Token(用于短链接)
+  "GetLoveApiKey": "", //灵犀API(https://account.getlove.cn/login/) Key(用于诗词)
+  "GetLoveApiSecret": "", //灵犀API Secret(用于诗词)
   "QQ": false, //是否启用QQ相关功能
   "Host": "[::]", //要连接的目标IP
   "Port": 23150, //要监听的目标端口

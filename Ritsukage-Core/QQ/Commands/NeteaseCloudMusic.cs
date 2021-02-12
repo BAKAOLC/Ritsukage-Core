@@ -25,7 +25,7 @@ namespace Ritsukage.QQ.Commands
                 await e.AutoAtReply("曲目信息获取失败");
             else
             {
-                var url = await CloudMusicApi.GetSongUrl(id);
+                var url = await CloudMusicApi.GetSongUrl(id, 128000);
                 if (url.Id == detail.Id && url.Id == id)
                 {
                     await e.Reply(CQCode.CQImage(detail.Album.GetPicUrl(512, 512)),

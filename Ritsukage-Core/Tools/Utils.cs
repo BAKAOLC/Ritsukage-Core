@@ -47,8 +47,12 @@ namespace Ritsukage.Tools
             return url;
         }
 
+        static Regex _UrlEncodeParser = new Regex("%[a-f0-9]{2}");
         public static string UrlEncode(string url)
-            => System.Web.HttpUtility.UrlEncode(url, Encoding.UTF8);
+        {
+            var encode = System.Web.HttpUtility.UrlEncode(url, Encoding.UTF8);
+            return _UrlEncodeParser.Replace(encode, (s) => s.Value.ToUpper());
+        }
 
         public static string GetQQHeadImageUrl(long qq) => "http://q.qlogo.cn/headimg_dl?spec=640&img_type=png&dst_uin=" + qq;
 

@@ -3,7 +3,7 @@ using System;
 
 namespace Ritsukage.Library.Data
 {
-    [Table("UserData")]
+    [Table("UserData"), AutoInitTable]
     public class UserData
     {
         [Column("ID"), PrimaryKey, AutoIncrement]

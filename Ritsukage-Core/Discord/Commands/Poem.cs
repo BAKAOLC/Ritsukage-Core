@@ -1,6 +1,5 @@
 ﻿using Discord.Commands;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Discord.Commands
@@ -40,6 +39,27 @@ namespace Ritsukage.Discord.Commands
                     + Environment.NewLine + string.Join(Environment.NewLine, s));
                 }
                 await Context.User.RemoveCoins(2);
+            }
+            else
+                await ReplyAsync("幻币数量不足");
+        }
+
+        [Command("诗歌搜索")]
+        public async Task SearchOrigin(string poem)
+        {
+            if (await Context.User.CheckCoins(2))
+            {
+                var msg = await ReplyAsync("``数据检索中……``");
+                try
+                {
+                    var result = await Tools.Poem.GetOrigin(poem);
+                    await msg.ModifyAsync(x => x.Content = result);
+                    await Context.User.RemoveCoins(2);
+                }
+                catch (Exception ex)
+                {
+                    await msg.ModifyAsync(x => x.Content = ex.Message);
+                }
             }
             else
                 await ReplyAsync("幻币数量不足");
