@@ -16,6 +16,7 @@ namespace Ritsukage.QQ.Commands
 {
     public class CommandArgs
     {
+        public string Raw { get; init; }
         readonly List<string> SingleArg;
         private int index = 0;
 
@@ -30,6 +31,7 @@ namespace Ritsukage.QQ.Commands
         /// <param name="rawInput">args部分【不带空格情况】</param>
         public CommandArgs(string rawInput)
         {
+            this.Raw = rawInput;
             this.SingleArg = new();
             int len = rawInput.Length;
             int i = 0;
@@ -88,6 +90,8 @@ namespace Ritsukage.QQ.Commands
         public void Reset() => index = 0;
 
         public string Next() => SingleArg[index++];
+
+        public bool HasNext() => index < SingleArg.Count;
     }
 
     public interface ICommandParser
