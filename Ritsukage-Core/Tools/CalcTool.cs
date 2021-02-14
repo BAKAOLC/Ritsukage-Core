@@ -8,7 +8,6 @@ namespace Ritsukage.Tools
 {
     public static class CalcTool
     {
-
         enum Operator {
             ADD, SUB, MUL, DIV,
             LB, RB, MOD,
@@ -102,7 +101,7 @@ namespace Ritsukage.Tools
                 var op = GetOperator(c);
                 //what is c# nullable mean??????
                 //op != null mean the nullable is not null or has value?
-                if (op != null && op.HasValue) {
+                if (op != null && op.HasValue && !(idx > 1 && expr[idx - 1] == 'e' && char.IsDigit(expr[idx - 2]))) {
                     //maybe sqrt(.... or sth else
                     if (op.Value == Operator.LB) {
                         if (start != idx) {
