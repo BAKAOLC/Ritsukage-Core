@@ -88,6 +88,8 @@ namespace Ritsukage.QQ.Commands
         public void Reset() => index = 0;
 
         public string Next() => SingleArg[index++];
+
+        public bool HasNext() => index < SingleArg.Count;
     }
 
     public interface ICommandParser
