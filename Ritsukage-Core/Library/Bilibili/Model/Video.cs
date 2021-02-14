@@ -105,14 +105,14 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 构造
         public static Video Get(long av)
         {
-            var info = JObject.Parse(Utils.HttpGET("http://api.bilibili.com/x/web-interface/view?aid=" + av));
+            var info = Hibi.HibiBilibili.GetVideoInfo(av);
             if ((int)info["code"] != 0)
                 throw new Exception((string)info["message"]);
             return GetByJson(info["data"]);
         }
         public static Video Get(string bv)
         {
-            var info = JObject.Parse(Utils.HttpGET("http://api.bilibili.com/x/web-interface/view?bvid=" + bv));
+            var info = Hibi.HibiBilibili.GetVideoInfo(BilibiliAVBVConverter.ToAV(bv));
             if ((int)info["code"] != 0)
                 throw new Exception((string)info["message"]);
             return GetByJson(info["data"]);

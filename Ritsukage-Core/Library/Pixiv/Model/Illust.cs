@@ -69,8 +69,11 @@ namespace Ritsukage.Library.Pixiv.Model
         public static async Task<Illust> Get(int id)
             => await Task.Run(() =>
             {
-                var data = JObject.Parse(Utils.HttpGET("https://api.fczbl.vip/pixiv/v2/?type=illust&id=" + id));
-                return new Illust(data["illust"]);
+                var data = Hibi.HibiPixiv.GetIllustDetail(id);
+                if (data == null)
+                    return null;
+                else
+                    return new Illust(data["illust"]);
             });
     }
 

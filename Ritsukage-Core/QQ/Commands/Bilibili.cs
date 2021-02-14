@@ -24,9 +24,9 @@ namespace Ritsukage.QQ.Commands
                 async (bitmap) =>
                 {
                     if (e.IsGroupMessage)
-                        await e.AutoAtReply("登录任务已建立，请前往私聊等待登录二维码的发送");
+                        await e.ReplyToOriginal("登录任务已建立，请前往私聊等待登录二维码的发送");
                     else
-                        await e.Reply("登录任务已建立，请等待登录二维码的发送");
+                        await e.ReplyToOriginal("登录任务已建立，请等待登录二维码的发送");
                     var qr = new MemoryImage(bitmap);
                     var path = qr.ToBase64File();
                     await e.SendPrivateMessage(CQCode.CQImage(path), "\n请使用Bilibili客户端扫码登录");
@@ -260,29 +260,29 @@ namespace Ritsukage.QQ.Commands
             var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
             if (data == null)
             {
-                await e.AutoAtReply("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
+                await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
-                await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
+                await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
             try
             {
                 var result = JObject.Parse(BiliLive.StartLive(roomid, 235, data.BilibiliCookie));
                 if (!string.IsNullOrEmpty((string)result["message"]))
-                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                    await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
                 {
-                    await e.AutoAtReply("开播成功");
+                    await e.ReplyToOriginal("开播成功");
                     await e.SendPrivateMessage($"rtmp地址: {(string)result["data"]["rtmp"]["addr"]}\n推流码: {(string)result["data"]["rtmp"]["code"]}");
                 }
             }
             catch
             {
-                await e.AutoAtReply("操作失败");
+                await e.ReplyToOriginal("操作失败");
             }
         }
 
@@ -293,26 +293,26 @@ namespace Ritsukage.QQ.Commands
             var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
             if (data == null)
             {
-                await e.AutoAtReply("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
+                await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
-                await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
+                await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
             try
             {
                 var result = JObject.Parse(BiliLive.StopLive(roomid, data.BilibiliCookie));
                 if (!string.IsNullOrEmpty((string)result["message"]))
-                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                    await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
-                    await e.AutoAtReply("已停止直播");
+                    await e.ReplyToOriginal("已停止直播");
             }
             catch
             {
-                await e.AutoAtReply("操作失败");
+                await e.ReplyToOriginal("操作失败");
             }
         }
 
@@ -323,26 +323,26 @@ namespace Ritsukage.QQ.Commands
             var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
             if (data == null)
             {
-                await e.AutoAtReply("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
+                await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
-                await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
+                await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
             try
             {
                 var result = JObject.Parse(BiliLive.UpdateLiveArea(roomid, area, data.BilibiliCookie));
                 if (!string.IsNullOrEmpty((string)result["message"]))
-                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                    await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
-                    await e.AutoAtReply("已成功更换直播分区");
+                    await e.ReplyToOriginal("已成功更换直播分区");
             }
             catch
             {
-                await e.AutoAtReply("操作失败");
+                await e.ReplyToOriginal("操作失败");
             }
         }
 
@@ -353,26 +353,26 @@ namespace Ritsukage.QQ.Commands
             var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
             if (data == null)
             {
-                await e.AutoAtReply("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
+                await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
-                await e.AutoAtReply("用户直播间数据获取失败，请稍后重试");
+                await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
             try
             {
                 var result = JObject.Parse(BiliLive.UpdateLiveTitle(roomid, title, data.BilibiliCookie));
                 if (!string.IsNullOrEmpty((string)result["message"]))
-                    await e.AutoAtReply("服务器返回消息：" + (string)result["message"]);
+                    await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
-                    await e.AutoAtReply("已成功更换直播分区");
+                    await e.ReplyToOriginal("已成功更换直播分区");
             }
             catch
             {
-                await e.AutoAtReply("操作失败");
+                await e.ReplyToOriginal("操作失败");
             }
         }
 
@@ -386,7 +386,7 @@ namespace Ritsukage.QQ.Commands
                 && x.Target == roomid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
                 if (data != null)
                 {
-                    await e.AutoAtReply("本群已订阅该目标，请检查输入是否正确");
+                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                     return;
                 }
             }
@@ -399,14 +399,14 @@ namespace Ritsukage.QQ.Commands
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
-                    await e.AutoAtReply("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
+                    await e.ReplyToOriginal("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
                 else if (x.IsFaulted && x.Exception != null)
-                    await e.AutoAtReply(new StringBuilder()
+                    await e.ReplyToOriginal(new StringBuilder()
                         .AppendLine("订阅项目因异常导致添加失败，错误信息：")
                         .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
-                    await e.AutoAtReply("订阅项目因未知原因导致添加失败，请稍后重试");
+                    await e.ReplyToOriginal("订阅项目因未知原因导致添加失败，请稍后重试");
             });
         }
 
@@ -420,24 +420,24 @@ namespace Ritsukage.QQ.Commands
                 && x.Target == roomid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
                 if (data == null)
                 {
-                    await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                     return;
                 }
                 await Database.Data.DeleteAsync(data).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
-                        await e.AutoAtReply("订阅项目已移除");
+                        await e.ReplyToOriginal("订阅项目已移除");
                     else if (x.IsFaulted && x.Exception != null)
-                        await e.AutoAtReply(new StringBuilder()
+                        await e.ReplyToOriginal(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
                             .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
-                        await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
+                        await e.ReplyToOriginal("订阅项目因未知原因导致移除失败，请稍后重试");
                 });
             }
             else
-                await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+                await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
         }
 
         [Command("订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
@@ -450,7 +450,7 @@ namespace Ritsukage.QQ.Commands
                 && x.Target == userid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
                 if (data != null)
                 {
-                    await e.AutoAtReply("本群已订阅该目标，请检查输入是否正确");
+                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                     return;
                 }
             }
@@ -463,14 +463,14 @@ namespace Ritsukage.QQ.Commands
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
-                    await e.AutoAtReply("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
+                    await e.ReplyToOriginal("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
                 else if (x.IsFaulted && x.Exception != null)
-                    await e.AutoAtReply(new StringBuilder()
+                    await e.ReplyToOriginal(new StringBuilder()
                         .AppendLine("订阅项目因异常导致添加失败，错误信息：")
                         .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
-                    await e.AutoAtReply("订阅项目因未知原因导致添加失败，请稍后重试");
+                    await e.ReplyToOriginal("订阅项目因未知原因导致添加失败，请稍后重试");
             });
         }
 
@@ -484,24 +484,24 @@ namespace Ritsukage.QQ.Commands
                 && x.Target == userid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
                 if (data == null)
                 {
-                    await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                     return;
                 }
                 await Database.Data.DeleteAsync(data).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
-                        await e.AutoAtReply("订阅项目已移除");
+                        await e.ReplyToOriginal("订阅项目已移除");
                     else if (x.IsFaulted && x.Exception != null)
-                        await e.AutoAtReply(new StringBuilder()
+                        await e.ReplyToOriginal(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
                             .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
-                        await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
+                        await e.ReplyToOriginal("订阅项目因未知原因导致移除失败，请稍后重试");
                 });
             }
             else
-                await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+                await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
         }
 
         [Command("启用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
@@ -515,21 +515,21 @@ namespace Ritsukage.QQ.Commands
                 {
                     if (data.SmartBilibiliLink)
                     {
-                        await e.AutoAtReply("本群已启用该功能，无需再次启用");
+                        await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
                         return;
                     }
                     data.SmartBilibiliLink = true;
                     await Database.Data.UpdateAsync(data).ContinueWith(async x =>
                     {
                         if (x.Result > 0)
-                            await e.AutoAtReply("本群已成功启用b站链接智能解析功能");
+                            await e.ReplyToOriginal("本群已成功启用b站链接智能解析功能");
                         else if (x.IsFaulted && x.Exception != null)
-                            await e.AutoAtReply(new StringBuilder()
+                            await e.ReplyToOriginal(new StringBuilder()
                                 .AppendLine("因异常导致功能启用失败，错误信息：")
                                 .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                                 .ToString());
                         else
-                            await e.AutoAtReply("因未知原因导致功能启用失败，请稍后重试");
+                            await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
                     });
                 }
             }
@@ -540,14 +540,14 @@ namespace Ritsukage.QQ.Commands
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
-                    await e.AutoAtReply("本群已成功启用b站链接智能解析功能");
+                    await e.ReplyToOriginal("本群已成功启用b站链接智能解析功能");
                 else if (x.IsFaulted && x.Exception != null)
-                    await e.AutoAtReply(new StringBuilder()
+                    await e.ReplyToOriginal(new StringBuilder()
                         .AppendLine("因异常导致功能启用失败，错误信息：")
                         .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
-                    await e.AutoAtReply("因未知原因导致功能启用失败，请稍后重试");
+                    await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
             });
         }
 
@@ -560,25 +560,25 @@ namespace Ritsukage.QQ.Commands
                 var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
                 if (data == null || !data.SmartBilibiliLink)
                 {
-                    await e.AutoAtReply("本群未启用该功能，无需禁用");
+                    await e.ReplyToOriginal("本群未启用该功能，无需禁用");
                     return;
                 }
                 data.SmartBilibiliLink = false;
                 await Database.Data.UpdateAsync(data).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
-                        await e.AutoAtReply("本群已成功禁用b站链接智能解析功能");
+                        await e.ReplyToOriginal("本群已成功禁用b站链接智能解析功能");
                     else if (x.IsFaulted && x.Exception != null)
-                        await e.AutoAtReply(new StringBuilder()
+                        await e.ReplyToOriginal(new StringBuilder()
                             .AppendLine("因异常导致功能禁用失败，错误信息：")
                             .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
                     else
-                        await e.AutoAtReply("因未知原因导致功能禁用失败，请稍后重试");
+                        await e.ReplyToOriginal("因未知原因导致功能禁用失败，请稍后重试");
                 });
             }
             else
-                await e.AutoAtReply("本群未启用该功能，无需禁用");
+                await e.ReplyToOriginal("本群未启用该功能，无需禁用");
         }
 
         [Command]
@@ -593,11 +593,11 @@ namespace Ritsukage.QQ.Commands
             {
                 msg = ex.Message;
             }
-            await e.Reply(msg);
+            await e.ReplyToOriginal(msg);
         }
         [Command]
         public static async void AV2BV(SoraMessage e)
-            => await e.AutoAtReply("参数错误，请重新输入");
+            => await e.ReplyToOriginal("参数错误，请重新输入");
 
         [Command]
         public static async void BV2AV(SoraMessage e, string bv)
@@ -611,10 +611,10 @@ namespace Ritsukage.QQ.Commands
             {
                 msg = ex.Message;
             }
-            await e.Reply(msg);
+            await e.ReplyToOriginal(msg);
         }
         [Command]
         public static async void BV2AV(SoraMessage e)
-            => await e.AutoAtReply("参数错误，请重新输入");
+            => await e.ReplyToOriginal("参数错误，请重新输入");
     }
 }

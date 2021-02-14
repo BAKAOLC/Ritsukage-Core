@@ -19,7 +19,7 @@ namespace Ritsukage.QQ.Commands
                 && x.Target == "java" && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
                 if (data != null)
                 {
-                    await e.AutoAtReply("本群已订阅该目标，请检查输入是否正确");
+                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                     return;
                 }
             }
@@ -32,14 +32,14 @@ namespace Ritsukage.QQ.Commands
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
-                    await e.AutoAtReply("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
+                    await e.ReplyToOriginal("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
                 else if (x.IsFaulted && x.Exception != null)
-                    await e.AutoAtReply(new StringBuilder()
+                    await e.ReplyToOriginal(new StringBuilder()
                         .AppendLine("订阅项目因异常导致添加失败，错误信息：")
                         .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                         .ToString());
                 else
-                    await e.AutoAtReply("订阅项目因未知原因导致添加失败，请稍后重试");
+                    await e.ReplyToOriginal("订阅项目因未知原因导致添加失败，请稍后重试");
             });
         }
 
@@ -53,15 +53,15 @@ namespace Ritsukage.QQ.Commands
                 && x.Target == "java" && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
                 if (data == null)
                 {
-                    await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                     return;
                 }
                 await Database.Data.DeleteAsync(data).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
-                        await e.AutoAtReply("订阅项目已移除");
+                        await e.ReplyToOriginal("订阅项目已移除");
                     else if (x.IsFaulted && x.Exception != null)
-                        await e.AutoAtReply(new StringBuilder()
+                        await e.ReplyToOriginal(new StringBuilder()
                             .AppendLine("订阅项目因异常导致移除失败，错误信息：")
                             .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
                             .ToString());
@@ -70,7 +70,7 @@ namespace Ritsukage.QQ.Commands
                 });
             }
             else
-                await e.AutoAtReply("本群未订阅该目标，请检查输入是否正确");
+                await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
         }
     }
 }

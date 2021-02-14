@@ -14,7 +14,7 @@ namespace Ritsukage.QQ.Commands
             if (search != null && search.Length > 0)
                 Play(e, search[0].Id);
             else
-                await e.AutoAtReply("未搜索到相关结果");
+                await e.ReplyToOriginal("未搜索到相关结果");
         }
 
         [Command("music")]
@@ -22,7 +22,7 @@ namespace Ritsukage.QQ.Commands
         {
             var detail = await CloudMusicApi.GetSongDetail(id);
             if (detail == null)
-                await e.AutoAtReply("曲目信息获取失败");
+                await e.ReplyToOriginal("曲目信息获取失败");
             else
             {
                 var url = await CloudMusicApi.GetSongUrl(id, 128000);

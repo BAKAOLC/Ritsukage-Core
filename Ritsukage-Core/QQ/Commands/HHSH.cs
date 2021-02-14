@@ -14,13 +14,13 @@ namespace Ritsukage.QQ.Commands
                 var trans = NBNHHSH.Get(origin);
                 if (trans.Length > 0)
                 {
-                    await e.Reply($"{origin} 的意思可能为" + Environment.NewLine + string.Join(" | ", trans));
+                    await e.ReplyToOriginal($"{origin} 的意思可能为" + Environment.NewLine + string.Join(" | ", trans));
                     return;
                 }
             }
             catch
             { }
-            await e.Reply($"{origin} 未能成功获取到猜测内容");
+            await e.ReplyToOriginal($"{origin} 未能成功获取到猜测内容");
         }
     }
 }
