@@ -1,0 +1,44 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "Ritsukage Core",
+        "description": "**Ritsukage Core的用户端指令使用说明文档**",
+        "version": "internal"
+    },
+    "paths": {
+        "+time": {
+            "get": {
+                "tags": [
+                    "Discord",
+                    "Tencent QQ"
+                ],
+                "summary": "获取服务端当前时间",
+                "operationId": "commands_all_time_current_time",
+                "parameters": [],
+                "responses": {
+                    "success": {
+                        "description": "操作执行成功",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "2021年02月14日 18时05分58秒"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Discord",
+            "description": "Discord端可用指令设定"
+        },
+        {
+            "name": "Tencent QQ",
+            "description": "Tenctent QQ端可用指令设定"
+        }
+    ]
+}
