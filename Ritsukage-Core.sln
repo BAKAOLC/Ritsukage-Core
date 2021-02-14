@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ritsukage-Core", "Ritsukage
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sora", "Sora\Sora\Sora.csproj", "{19C5E2F5-BCFE-482F-AE5C-880FE2E9F043}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolUnitTestProject", "ToolUnitTestProject\ToolUnitTestProject.csproj", "{8E175DA2-D5DF-4DDA-9B7B-C9BA0F172A28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{19C5E2F5-BCFE-482F-AE5C-880FE2E9F043}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19C5E2F5-BCFE-482F-AE5C-880FE2E9F043}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19C5E2F5-BCFE-482F-AE5C-880FE2E9F043}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E175DA2-D5DF-4DDA-9B7B-C9BA0F172A28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E175DA2-D5DF-4DDA-9B7B-C9BA0F172A28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E175DA2-D5DF-4DDA-9B7B-C9BA0F172A28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E175DA2-D5DF-4DDA-9B7B-C9BA0F172A28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
