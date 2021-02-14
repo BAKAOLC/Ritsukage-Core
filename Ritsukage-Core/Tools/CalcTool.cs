@@ -8,6 +8,7 @@ namespace Ritsukage.Tools
 {
     public static class CalcTool
     {
+
         enum Operator {
             ADD, SUB, MUL, DIV,
             LB, RB, MOD,
@@ -85,6 +86,10 @@ namespace Ritsukage.Tools
             double value = GetExprValue(expr[start..idx]);
             return (value, idx - 1);
         }
+
+        static void MaybeNum(Stack<double> nums, Stack<Operator> op, string s) {
+
+        }
         /// <summary>	
         /// 解析简单的数学表达式，不保证结果，表达式有问题可能会丢未知异常	
         /// </summary>	
@@ -106,59 +111,73 @@ namespace Ritsukage.Tools
                     if (op.Value == Operator.LB) {
                         if (start != idx) {
                             var v = expr[start..idx];
+                            var maybeOp = GetOperator(v[0]);
+                            bool maybeSubFirst = false;
+                            if (maybeOp != null && maybeOp.HasValue) {
+                                v = v[1..];
+                                if (maybeOp.Value == Operator.SUB) {
+                                    maybeSubFirst = true;
+                                }
+                            }
                             switch (v) {
                                 case "sqrt": {
                                     //point '(' at begin
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Sqrt(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Sqrt(numV) : Math.Sqrt(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 case "sin": {
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Sin(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Sin(numV) : Math.Sin(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 case "cos": {
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Cos(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Cos(numV) : Math.Cos(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 case "tan": {
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Tan(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Tan(numV) : Math.Tan(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 case "abs": {
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Abs(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Abs(numV) : Math.Abs(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 case "ln": {
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Log(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Log(numV) : Math.Log(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 case "lg": {
                                     var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                    nums.Push(Math.Log10(numV));
+                                    nums.Push(maybeSubFirst ? -Math.Log10(numV) : Math.Log10(numV));
                                     idx = endIdx;
                                     start = idx + 1;
                                     break;
                                 }
                                 default: {
-                                    nums.Push(ParseNum(expr[start..idx]));
+                                    if (v.Length > 0) {
+                                        var numV = ParseNum(v);
+                                        nums.Push(maybeSubFirst ? -numV : numV);
+                                    } else if (maybeSubFirst) {
+                                        nums.Push(0);
+                                        ops.Push(Operator.SUB);
+                                    }
                                     ops.Push(op.Value);
                                     brackets += 1;
                                     start = idx += 1;
@@ -215,6 +234,9 @@ namespace Ritsukage.Tools
                 double a = nums.Pop();
                 nums.Push(OpNum(op, a, b));
             }
+            if (ops.Count == 1 && nums.Count == 1 && ops.Pop() == Operator.SUB)
+                nums.Push(-nums.Pop());
+
             if (nums.Count != 1) {
                 throw new ArgumentException($"the expr is wrong with nums left: {nums}");
             }
