@@ -20,10 +20,16 @@ namespace Ritsukage.Library.Netease.CloudMusic
             });
             if (!success)
                 return null;
-            List<SongSearchResult> result = new();
-            foreach (var s in (JArray)json["result"]["songs"])
-                result.Add(new(s));
-            return result.ToArray();
+            try
+            {
+                List<SongSearchResult> result = new();
+                foreach (var s in (JArray)json["result"]["songs"])
+                    result.Add(new(s));
+                return result.ToArray();
+            }
+            catch
+            { }
+            return null;
         }
 
         public static async Task<SongDetail> GetSongDetail(long id)

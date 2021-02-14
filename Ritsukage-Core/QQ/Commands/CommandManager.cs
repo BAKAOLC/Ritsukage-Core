@@ -3,7 +3,9 @@ using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using Sora.Entities;
 using Sora.Entities.Base;
+using Sora.Entities.CQCodes;
 using Sora.Entities.Info;
+using Sora.Enumeration.ApiType;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections.Generic;
@@ -88,6 +90,8 @@ namespace Ritsukage.QQ.Commands
         public void Reset() => index = 0;
 
         public string Next() => SingleArg[index++];
+
+        public bool HasNext() => index < SingleArg.Count;
     }
 
     public interface ICommandParser
@@ -421,23 +425,35 @@ namespace Ritsukage.QQ.Commands
                 await gm.RecallSourceMessage();
         }
 
-        public async ValueTask Repeat()
+        public async ValueTask<(APIStatusType apiStatus, int messageId)> Repeat()
         {
             if (Event is GroupMessageEventArgs gm)
                 await gm.Repeat();
             else if (Event is PrivateMessageEventArgs pm)
                 await pm.Repeat();
+            return (APIStatusType.Failed, -1);
         }
 
-        public async ValueTask Reply(params object[] msg)
+        public async ValueTask<(APIStatusType apiStatus, int messageId)> Reply(params object[] msg)
         {
             if (Event is GroupMessageEventArgs gm)
                 await gm.Reply(msg);
             else if (Event is PrivateMessageEventArgs pm)
                 await pm.Reply(msg);
+            return (APIStatusType.Failed, -1);
         }
 
-        public async ValueTask AutoAtReply(params object[] msg)
+        public async ValueTask<(APIStatusType apiStatus, int messageId)> ReplyToOriginal(params object[] msg)
+        {
+            msg = (new object[] { CQCode.CQReply(Message.MessageId) }).Concat(msg).ToArray();
+            if (Event is GroupMessageEventArgs gm)
+                await gm.Reply(msg);
+            else if (Event is PrivateMessageEventArgs pm)
+                await pm.Reply(msg);
+            return (APIStatusType.Failed, -1);
+        }
+
+        public async ValueTask<(APIStatusType apiStatus, int messageId)> AutoAtReply(params object[] msg)
         {
             if (Event is GroupMessageEventArgs gm)
             {
@@ -446,6 +462,7 @@ namespace Ritsukage.QQ.Commands
             }
             else if (Event is PrivateMessageEventArgs pm)
                 await pm.Reply(msg);
+            return (APIStatusType.Failed, -1);
         }
 
         public async ValueTask SendPrivateMessage(params object[] msg)

@@ -10,13 +10,13 @@ namespace Ritsukage.QQ.Commands
         {
             if (_char.Length != 1)
             {
-                await e.Reply("参数错误，请检查后重试");
+                await e.ReplyToOriginal("参数错误，请检查后重试");
                 return;
             }
             var result = await Tools.Poem.Search(_char);
             if (result.Count <= 0)
             {
-                await e.Reply("没有搜索到任何结果，请检查后重试");
+                await e.ReplyToOriginal("没有搜索到任何结果，请检查后重试");
                 return;
             }
             if (result.Count <= 5)
@@ -42,12 +42,12 @@ namespace Ritsukage.QQ.Commands
             try
             {
                 var result = await Tools.Poem.GetOrigin(poem);
-                await e.Reply(result);
+                await e.ReplyToOriginal(result);
                 await e.RemoveCoins(2);
             }
             catch (Exception ex)
             {
-                await e.Reply(ex.Message);
+                await e.ReplyToOriginal(ex.Message);
             }
         }
     }

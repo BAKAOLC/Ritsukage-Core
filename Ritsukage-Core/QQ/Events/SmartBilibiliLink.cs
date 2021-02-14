@@ -1,10 +1,12 @@
-﻿using Ritsukage.Library.Bilibili.Model;
+﻿using Newtonsoft.Json.Linq;
+using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Tools;
 using Sora.Entities.CQCodes;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -25,15 +27,15 @@ namespace Ritsukage.QQ.Events
         static readonly object _lock = new();
         static readonly Dictionary<long, Dictionary<string, Dictionary<string, DateTime>>> Delay = new();
 
-        static readonly Regex Regex_ShortLink = new Regex(@"^(https?://b23\.tv/)(?<data>[0-9a-zA-Z]+)");
+        static readonly Regex Regex_ShortLink = new Regex(@"^((https?://)?b23\.tv/)(?<data>[0-9a-zA-Z]+)");
 
         const string BilibiliVideo = "https://www.bilibili.com/video/";
         static readonly Regex Regex_AV = new Regex(@"^[Aa][Vv](?<av>\d+)$");
         static readonly Regex Regex_BV = new Regex(@"^[Bb][Vv](?<bv>1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2})$");
-        static readonly Regex Regex_Video = new Regex(@"^(https?://www\.bilibili\.com/video/)(?<id>[0-9a-zA-Z]+)");
+        static readonly Regex Regex_Video = new Regex(@"^((https?://)?www\.bilibili\.com/video/)(?<id>[0-9a-zA-Z]+)");
 
         const string BilibiliLiveRoom = "https://live.bilibili.com/";
-        static readonly Regex Regex_LiveRoom = new Regex(@"^(https?://live\.bilibili\.com/)(?<id>\d+)");
+        static readonly Regex Regex_LiveRoom = new Regex(@"^((https?://)?live\.bilibili\.com/)(?<id>\d+)");
 
         static async void Trigger(GroupMessageEventArgs args)
         {
@@ -51,6 +53,13 @@ namespace Ritsukage.QQ.Events
             }
             Match m;
             string baseStr = args.Message.RawText;
+            var cqJson = args.Message.MessageList.Where(x => x.Function == Sora.Enumeration.CQFunction.Json).FirstOrDefault();
+            if (cqJson != null)
+            {
+                var data = JObject.Parse(((Sora.Entities.CQCodes.CQCodeModel.Code)cqJson.CQData).Content);
+                if ((string)data["desc"] == "哔哩哔哩")
+                    baseStr = (string)data["meta"]["detail_1"]["qqdocurl"];
+            }
             #region RawText Match
             #region AV
             m = Regex_AV.Match(baseStr);

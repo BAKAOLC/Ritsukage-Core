@@ -12,20 +12,25 @@ namespace Ritsukage.QQ.Commands
         public static async void GetIllustDetail(SoraMessage e, int id)
         {
             var detail = await Illust.Get(id);
-            ArrayList msg = new();
-            foreach (var img in detail.Images)
-                msg.Add(CQCode.CQImage(ImageUrls.ToPixivCat(img.Medium)));
-            msg.Add(new StringBuilder().AppendLine()
-                .AppendLine(detail.Title)
-                .AppendLine($"Author: {detail.Author}")
-                .AppendLine(detail.Caption)
-                .AppendLine($"Tags: {string.Join(" | ", detail.Tags)}")
-                .AppendLine($"Publish Date: {detail.CreateDate:yyyy-MM-dd hh:mm:ss}")
-                .AppendLine($"Bookmarks: {detail.TotalBookmarks} Comments:{detail.TotalComments} Views:{detail.TotalView}")
-                .Append(detail.Url)
-                .ToString());
-            await e.Reply(msg.ToArray());
-            await e.RemoveCoins(5);
+            if (detail == null)
+                await e.ReplyToOriginal("数据获取失败，请稍后再试");
+            else
+            {
+                ArrayList msg = new();
+                foreach (var img in detail.Images)
+                    msg.Add(CQCode.CQImage(ImageUrls.ToPixivCat(img.Medium)));
+                msg.Add(new StringBuilder().AppendLine()
+                    .AppendLine(detail.Title)
+                    .AppendLine($"Author: {detail.Author}")
+                    .AppendLine(detail.Caption)
+                    .AppendLine($"Tags: {string.Join(" | ", detail.Tags)}")
+                    .AppendLine($"Publish Date: {detail.CreateDate:yyyy-MM-dd hh:mm:ss}")
+                    .AppendLine($"Bookmarks: {detail.TotalBookmarks} Comments:{detail.TotalComments} Views:{detail.TotalView}")
+                    .Append(detail.Url)
+                    .ToString());
+                await e.Reply(msg.ToArray());
+                await e.RemoveCoins(5);
+            }
         }
     }
 }

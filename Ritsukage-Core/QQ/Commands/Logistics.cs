@@ -14,7 +14,7 @@
             }
             catch
             {
-                await e.Reply("快递详情获取失败，请稍后再试");
+                await e.ReplyToOriginal("快递详情获取失败，请稍后再试");
             }
         }
     }
