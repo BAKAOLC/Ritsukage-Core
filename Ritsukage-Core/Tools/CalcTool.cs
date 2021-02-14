@@ -86,10 +86,6 @@ namespace Ritsukage.Tools
             double value = GetExprValue(expr[start..idx]);
             return (value, idx - 1);
         }
-
-        static void MaybeNum(Stack<double> nums, Stack<Operator> op, string s) {
-
-        }
         /// <summary>	
         /// 解析简单的数学表达式，不保证结果，表达式有问题可能会丢未知异常	
         /// </summary>	
@@ -234,8 +230,6 @@ namespace Ritsukage.Tools
                 double a = nums.Pop();
                 nums.Push(OpNum(op, a, b));
             }
-            if (ops.Count == 1 && nums.Count == 1 && ops.Pop() == Operator.SUB)
-                nums.Push(-nums.Pop());
 
             if (nums.Count != 1) {
                 throw new ArgumentException($"the expr is wrong with nums left: {nums}");
