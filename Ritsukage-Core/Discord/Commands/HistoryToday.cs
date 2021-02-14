@@ -10,7 +10,7 @@ namespace Ritsukage.Discord.Commands
         [Command("历史上的今天"), Alias("historytoday")]
         public async Task Normal()
         {
-            if (await Context.User.CheckCoins(8))
+            if (await Context.User.CheckCoins(3))
             {
                 var msg = await ReplyAsync("``数据检索中……``");
                 try
@@ -22,7 +22,7 @@ namespace Ritsukage.Discord.Commands
                     for (var i = 1; i < h.Length; i++)
                         sb.AppendLine().Append(h[i].ToString());
                     await msg.ModifyAsync(x => x.Content = sb.ToString());
-                    await Context.User.RemoveCoins(8);
+                    await Context.User.RemoveCoins(3);
                 }
                 catch
                 {
