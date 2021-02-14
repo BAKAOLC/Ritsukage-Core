@@ -85,7 +85,11 @@ namespace Ritsukage.Tools
             double value = GetExprValue(expr[start..idx]);
             return (value, idx - 1);
         }
-
+        /// <summary>	
+        /// 解析简单的数学表达式，不保证结果，表达式有问题可能会丢未知异常	
+        /// </summary>	
+        /// <param name="expr">表达式 需要保证无空格</param>	
+        /// <returns>表达式计算结果 不保证正确性</returns>
         public static double GetExprValue(string expr) {
             var nums = new Stack<double>();
             var ops = new Stack<Operator>();
