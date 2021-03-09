@@ -74,7 +74,8 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 构造
         public static User Get(int id)
         {
-            var info = Hibi.HibiBilibili.GetUserInfo(id);
+            //var info = Hibi.HibiBilibili.GetUserInfo(id);
+            var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
             if (((int)info["code"]) != 0)
                 throw new Exception((string)info["message"]);
             return new User()

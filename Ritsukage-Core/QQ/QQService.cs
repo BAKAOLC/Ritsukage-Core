@@ -2,7 +2,8 @@
 using Ritsukage.QQ.Events;
 using Ritsukage.Tools.Console;
 using Sora.Entities.Base;
-using Sora.Server;
+using Sora.Net;
+using Sora.OnebotModel;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -100,6 +101,14 @@ namespace Ritsukage.QQ
                 ConsoleLog.Info(e.EventName, $"[{e.LoginUid}] {e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
 
                 await Task.Run(() => CommandManager.ReceiveMessage(e));
+            };
+            server.Event.OnSelfMessage += async (s, e) =>
+            {
+                if (e.IsAnonymousMessage)
+                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
+                else
+                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
+                await ValueTask.CompletedTask;
             };
             #endregion
             #region Event Manager

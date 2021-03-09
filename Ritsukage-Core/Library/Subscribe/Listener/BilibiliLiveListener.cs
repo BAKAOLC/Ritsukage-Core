@@ -62,7 +62,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 foreach (var c in Checker.ToArray())
                 {
                     Broadcast(await c.Check());
-                    await Task.Delay(5000);
+                    await Task.Delay(20 * 1000);
                 }
             });
         }

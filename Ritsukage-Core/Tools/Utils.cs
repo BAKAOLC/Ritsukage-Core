@@ -176,6 +176,41 @@ namespace Ritsukage.Tools
             request.Abort();
             return retString;
         }
+        public static string HttpPUT(HttpWebRequest request, string content = "", string contentType = "")
+        {
+            request.Method = "PUT";
+            if (!string.IsNullOrWhiteSpace(contentType))
+                request.ContentType = contentType;
+            request.ContentLength = content.Length;
+            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
+            using Stream stream = request.GetRequestStream();
+            stream.Write(byteResquest, 0, byteResquest.Length);
+            stream.Close();
+            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string retString;
+            if (response.ContentEncoding == "gzip")
+            {
+                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                retString = reader.ReadToEnd();
+            }
+            else if (response.ContentEncoding == "br")
+            {
+                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
+                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
+                retString = reader.ReadToEnd();
+            }
+            else
+            {
+                using Stream rs = response.GetResponseStream();
+                using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
+                retString = sr.ReadToEnd();
+            }
+            response.Close();
+            response.Dispose();
+            request.Abort();
+            return retString;
+        }
 
         public static string HttpGET(string Url, string postDataStr = "", long timeout = 20000,
             string cookie = "", string referer = "", string origin = "")
@@ -183,12 +218,10 @@ namespace Ritsukage.Tools
             HttpWebRequest request = null;
             try
             {
-                if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-                {
-                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                }
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request = (HttpWebRequest)WebRequest.Create(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)));
+                request.ServerCertificateValidationCallback = delegate { return true; };
                 request.Timeout = (int)timeout;
                 SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
@@ -200,9 +233,7 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
-                if (e.InnerException != null)
-                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e.InnerException));
+                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
             }
             return string.Empty;
         }
@@ -212,12 +243,10 @@ namespace Ritsukage.Tools
             HttpWebRequest request = null;
             try
             {
-                if (Url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-                {
-                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                }
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request = (HttpWebRequest)WebRequest.Create(Url);
+                request.ServerCertificateValidationCallback = delegate { return true; };
                 request.Timeout = (int)timeout;
                 SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
@@ -229,9 +258,32 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e));
-                if (e.InnerException != null)
-                    ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e.InnerException));
+                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
+            }
+            return string.Empty;
+        }
+        public static string HttpPUT(string Url, string postDataStr, long timeout = 20000,
+           string cookie = "", string referer = "", string origin = "", string contentType = "")
+        {
+            HttpWebRequest request = null;
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                request = (HttpWebRequest)WebRequest.Create(Url);
+                request.ServerCertificateValidationCallback = delegate { return true; };
+                request.Timeout = (int)timeout;
+                SetHttpHeaders(request, "pc", cookie);
+                if (!string.IsNullOrWhiteSpace(referer))
+                    request.Referer = referer;
+                if (!string.IsNullOrWhiteSpace(origin))
+                    request.Headers.Add("Origin", origin);
+                return HttpPUT(request, postDataStr, contentType);
+            }
+            catch (Exception e)
+            {
+                request?.Abort();
+                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
             }
             return string.Empty;
         }

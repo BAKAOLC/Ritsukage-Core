@@ -5,6 +5,7 @@ using Ritsukage.Library.Subscribe;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
 using System;
+using System.IO;
 using System.Threading;
 
 namespace Ritsukage
@@ -22,6 +23,13 @@ namespace Ritsukage
         static void Main(string[] args)
 #pragma warning restore IDE0060 // 删除未使用的参数
         {
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var directory = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "crash-report"));
+                File.WriteAllText(
+                    Path.Combine(directory.FullName, $"crash-{DateTime.Now:yyyyMMdd-HHmmss-ffff}.log"),
+                    ConsoleLog.ErrorLogBuilder((Exception)args.ExceptionObject));
+            };
             Console.Title = "Ritsukage Core";
             ConsoleLog.Info("Main", "Loading...");
             Launch();
@@ -101,7 +109,8 @@ namespace Ritsukage
                             Location = cfg.Host,
                             Port = cfg.Port,
                             AccessToken = cfg.AccessToken,
-                            HeartBeatTimeOut = cfg.HeartBeatTimeOut
+                            HeartBeatTimeOut = cfg.HeartBeatTimeOut,
+                            EnableSoraCommandManager = false
                         });
                         QQServer.Start();
                     }

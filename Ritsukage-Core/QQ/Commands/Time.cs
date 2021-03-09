@@ -26,15 +26,22 @@ namespace Ritsukage.QQ.Commands
         [Command("北欧历")]
         public static async void BOL(SoraMessage e)
         {
-            var day = Math.Floor((DateTime.Now - new DateTime(2019, 8, 1, 0, 0, 0)).TotalDays) + 1;
+            var day = Math.Floor((DateTime.Now.Date - new DateTime(2019, 8, 1, 0, 0, 0)).TotalDays) + 1;
             await e.Reply($"当前为北欧历时间：\n2019年08月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
         }
 
         [Command("新北欧历")]
         public static async void NewBOL(SoraMessage e)
         {
-            var day = Math.Floor((DateTime.Now - new DateTime(2020, 6, 1, 0, 0, 0)).TotalDays) + 1;
+            var day = Math.Floor((DateTime.Now.Date - new DateTime(2020, 6, 1, 0, 0, 0)).TotalDays) + 1;
             await e.Reply($"当前为新北欧历时间：\n2020年06月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+        }
+
+        [Command("新新北欧历")]
+        public static async void NewNewBOL(SoraMessage e)
+        {
+            var day = Math.Floor((DateTime.Now.Date - new DateTime(2021, 7, 1, 0, 0, 0)).TotalDays) + 1;
+            await e.Reply($"当前为新新北欧历时间：\n2021年07月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
         }
 
         [Command("日期测试")]
