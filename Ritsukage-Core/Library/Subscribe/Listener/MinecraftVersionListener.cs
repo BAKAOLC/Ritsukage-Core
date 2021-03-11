@@ -1,14 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -99,7 +95,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             => new StringBuilder()
                 .AppendLine("[Minecraft]")
                 .AppendLine(result.Title)
-                .Append(result.Time.ToString("yyyy-MM-dd hh:mm:ss"))
+                .Append(result.Time.ToString("yyyy-MM-dd HH:mm:ss"))
                 .ToString();
     }
 }

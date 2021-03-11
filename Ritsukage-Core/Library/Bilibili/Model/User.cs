@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Text;
 
@@ -60,7 +61,8 @@ namespace Ritsukage.Library.Bilibili.Model
             return new StringBuilder()
                 .AppendLine($"{Name} (UID:{Id}) Lv{Level}")
                 .AppendLine($"性别：{Sex}  生日：{birth}  关注：{Following}  粉丝：{Follower}")
-                .Append(Sign)
+                .AppendLine(Sign)
+                .Append(Url)
                 .ToString();
         }
         public override string ToString()
@@ -74,9 +76,13 @@ namespace Ritsukage.Library.Bilibili.Model
         #region 构造
         public static User Get(int id)
         {
-            var info = Hibi.HibiBilibili.GetUserInfo(id);
+            //var info = Hibi.HibiBilibili.GetUserInfo(id);
+            var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
             if (((int)info["code"]) != 0)
                 throw new Exception((string)info["message"]);
+            ConsoleLog.Debug("Bilibili",
+                new StringBuilder("[User Info Parser] Parser: ")
+                .AppendLine().Append(info["data"].ToString()).ToString());
             return new User()
             {
                 Id = (int)info["data"]["card"]["mid"],

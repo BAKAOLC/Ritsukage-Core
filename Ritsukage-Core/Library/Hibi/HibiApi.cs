@@ -6,7 +6,7 @@ namespace Ritsukage.Library.Hibi
 {
     public class HibiApi
     {
-        const string Host = "https://hibiapi.herokuapp.com";
+        const string Host = "https://api.obfs.dev";
 
         public static JToken Get(string path, Dictionary<string, object> param = null)
         {

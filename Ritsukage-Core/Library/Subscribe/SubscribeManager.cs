@@ -15,8 +15,8 @@ namespace Ritsukage.Library.Subscribe
         {
             if (_init) return;
             _init = true;
-            Listeners.Add(new BilibiliLiveListener(), 60 * 1000);
-            Listeners.Add(new BilibiliDynamicListener(), 5 * 60 * 1000);
+            Listeners.Add(new BilibiliLiveListener(), 3 * 60 * 1000);
+            Listeners.Add(new BilibiliDynamicListener(), 8 * 60 * 1000);
             Listeners.Add(new MinecraftVersionListener(), 60 * 1000);
             CreateListenerThread();
         }
@@ -28,7 +28,7 @@ namespace Ritsukage.Library.Subscribe
             {
                 while (true)
                 {
-                    Thread.Sleep(20000);
+                    Thread.Sleep(20 * 1000);
                     foreach (var listener in Listeners)
                     {
                         ConsoleLog.Debug("Subscribe", "Refresh subscribe listener: " + listener.Key.GetType().FullName);

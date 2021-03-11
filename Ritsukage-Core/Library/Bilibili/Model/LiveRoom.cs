@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Globalization;
 using System.Text;
@@ -103,6 +104,9 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("http://api.live.bilibili.com/room/v1/Room/get_info?room_id=" + id));
             if ((int)info["code"] != 0)
                 throw new Exception((string)info["message"]);
+            ConsoleLog.Debug("Bilibili",
+                new StringBuilder("[Live Room Info Parser] Parser: ")
+                .AppendLine().Append(info["data"].ToString()).ToString());
             var room = new LiveRoom()
             {
                 UserId = (int)info["data"]["uid"],
@@ -123,7 +127,7 @@ namespace Ritsukage.Library.Bilibili.Model
             if (room.LiveStatus == LiveStatus.Live)
                 room.LiveStartTime = Convert.ToDateTime((string)info["data"]["live_time"], new DateTimeFormatInfo()
                 {
-                    FullDateTimePattern = "yyyy-MM-dd hh:mm:ss"
+                    FullDateTimePattern = "yyyy-MM-dd HH:mm:ss"
                 });
             return room;
         }

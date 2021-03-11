@@ -57,7 +57,7 @@ namespace Ritsukage.Library.Bilibili.Model
         public string GetInfo()
             => new StringBuilder()    
             .AppendLine($"动态UP：{UserName}(UID:{UserId})")    
-            .AppendLine("发布时间：" + Time.ToString("yyyy-MM-dd hh:mm:ss"))    
+            .AppendLine("发布时间：" + Time.ToString("yyyy-MM-dd HH:mm:ss"))    
             .Append($"查看数：{View}  转发：{Repost}  评论：{Reply}  点赞：{Like}")
             .ToString();
         public string BaseToString()

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Text;
 
@@ -7,6 +8,7 @@ namespace Ritsukage.Library.Bilibili.Model
 {
     public class Vote
     {
+        #region 属性
         /// <summary>
         /// Id
         /// </summary>
@@ -47,6 +49,7 @@ namespace Ritsukage.Library.Bilibili.Model
         /// 投票选项
         /// </summary>
         public VoteOption[] Options;
+        #endregion
 
         #region 方法
         public string BaseToString()
@@ -56,7 +59,7 @@ namespace Ritsukage.Library.Bilibili.Model
             if (!string.IsNullOrWhiteSpace(Desc))
                 sb.AppendLine(Desc);
             sb.AppendLine("参与人数：" + Join);
-            sb.AppendLine("截止时间：" + EndTime.ToString("yyyy-MM-dd hh:mm:ss"));
+            sb.AppendLine("截止时间：" + EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
             sb.Append("投票选项" + (ChooseNumber == 1 ? "(单选)" : $"(多选，最多可选择{ChooseNumber}项)："));
             for (var i = 0; i < Options.Length; i++)
             {
@@ -72,7 +75,7 @@ namespace Ritsukage.Library.Bilibili.Model
             if (!string.IsNullOrWhiteSpace(Desc))
                 sb.AppendLine(Desc);
             sb.AppendLine("参与人数：" + Join);
-            sb.AppendLine("截止时间：" + EndTime.ToString("yyyy-MM-dd hh:mm:ss"));
+            sb.AppendLine("截止时间：" + EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
             sb.Append("投票选项" + (ChooseNumber == 1 ? "(单选)" : $"(多选，最多可选择{ChooseNumber}项)："));
             for (var i = 0; i < Options.Length; i++)
             {
@@ -89,6 +92,9 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("https://api.vc.bilibili.com/vote_svr/v1/vote_svr/vote_info?vote_id=" + id));
             if ((int)info["code"] != 0)
                 throw new Exception($"投票id{id}不存在");
+            ConsoleLog.Debug("Bilibili",
+                new StringBuilder("[Vote Info Parser] Parser: ")
+                .AppendLine().Append(info["data"].ToString()).ToString());
             var vote = new Vote()
             {
                 Id = (int)info["data"]["info"]["vote_id"],

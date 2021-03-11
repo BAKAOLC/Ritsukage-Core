@@ -5,6 +5,7 @@ using Ritsukage.Tools;
 using Sora.Entities.CQCodes;
 using Sora.EventArgs.SoraEvent;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,15 +28,17 @@ namespace Ritsukage.QQ.Events
         static readonly object _lock = new();
         static readonly Dictionary<long, Dictionary<string, Dictionary<string, DateTime>>> Delay = new();
 
+        #region Regex define
         static readonly Regex Regex_ShortLink = new Regex(@"^((https?://)?b23\.tv/)(?<data>[0-9a-zA-Z]+)");
-
-        const string BilibiliVideo = "https://www.bilibili.com/video/";
+        static readonly Regex Regex_User = new Regex(@"^((https?://)?space\.bilibili\.com/)(?<id>\d+)");
         static readonly Regex Regex_AV = new Regex(@"^[Aa][Vv](?<av>\d+)$");
         static readonly Regex Regex_BV = new Regex(@"^[Bb][Vv](?<bv>1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2})$");
         static readonly Regex Regex_Video = new Regex(@"^((https?://)?www\.bilibili\.com/video/)(?<id>[0-9a-zA-Z]+)");
-
-        const string BilibiliLiveRoom = "https://live.bilibili.com/";
         static readonly Regex Regex_LiveRoom = new Regex(@"^((https?://)?live\.bilibili\.com/)(?<id>\d+)");
+        static readonly Regex Regex_Dynamic = new Regex(@"^((https?://)?t\.bilibili\.com/)(?<id>\d+)");
+        #endregion
+
+        const string BilibiliVideo = "https://www.bilibili.com/video/";
 
         static async void Trigger(GroupMessageEventArgs args)
         {
@@ -46,13 +49,16 @@ namespace Ritsukage.QQ.Events
                 {
                     Delay.Add(args.SourceGroup.Id, record = new()
                     {
+                        { "user", new() },
                         { "video", new() },
-                        { "live", new() }
+                        { "live", new() },
+                        { "dynamic", new() }
                     });
                 }
             }
             Match m;
             string baseStr = args.Message.RawText;
+            #region 小程序
             var cqJson = args.Message.MessageList.Where(x => x.Function == Sora.Enumeration.CQFunction.Json).FirstOrDefault();
             if (cqJson != null)
             {
@@ -60,7 +66,30 @@ namespace Ritsukage.QQ.Events
                 if ((string)data["desc"] == "哔哩哔哩")
                     baseStr = (string)data["meta"]["detail_1"]["qqdocurl"];
             }
+            #endregion
             #region RawText Match
+            #region User
+            m = Regex_User.Match(baseStr);
+            if (m.Success)
+            {
+                var o = m.Groups["id"].Value;
+                if (int.TryParse(o, out var id))
+                {
+                    try
+                    {
+                        if (!record["user"].ContainsKey(o) || (DateTime.Now - record["user"][o]).TotalSeconds >= DelayTime)
+                        {
+                            record["user"][o] = DateTime.Now;
+                            SendUserInfo(args, User.Get(id));
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+                return;
+            }
+            #endregion
             #region AV
             m = Regex_AV.Match(baseStr);
             if (m.Success)
@@ -73,8 +102,7 @@ namespace Ritsukage.QQ.Events
                         if (!record["video"].ContainsKey(av) || (DateTime.Now - record["video"][av]).TotalSeconds >= DelayTime)
                         {
                             record["video"][av] = DateTime.Now;
-                            var video = Video.Get(_av);
-                            SendVideoInfo(args, video);
+                            SendVideoInfo(args, Video.Get(_av));
                         }
                     }
                     catch
@@ -94,8 +122,7 @@ namespace Ritsukage.QQ.Events
                     if (!record["video"].ContainsKey(baseStr) || (DateTime.Now - record["video"][bv]).TotalSeconds >= DelayTime)
                     {
                         record["video"][bv] = DateTime.Now;
-                        var video = Video.Get(baseStr);
-                        SendVideoInfo(args, video);
+                        SendVideoInfo(args, Video.Get(baseStr));
                     }
                 }
                 catch
@@ -116,8 +143,29 @@ namespace Ritsukage.QQ.Events
                         if (!record["live"].ContainsKey(o) || (DateTime.Now - record["live"][o]).TotalSeconds >= DelayTime)
                         {
                             record["live"][o] = DateTime.Now;
-                            var room = LiveRoom.Get(id);
-                            SendLiveRoomInfo(args, room);
+                            SendLiveRoomInfo(args, LiveRoom.Get(id));
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+                return;
+            }
+            #endregion
+            #region Dynamic
+            m = Regex_Dynamic.Match(baseStr);
+            if (m.Success)
+            {
+                var o = m.Groups["id"].Value;
+                if (ulong.TryParse(o, out var id))
+                {
+                    try
+                    {
+                        if (!record["dynamic"].ContainsKey(o) || (DateTime.Now - record["dynamic"][o]).TotalSeconds >= DelayTime)
+                        {
+                            record["dynamic"][o] = DateTime.Now;
+                            SendDynamicInfo(args, Dynamic.Get(id));
                         }
                     }
                     catch
@@ -149,6 +197,28 @@ namespace Ritsukage.QQ.Events
             #region Url Parser
             foreach (var url in urls)
             {
+                #region User
+                m = Regex_User.Match(url);
+                if (m.Success)
+                {
+                    var o = m.Groups["id"].Value;
+                    if (int.TryParse(o, out var id))
+                    {
+                        try
+                        {
+                            if (!record["user"].ContainsKey(o) || (DateTime.Now - record["user"][o]).TotalSeconds >= DelayTime)
+                            {
+                                record["user"][o] = DateTime.Now;
+                                SendUserInfo(args, User.Get(id));
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    continue;
+                }
+                #endregion
                 #region Video
                 m = Regex_Video.Match(url);
                 if (m.Success)
@@ -166,8 +236,7 @@ namespace Ritsukage.QQ.Events
                                 if (!record["video"].ContainsKey(av) || (DateTime.Now - record["video"][av]).TotalSeconds >= DelayTime)
                                 {
                                     record["video"][av] = DateTime.Now;
-                                    var video = Video.Get(_av);
-                                    SendVideoInfo(args, video);
+                                    SendVideoInfo(args, Video.Get(_av));
                                 }
                             }
                             catch
@@ -187,8 +256,7 @@ namespace Ritsukage.QQ.Events
                             if (!record["video"].ContainsKey(bv) || (DateTime.Now - record["video"][bv]).TotalSeconds >= DelayTime)
                             {
                                 record["video"][bv] = DateTime.Now;
-                                var video = Video.Get(bv);
-                                SendVideoInfo(args, video);
+                                SendVideoInfo(args, Video.Get(bv));
                             }
                         }
                         catch
@@ -223,9 +291,37 @@ namespace Ritsukage.QQ.Events
                     continue;
                 }
                 #endregion
+                #region Dynamic
+                m = Regex_Dynamic.Match(url);
+                if (m.Success)
+                {
+                    var o = m.Groups["id"].Value;
+                    if (ulong.TryParse(o, out var id))
+                    {
+                        try
+                        {
+                            if (!record["dynamic"].ContainsKey(o) || (DateTime.Now - record["dynamic"][o]).TotalSeconds >= DelayTime)
+                            {
+                                record["dynamic"][o] = DateTime.Now;
+                                SendDynamicInfo(args, Dynamic.Get(id));
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    continue;
+                }
+                #endregion
             }
             #endregion
         }
+
+        static async void SendUserInfo(GroupMessageEventArgs e, User user)
+            => await e.Reply(CQCode.CQImage(user.FaceUrl), new StringBuilder()
+                .AppendLine()
+                .AppendLine(user.BaseToString())
+                .ToString());
 
         static async void SendVideoInfo(GroupMessageEventArgs e, Video video)
             => await e.Reply(CQCode.CQImage(video.PicUrl), new StringBuilder()
@@ -240,6 +336,18 @@ namespace Ritsukage.QQ.Events
                 .AppendLine()
                 .AppendLine(room.BaseToString())
                 .ToString());
+        }
+
+        static async void SendDynamicInfo(GroupMessageEventArgs e, Dynamic dynamic)
+        {
+            ArrayList msg = new();
+            foreach (var pic in dynamic.Pictures)
+            {
+                msg.Add(CQCode.CQImage(pic));
+                msg.Add(Environment.NewLine);
+            }
+            msg.Add(dynamic.BaseToString());
+            await e.Reply(msg.ToArray());
         }
     }
 }

@@ -29,19 +29,37 @@ namespace Ritsukage.Tools.Console
         #endregion
 
         #region 格式化错误Log
+        static string FormatException(Exception e)
+            => new StringBuilder()
+            .AppendLine("Error:" + e.GetType().FullName)
+            .AppendLine("Message:" + e.Message)
+            .AppendLine("Stack Trace:")
+            .Append(e.StackTrace).ToString();
+
         /// <summary>
         /// 生成格式化的错误Log文本
         /// </summary>
         /// <param name="e">错误</param>
         /// <returns>格式化Log</returns>
-        public static string ErrorLogBuilder(Exception e)
-            => new StringBuilder().AppendLine()
+        public static string ErrorLogBuilder(Exception e, bool showInnerException)
+        {
+            var sb = new StringBuilder().AppendLine()
             .AppendLine("==============ERROR==============")
-            .AppendLine("Error:" + e.GetType().FullName)
-            .AppendLine("Message:" + e.Message)
-            .AppendLine("Stack Trace:")
-            .AppendLine(e.StackTrace)
-            .Append("=================================").ToString();
+            .AppendLine(FormatException(e));
+            if (showInnerException)
+            {
+                while (e.InnerException != null)
+                {
+                    sb.AppendLine("==============INNER==============")
+                        .AppendLine(FormatException(e.InnerException));
+                    e = e.InnerException;
+                }
+            }
+            sb.Append("=================================");
+            return sb.ToString();
+        }
+        public static string ErrorLogBuilder(Exception e) => ErrorLogBuilder(e, false);
+        public static string GetFormatString(this Exception e, bool showInnerException) => ErrorLogBuilder(e, showInnerException);
         public static string GetFormatString(this Exception e) => ErrorLogBuilder(e);
         #endregion
 
