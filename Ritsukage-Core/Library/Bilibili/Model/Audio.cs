@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Text;
 
@@ -83,7 +84,7 @@ namespace Ritsukage.Library.Bilibili.Model
             .AppendLine(Intro)
             .AppendLine("原视频：" + BV)
             .AppendLine($"播放：{Statistic.Play}  收藏：{Statistic.Collect}  评论：{Statistic.Comment}  分享：{Statistic.Share}")
-            .AppendLine("发布时间：" + UploadTime.ToString("yyyy-MM-dd hh:mm:ss"))
+            .AppendLine("发布时间：" + UploadTime.ToString("yyyy-MM-dd HH:mm:ss"))
             .Append(Url)
             .ToString();
         public override string ToString()
@@ -102,7 +103,11 @@ namespace Ritsukage.Library.Bilibili.Model
             return GetByJson(info["data"]);
         }
         public static Audio GetByJson(JToken data)
-            => new Audio()
+        {
+            ConsoleLog.Debug("Bilibili",
+                new StringBuilder("[Audio Info Parser] Parser: ")
+                .AppendLine().Append(data.ToString()).ToString());
+            return new Audio()
             {
                 Id = (int)data["id"],
                 AV = (int)data["aid"],
@@ -127,6 +132,7 @@ namespace Ritsukage.Library.Bilibili.Model
                     Share = (int)data["statistic"]["share"],
                 },
             };
+        }
         #endregion
     }
 

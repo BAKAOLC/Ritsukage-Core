@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Linq;
 using System.Text;
@@ -91,7 +92,7 @@ namespace Ritsukage.Library.Bilibili.Model
             .AppendLine($"UP：{UserName}(https://space.bilibili.com/{UserId})")
             .AppendLine($"播放量：{Statistic.View} 弹幕：{Statistic.Danmaku} 评论：{Statistic.Reply}")
             .AppendLine($"收藏：{Statistic.Favorite} 投币：{Statistic.Coin} 分享：{Statistic.Share} 点赞：{Statistic.Like}")
-            .AppendLine("发布时间：" + PubDate.ToString("yyyy-MM-dd hh:mm:ss"))
+            .AppendLine("发布时间：" + PubDate.ToString("yyyy-MM-dd HH:mm:ss"))
             .AppendLine(Desc)
             .Append(Url)
             .ToString();
@@ -121,6 +122,9 @@ namespace Ritsukage.Library.Bilibili.Model
         }
         public static Video GetByJson(JToken data)
         {
+            ConsoleLog.Debug("Bilibili",
+                new StringBuilder("[Video Info Parser] Parser: ")
+                .AppendLine().Append(data.ToString()).ToString());
             var video = new Video()
             {
                 AV = (long)data["aid"],
@@ -134,7 +138,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 .Replace("<br/>", Environment.NewLine)),
                 Count = (int)data["videos"],
                 PubDate = Utils.GetDateTime((long)data["pubdate"]),
-                CopyRight = (int)data["copyright"] == 1 ? true : false,
+                CopyRight = (int)data["copyright"] == 1,
                 AreaId = (int)data["tid"],
                 AreaName = (string)data["tname"],
                 Duration = new TimeSpan(0, 0, (int)data["duration"]),
@@ -235,6 +239,8 @@ namespace Ritsukage.Library.Bilibili.Model
 
     public static class VideoExtensions
     {
+        public static string PutCoin(string bv, string cookie)
+            => PutCoin(BilibiliAVBVConverter.ToAV(bv), cookie);
         public static string PutCoin(long av, string cookie)
         {
             string jct = Bilibili.GetJCT(cookie);

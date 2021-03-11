@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using Ritsukage.Tools;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -41,7 +40,7 @@ namespace Ritsukage.Library.Pixiv.Model
             Author = new(data["user"]);
             CreateDate = Convert.ToDateTime((string)data["create_date"], new DateTimeFormatInfo()
             {
-                FullDateTimePattern = "yyyy-MM-ddThh:mm:sszzz"
+                FullDateTimePattern = "yyyy-MM-ddTHH:mm:sszzz"
             });
             PageCount = (int)data["page_count"];
             List<ImageUrls> images = new();

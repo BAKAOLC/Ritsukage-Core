@@ -25,7 +25,7 @@ namespace Ritsukage.Discord.Commands
                     .AppendLine($"Author: {detail.Author}")
                     .AppendLine(detail.Caption)
                     .AppendLine($"Tags: {string.Join(" | ", detail.Tags)}")
-                    .AppendLine($"Publish Date: {detail.CreateDate:yyyy-MM-dd hh:mm:ss}")
+                    .AppendLine($"Publish Date: {detail.CreateDate:yyyy-MM-dd HH:mm:ss}")
                     .AppendLine($"Bookmarks: {detail.TotalBookmarks} Comments:{detail.TotalComments} Views:{detail.TotalView}")
                     .Append(detail.Url);
                     await msg.ModifyAsync(x => x.Content = msg.ToString());
