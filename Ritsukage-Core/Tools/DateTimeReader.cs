@@ -6,32 +6,41 @@ namespace Ritsukage.Tools
 {
     public static class DateTimeReader
     {
-        static readonly string[] DateFormats = {
-            "%y'年'%M'月'%d'日'",      //2021年01月04日
-            "%y'/'%M'/'%d",            //2021/01/04
-            "%y'-'%M'-'%d",            //2021-01-04
-            "%y'年'%M'月'",            //2021年01月
-            "%y'/'%M",                 //2021/01
-            "%y'-'%M'",                //2021-01
-            "%M'月'%d'日'",            //01月04日
-            "%M'/'%d",                 //01/04
-            "%M'-'%d",                 //01-04
-            "%y'年'",                  //2021年
-            "%M'月'",                  //01月
-            "%d'日'",                  //04日
+        static readonly Regex[] DateMatch = {
+            new Regex(@"((?<year>\d{4})年)?((?<month>\d{1,2})月)?((?<day>\d{1,2})日)?"),
+            new Regex(@"(?<year>\d{4})/(?<month>\d{1,2})/(?<day>\d{1,2})"),
+            new Regex(@"(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})"),
+            new Regex(@"(?<year>\d{4})/(?<month>\d{1,2})"),
+            new Regex(@"(?<year>\d{4})-(?<month>\d{1,2})"),
+            new Regex(@"(?<month>\d{1,2})/(?<day>\d{1,2})"),
+            new Regex(@"(?<month>\d{1,2})-(?<day>\d{1,2})"),
         };
-        static readonly string[] DateMatch = {
-            @"\d+年\d+月\d+日",
-            @"\d+/\d+/\d+",
-            @"\d+\-\d+\-\d+",
-            @"\d+月\d+日",
-            @"\d+年\d+月",
-            @"\d+/\d+",
-            @"\d+\-\d+",
-            @"\d+年",
-            @"\d+月",
-            @"\d+日",
-        };
+        static DateTime? GetDate(string original)
+        {
+            var now = DateTime.Now;
+            Match m = null;
+            foreach (var dm in DateMatch)
+            {
+                var r = dm.Match(original);
+                if (r.Success && !string.IsNullOrWhiteSpace(r.Value))
+                {
+                    m = r;
+                    break;
+                }
+            }
+            if (m != null)
+            {
+                if (!int.TryParse(m.Groups["year"].Value, out int year))
+                    year = now.Year;
+                if (!int.TryParse(m.Groups["month"].Value, out int month))
+                    month = 1;
+                if (!int.TryParse(m.Groups["day"].Value, out int day))
+                    day = 1;
+                return new DateTime(year, month, day).Date;
+            }
+            return null;
+        }
+
         static readonly string[] TimeFormats = {
             "%H'时'%m'分'%s'秒'",     //08时41分20秒
             "%H':'%m':'%s",          //08:41:20
@@ -46,46 +55,37 @@ namespace Ritsukage.Tools
             @"\d+:\d+",
             @"\d+分\d+秒",
         };
-
-        public static DateTime Parse(string original)
+        static TimeSpan? GetTime(string original)
         {
-            var s = original.ToLower();
-
-            string date = string.Empty;
             string time = string.Empty;
-            foreach (var dm in DateMatch)
-            {
-                var r = Regex.Match(s, dm);
-                if (r.Success)
-                {
-                    date = r.Value;
-                    break;
-                }
-            }
             foreach (var tm in TimeMatch)
             {
-                var r = Regex.Match(s, tm);
+                var r = Regex.Match(original, tm);
                 if (r.Success)
                 {
                     time = r.Value;
                     break;
                 }
             }
+            if (DateTime.TryParseExact(time, TimeFormats, CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces, out var gotTime))
+                return gotTime.TimeOfDay;
+            return null;
+        }
 
-            DateTime? Date = null;
-            TimeSpan? Time = null;
-            if (DateTime.TryParseExact(date, DateFormats, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var gotDate))
-                Date = gotDate.Date;
-            if (DateTime.TryParseExact(time, TimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var gotTime))
-                Time = gotTime.TimeOfDay;
-
-            if (Date.HasValue && Time.HasValue)
-                return Date.Value + Time.Value;
-            else if (Date.HasValue)
-                return Date.Value;
-            else if (Time.HasValue)
-                return DateTime.Today + Time.Value;
-            else throw new ArgumentException($"{original} is not a datetime value.");
+        public static DateTime Parse(string original)
+        {
+            var s = original.ToLower();
+            var date = GetDate(s);
+            var time = GetTime(s);
+            if (date.HasValue && time.HasValue)
+                return date.Value + time.Value;
+            else if (date.HasValue)
+                return date.Value;
+            else if (time.HasValue)
+                return DateTime.Today + time.Value;
+            else
+                throw new ArgumentException($"{original} is not a datetime value.");
         }
     }
 }
