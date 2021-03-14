@@ -66,12 +66,9 @@ namespace Ritsukage.Library.Roll.Model
                 int recentDay = data.Where(x => x.ResidueDays > 0).ToArray()[0].ResidueDays;
                 var recent = data.Where(x => x.ResidueDays == recentDay).ToList();
                 _recent = today.Concat(recent).ToArray();
-                if (today.Count == 0)
-                {
-                    recentDay = data.Where(x => x.ResidueDays > recentDay).ToArray()[0].ResidueDays;
-                    recent = data.Where(x => x.ResidueDays == recentDay).ToList();
-                    _recent = _recent.Concat(recent).ToArray();
-                }
+                recentDay = data.Where(x => x.ResidueDays > recentDay).ToArray()[0].ResidueDays;
+                recent = data.Where(x => x.ResidueDays == recentDay).ToList();
+                _recent = _recent.Concat(recent).ToArray();
                 return _recent;
             }
             throw new Exception("最近节日获取失败");

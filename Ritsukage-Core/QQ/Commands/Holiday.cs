@@ -6,7 +6,7 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup]
     public static class Holiday
     {
-        [Command("最近节日", "holiday")]
+        [Command("最近节日", "holiday"), ExecutesCooldown("holiday", 120, true)]
         public static async void Normal(SoraMessage e)
         {
             try
@@ -18,6 +18,7 @@ namespace Ritsukage.QQ.Commands
                 for (var i = 1; i < h.Length; i++)
                     sb.AppendLine().Append(h[i].ToString());
                 await e.Reply(sb.ToString());
+                await e.UpdateGroupCooldown("holiday");
             }
             catch
             {

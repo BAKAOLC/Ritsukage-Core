@@ -15,11 +15,13 @@ namespace Ritsukage.Tools
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
 
+        public static readonly DateTime BaseUTC = new DateTime(1970, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc);
+
         public static DateTime GetDateTime(double ts)
-            => new DateTime(1970, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc).AddSeconds(ts);
+            => BaseUTC.AddSeconds(ts);
 
         public static long GetTimeStamp()
-            => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+            => (long)(DateTime.UtcNow - BaseUTC).TotalSeconds;
 
         const string TaobaoTimeStampApi = "http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp";
         public static long GetNetworkTimeStamp()

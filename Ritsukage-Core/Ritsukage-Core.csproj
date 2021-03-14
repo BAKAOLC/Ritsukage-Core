@@ -14,6 +14,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="QQ\Console\**" />
+    <EmbeddedResource Remove="QQ\Console\**" />
+    <None Remove="QQ\Console\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Library\Roll\Model\HistoryToday.cs~RFc9704f4.TMP" />
     <None Remove="Tools\Utils.cs~RFe53c63.TMP" />
   </ItemGroup>
