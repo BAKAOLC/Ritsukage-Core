@@ -12,3 +12,5 @@ TestResults
 /Ritsukage-Core/Library/Data/LuaSTGActivityData.cs
 /Ritsukage-Core/QQ/Commands/LuaSTGActivity.cs
 /Ritsukage-Core/QQ/Commands/RitsukageLive.cs
+/Ritsukage-Core/QQ/Commands/SuperAdminTool.cs
+/Ritsukage-Core/QQ/Console

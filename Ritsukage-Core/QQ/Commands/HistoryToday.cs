@@ -6,7 +6,7 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup]
     public static class HistoryToday
     {
-        [Command("历史上的今天", "historytoday"), NeedCoins(3)]
+        [Command("历史上的今天", "historytoday"), NeedCoins(3), ExecutesCooldown("historytoday", 120, true)]
         public static async void Normal(SoraMessage e)
         {
             try
@@ -21,6 +21,7 @@ namespace Ritsukage.QQ.Commands
                     sb.AppendLine().Append("<更多条目已被过滤，如果需要请自行搜索>");
                 await e.Reply(sb.ToString());
                 await e.RemoveCoins(3);
+                await e.UpdateGroupCooldown("historytoday");
             }
             catch
             {
