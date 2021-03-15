@@ -2,12 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Pixiv.Model
 {
     public class Illust
     {
+        public bool IsUgoira { get; init; }
+
         public int Id { get; init; }
 
         public string Title { get; init; }
@@ -32,11 +37,27 @@ namespace Ritsukage.Library.Pixiv.Model
 
         public string Url => "https://www.pixiv.net/artworks/" + Id;
 
+        public async Task<UgoiraMetadata> GetUgoiraMetadata()
+            => await Task.Run(() =>
+            {
+                var data = Hibi.HibiPixiv.GetIllustUgoiraMetadata(Id);
+                return new UgoiraMetadata(data["ugoira_metadata"]);
+            });
+
+        static readonly Regex HtmlTagParser = new Regex(@"<[^>]+>");
         public Illust(JToken data)
         {
+            IsUgoira = (string)data["type"] == "ugoira";
             Id = (int)data["id"];
             Title = (string)data["title"];
-            Caption = (string)data["caption"];
+            Caption = Escape(RemoveEmptyLine(HtmlTagParser.Replace((string)data["caption"], (s) =>
+            {
+                var text = s.Value;
+                if (text == "<br />")
+                    return Environment.NewLine;
+                else
+                    return "";
+            })));
             Author = new(data["user"]);
             CreateDate = Convert.ToDateTime((string)data["create_date"], new DateTimeFormatInfo()
             {
@@ -63,7 +84,19 @@ namespace Ritsukage.Library.Pixiv.Model
             TotalView = (int)data["total_view"];
             TotalBookmarks = (int)data["total_bookmarks"];
             TotalComments = (int)data["total_comments"];
+
         }
+
+        public override string ToString()
+            => new StringBuilder().AppendLine()
+                    .AppendLine(Title)
+                    .AppendLine($"Author: {Author}")
+                    .AppendLine(Caption)
+                    .AppendLine($"Tags: {string.Join(" | ", Tags)}")
+                    .AppendLine($"Publish Date: {CreateDate:yyyy-MM-dd HH:mm:ss}")
+                    .AppendLine($"Bookmarks: {TotalBookmarks} Comments:{TotalComments} Views:{TotalView}")
+                    .Append(Url)
+                    .ToString();
 
         public static async Task<Illust> Get(int id)
             => await Task.Run(() =>
@@ -74,6 +107,41 @@ namespace Ritsukage.Library.Pixiv.Model
                 else
                     return new Illust(data["illust"]);
             });
+
+        static string RemoveEmptyLine(string text)
+            => string.Join(Environment.NewLine, text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+                .GroupBy(x => x).Select(x => x.Key).ToArray());
+
+        public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
+    }
+
+    public struct UgoiraMetadata
+    {
+        public string ZipUrl { get; init; }
+        public UgoiraMetadataGifFrame[] Frames { get; init; }
+
+        public UgoiraMetadata(JToken data)
+        {
+            ZipUrl = (string)data["zip_urls"]["medium"];
+            List<UgoiraMetadataGifFrame> frames = new();
+            foreach (var frame in (JArray)data["frames"])
+                frames.Add(new(frame));
+            Frames = frames.ToArray();
+        }
+    }
+
+    public struct UgoiraMetadataGifFrame
+    {
+        public string File { get; init; }
+        public int Delay { get; init; }
+
+        public UgoiraMetadataGifFrame(JToken data) : this((string)data["file"], (int)data["delay"]) { }
+
+        public UgoiraMetadataGifFrame(string file, int delay)
+        {
+            File = file;
+            Delay = delay;
+        }
     }
 
     public struct ImageUrls
