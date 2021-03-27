@@ -19,6 +19,8 @@ namespace Ritsukage
 
         public static bool Working = false;
 
+        static DateTime LaunchTime;
+
 #pragma warning disable IDE0060 // 删除未使用的参数
         static void Main(string[] args)
 #pragma warning restore IDE0060 // 删除未使用的参数
@@ -30,17 +32,21 @@ namespace Ritsukage
                     Path.Combine(directory.FullName, $"crash-{DateTime.Now:yyyyMMdd-HHmmss-ffff}.log"),
                     ConsoleLog.ErrorLogBuilder((Exception)args.ExceptionObject));
             };
+            LaunchTime = DateTime.Now;
             Console.Title = "Ritsukage Core";
             ConsoleLog.Info("Main", "Loading...");
             Launch();
             while (Working)
             {
-                Thread.Sleep(1000);
+                UpdateTitle();
+                Thread.Sleep(100);
             }
             Shutdown();
             ConsoleLog.Info("Main", "程序主逻辑已结束，按任意键结束程序");
             Console.ReadKey();
         }
+
+        static void UpdateTitle() => Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}";
 
         static void Launch()
         {

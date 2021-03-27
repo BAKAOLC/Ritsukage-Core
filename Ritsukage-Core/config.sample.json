@@ -5,6 +5,8 @@
   "Roll_Api_Id": "", //Roll Api Id (https://github.com/MZCretin/RollToolsApi)
   "Roll_Api_Secret": "", //Roll Api Secret
   "SuoLinkToken": "", //缩链API(http://suolink.cn/) Token(用于短链接)
+  "BaiduTranslateAppId": "", //百度翻译Api App Id
+  "BaiduTranslateKey": "", //百度翻译Api Key
   "GetLoveApiKey": "", //灵犀API(https://account.getlove.cn/login/) Key(用于诗词)
   "GetLoveApiSecret": "", //灵犀API Secret(用于诗词)
   "QQ": false, //是否启用QQ相关功能

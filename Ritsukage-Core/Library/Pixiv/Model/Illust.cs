@@ -41,7 +41,10 @@ namespace Ritsukage.Library.Pixiv.Model
             => await Task.Run(() =>
             {
                 var data = Hibi.HibiPixiv.GetIllustUgoiraMetadata(Id);
-                return new UgoiraMetadata(data["ugoira_metadata"]);
+                if (data != null)
+                    return new UgoiraMetadata(data["ugoira_metadata"]);
+                else
+                    return new UgoiraMetadata();
             });
 
         static readonly Regex HtmlTagParser = new Regex(@"<[^>]+>");

@@ -2,7 +2,6 @@
 using Ritsukage.Tools.Console;
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -97,6 +96,15 @@ namespace Ritsukage.Tools
             return stream;
         }
 
+        public static HttpWebRequest CreateHttpWebRequest(string url)
+        {
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            request.ServerCertificateValidationCallback = delegate { return true; };
+            return request;
+        }
+
         public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")
         {
             request.Accept = "application/json, text/plain, */*";
@@ -112,104 +120,6 @@ namespace Ritsukage.Tools
             if (cookie != "")
                 request.Headers.Add("cookie", cookie);
         }
-        public static string HttpGET(HttpWebRequest request)
-        {
-            request.Method = "GET";
-            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string retString;
-            if (response.ContentEncoding == "gzip")
-            {
-                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
-                using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
-                retString = reader.ReadToEnd();
-            }
-            else if (response.ContentEncoding == "br")
-            {
-                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
-                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
-                retString = reader.ReadToEnd();
-            }
-            else
-            {
-                using Stream rs = response.GetResponseStream();
-                using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
-                retString = sr.ReadToEnd();
-            }
-            response.Close();
-            response.Dispose();
-            request.Abort();
-            return retString;
-        }
-        public static string HttpPOST(HttpWebRequest request, string content = "", string contentType = "")
-        {
-            request.Method = "POST";
-            if (!string.IsNullOrWhiteSpace(contentType))
-                request.ContentType = contentType;
-            request.ContentLength = content.Length;
-            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
-            using Stream stream = request.GetRequestStream();
-            stream.Write(byteResquest, 0, byteResquest.Length);
-            stream.Close();
-            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string retString;
-            if (response.ContentEncoding == "gzip")
-            {
-                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
-                using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
-                retString = reader.ReadToEnd();
-            }
-            else if (response.ContentEncoding == "br")
-            {
-                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
-                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
-                retString = reader.ReadToEnd();
-            }
-            else
-            {
-                using Stream rs = response.GetResponseStream();
-                using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
-                retString = sr.ReadToEnd();
-            }
-            response.Close();
-            response.Dispose();
-            request.Abort();
-            return retString;
-        }
-        public static string HttpPUT(HttpWebRequest request, string content = "", string contentType = "")
-        {
-            request.Method = "PUT";
-            if (!string.IsNullOrWhiteSpace(contentType))
-                request.ContentType = contentType;
-            request.ContentLength = content.Length;
-            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
-            using Stream stream = request.GetRequestStream();
-            stream.Write(byteResquest, 0, byteResquest.Length);
-            stream.Close();
-            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string retString;
-            if (response.ContentEncoding == "gzip")
-            {
-                using GZipStream gzip = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress);
-                using StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
-                retString = reader.ReadToEnd();
-            }
-            else if (response.ContentEncoding == "br")
-            {
-                using BrotliStream br = new BrotliStream(response.GetResponseStream(), CompressionMode.Decompress);
-                using StreamReader reader = new StreamReader(br, Encoding.UTF8);
-                retString = reader.ReadToEnd();
-            }
-            else
-            {
-                using Stream rs = response.GetResponseStream();
-                using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
-                retString = sr.ReadToEnd();
-            }
-            response.Close();
-            response.Dispose();
-            request.Abort();
-            return retString;
-        }
 
         public static string HttpGET(string Url, string postDataStr = "", long timeout = 20000,
             string cookie = "", string referer = "", string origin = "")
@@ -217,10 +127,7 @@ namespace Ritsukage.Tools
             HttpWebRequest request = null;
             try
             {
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                request = (HttpWebRequest)WebRequest.Create(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)));
-                request.ServerCertificateValidationCallback = delegate { return true; };
+                request = CreateHttpWebRequest(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)));
                 request.Timeout = (int)timeout;
                 SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
@@ -242,10 +149,7 @@ namespace Ritsukage.Tools
             HttpWebRequest request = null;
             try
             {
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                request = (HttpWebRequest)WebRequest.Create(Url);
-                request.ServerCertificateValidationCallback = delegate { return true; };
+                request = CreateHttpWebRequest(Url);
                 request.Timeout = (int)timeout;
                 SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
@@ -267,10 +171,7 @@ namespace Ritsukage.Tools
             HttpWebRequest request = null;
             try
             {
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                request = (HttpWebRequest)WebRequest.Create(Url);
-                request.ServerCertificateValidationCallback = delegate { return true; };
+                request = CreateHttpWebRequest(Url);
                 request.Timeout = (int)timeout;
                 SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
@@ -285,6 +186,60 @@ namespace Ritsukage.Tools
                 ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
             }
             return string.Empty;
+        }
+
+        public static string HttpGET(HttpWebRequest request)
+        {
+            request.AutomaticDecompression = DecompressionMethods.All;
+            request.Method = "GET";
+            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            using Stream rs = response.GetResponseStream();
+            using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
+            string retString = sr.ReadToEnd();
+            response.Close();
+            response.Dispose();
+            request.Abort();
+            return retString;
+        }
+        public static string HttpPOST(HttpWebRequest request, string content = "", string contentType = "")
+        {
+            request.AutomaticDecompression = DecompressionMethods.All;
+            request.Method = "POST";
+            if (!string.IsNullOrWhiteSpace(contentType))
+                request.ContentType = contentType;
+            request.ContentLength = content.Length;
+            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
+            using Stream stream = request.GetRequestStream();
+            stream.Write(byteResquest, 0, byteResquest.Length);
+            stream.Close();
+            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            using Stream rs = response.GetResponseStream();
+            using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
+            string retString = sr.ReadToEnd();
+            response.Close();
+            response.Dispose();
+            request.Abort();
+            return retString;
+        }
+        public static string HttpPUT(HttpWebRequest request, string content = "", string contentType = "")
+        {
+            request.AutomaticDecompression = DecompressionMethods.All;
+            request.Method = "PUT";
+            if (!string.IsNullOrWhiteSpace(contentType))
+                request.ContentType = contentType;
+            request.ContentLength = content.Length;
+            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
+            using Stream stream = request.GetRequestStream();
+            stream.Write(byteResquest, 0, byteResquest.Length);
+            stream.Close();
+            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            using Stream rs = response.GetResponseStream();
+            using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
+            string retString = sr.ReadToEnd();
+            response.Close();
+            response.Dispose();
+            request.Abort();
+            return retString;
         }
     }
 }

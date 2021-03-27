@@ -1,39 +1,32 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Ritsukage.Library.Data;
-using Ritsukage.Library.Minecraft.Changelog;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
+using System;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Subscribe.Listener
 {
-    public class MinecraftVersionListener : Base.SubscribeListener
+    public class MinecraftJiraListener : Base.SubscribeListener
     {
-        const string type = "minecraft version";
+        const string type = "minecraft jira";
 
-        readonly MinecraftVersionCheckMethod Checker = new();
+        readonly MinecraftJiraCheckMethod Checker = new();
 
         public override async void RefreshListener()
             => await Task.CompletedTask;
 
         public override async void Listen()
-        {
-            await Task.Run(async () =>
-            {
-                Broadcast(await Checker.Check());
-                await Task.Delay(5000);
-            });
-        }
+            => Broadcast(await Checker.Check());
 
         public override async void Broadcast(CheckResult.Base.SubscribeCheckResult result)
         {
-            if (result.Updated && result is MinecraftVersionCheckResult b)
+            if (result.Updated && result is MinecraftJiraCheckResult b)
             {
                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type}");
                 var t = await Database.Data.Table<SubscribeList>().ToListAsync();
@@ -91,41 +84,12 @@ namespace Ritsukage.Library.Subscribe.Listener
             }
         }
 
-        static string GetString(MinecraftVersionCheckResult result)
-        {
-            var m = Regex.Match(result.Title.Trim(), "^(?<version>[^ ]+) (?<type>快照|正式版)更新$");
-            var type = m.Groups["type"].Value;
-            var version = m.Groups["version"].Value.Trim();
-            var vm = Regex.Match(version, @"^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\d+))?$");
-            var mainVersion = vm.Groups["mainVersion"].Value;
-            var subType = type == "快照" ? "snapshot" : "release";
-            var subNum = "";
-            if (vm.Groups["sub"].Success && !string.IsNullOrWhiteSpace(vm.Groups["sub"].Value))
-            {
-                subType = vm.Groups["subType"].Value;
-                subNum = vm.Groups["subNum"].Value;
-            }
-            string changelog = null;
-            switch (subType)
-            {
-                case "snapshot":
-                case "pre":
-                case "rc":
-                    var articles = new ArticleList("snapshot");
-                    var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
-                    && subType == "snapshot" || ((subType == "pre" ? x.Key.Contains("PRE-RELEASE")
-                    : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(article.Key))
-                        changelog = article.Value;
-                    break;
-            }
-            var sb = new StringBuilder()
-                .AppendLine("[Minecraft]")
-                .AppendLine(result.Title)
-                .Append(result.Time.ToString("yyyy-MM-dd HH:mm:ss"));
-            if (!string.IsNullOrEmpty(changelog))
-                sb.AppendLine().Append("Change logs: " + changelog);
-            return sb.ToString();
-        }
+        static string GetString(MinecraftJiraCheckResult result)
+            => new StringBuilder()
+            .AppendLine("[Minecraft Jira]")
+            .AppendLine("哇哦，Bugjang杀死了这些虫子:")
+            .AppendLine(string.Join(Environment.NewLine, result.Data.Select(x => x.Title)))
+            .Append($"统计时间: {result.From:yyyy-MM-dd HH:mm} ~ {result.To:yyyy-MM-dd HH:mm}")
+            .ToString();
     }
 }

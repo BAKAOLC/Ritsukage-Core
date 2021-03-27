@@ -18,6 +18,7 @@ namespace Ritsukage.Library.Subscribe
             Listeners.Add(new BilibiliLiveListener(), 3 * 60 * 1000);
             Listeners.Add(new BilibiliDynamicListener(), 8 * 60 * 1000);
             Listeners.Add(new MinecraftVersionListener(), 60 * 1000);
+            Listeners.Add(new MinecraftJiraListener(), 20 * 60 * 1000);
             CreateListenerThread();
         }
 

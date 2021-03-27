@@ -170,10 +170,7 @@ namespace Ritsukage.Tools.Download
 
         HttpWebRequest GetWebRequest()
         {
-            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-            HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(Url);
-            wr.ServerCertificateValidationCallback = delegate { return true; };
+            var wr = Utils.CreateHttpWebRequest(Url);
             wr.Host = Host;
             wr.UserAgent = UserAgent;
             wr.Timeout = TimeOut;
@@ -219,6 +216,7 @@ namespace Ritsukage.Tools.Download
             {
                 Status = TaskStatus.Connect;
                 var wr = GetWebRequest();
+                OnTaskConnecting?.Invoke(this);
                 var response = wr.GetResponse();
                 TotalBytes = response.ContentLength;
                 Stream st = response.GetResponseStream();

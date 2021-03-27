@@ -38,6 +38,17 @@ namespace Ritsukage
         /// </summary>
         public string SuoLinkToken = "";
 
+        #region Baidu
+        /// <summary>
+        /// 百度翻译Api App Id
+        /// </summary>
+        public string BaiduTranslateAppId = "";
+        /// <summary>
+        /// 百度翻译Api Key
+        /// </summary>
+        public string BaiduTranslateKey = "";
+        #endregion
+
         #region QQ
         /// <summary>
         /// 是否启用QQ相关功能
