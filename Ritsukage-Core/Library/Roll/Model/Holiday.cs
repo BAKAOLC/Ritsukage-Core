@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Ritsukage.Library.Roll.Model
 {
@@ -18,7 +19,11 @@ namespace Ritsukage.Library.Roll.Model
             Date = (string)data["date"];
             LunarDate = (string)data["lunarDate"];
             ForLunar = (bool)data["lunarHoliday"];
-            ResidueDays = (int)data["residueDays"];
+            var m = Regex.Match(Date, @"^(?<year>\d+)年(?<month>\d+)月(?<day>\d+)日$");
+            ResidueDays = Convert.ToInt32((new DateTime(
+                int.Parse(m.Groups["year"].Value),
+                int.Parse(m.Groups["month"].Value),
+                int.Parse(m.Groups["day"].Value)).Date - DateTime.Today.Date).TotalDays);
         }
 
         public string ResidueDay()

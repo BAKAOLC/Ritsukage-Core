@@ -533,22 +533,25 @@ namespace Ritsukage.QQ.Commands
                     });
                 }
             }
-            await Database.Data.InsertAsync(new QQGroupSetting()
+            else
             {
-                Group = e.SourceGroup.Id,
-                SmartBilibiliLink = true
-            }).ContinueWith(async x =>
-            {
-                if (x.Result > 0)
-                    await e.ReplyToOriginal("本群已成功启用b站链接智能解析功能");
-                else if (x.IsFaulted && x.Exception != null)
-                    await e.ReplyToOriginal(new StringBuilder()
-                        .AppendLine("因异常导致功能启用失败，错误信息：")
-                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                        .ToString());
-                else
-                    await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
-            });
+                await Database.Data.InsertAsync(new QQGroupSetting()
+                {
+                    Group = e.SourceGroup.Id,
+                    SmartBilibiliLink = true
+                }).ContinueWith(async x =>
+                {
+                    if (x.Result > 0)
+                        await e.ReplyToOriginal("本群已成功启用b站链接智能解析功能");
+                    else if (x.IsFaulted && x.Exception != null)
+                        await e.ReplyToOriginal(new StringBuilder()
+                            .AppendLine("因异常导致功能启用失败，错误信息：")
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .ToString());
+                    else
+                        await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
+                });
+            }
         }
 
         [Command("禁用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]

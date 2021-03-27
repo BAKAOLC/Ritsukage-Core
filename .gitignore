@@ -1,6 +1,7 @@
 /Ritsukage-Core/bin
 /Ritsukage-Core/obj
 /.vs
+/.vscode
 
 TestResults
 /**/bin

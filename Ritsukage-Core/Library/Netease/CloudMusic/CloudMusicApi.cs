@@ -13,7 +13,7 @@ namespace Ritsukage.Library.Netease.CloudMusic
         {
             bool success;
             JObject json;
-            using var api = new BaseApi();
+            var api = new BaseApi();
             (success, json) = await api.RequestAsync(Providers.Search, new()
             {
                 { "keywords", key }
@@ -36,7 +36,7 @@ namespace Ritsukage.Library.Netease.CloudMusic
         {
             bool success;
             JObject json;
-            using var api = new BaseApi();
+            var api = new BaseApi();
             (success, json) = await api.RequestAsync(Providers.SongDetail, new()
             {
                 { "ids", id.ToString() }
@@ -50,7 +50,7 @@ namespace Ritsukage.Library.Netease.CloudMusic
         {
             bool success;
             JObject json;
-            using var api = new BaseApi();
+            var api = new BaseApi();
             (success, json) = await api.RequestAsync(Providers.SongUrl, new()
             {
                 { "id", id.ToString() },

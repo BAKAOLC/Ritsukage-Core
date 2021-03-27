@@ -3,7 +3,7 @@
     public class MinecraftVersion : FeedReader
     {
         public MinecraftVersion()
-            : base("https://rsshub-indol-omega.vercel.app/minecraft/version")
+            : base("https://rsshub.app/minecraft/version")
         { }
     }
 }

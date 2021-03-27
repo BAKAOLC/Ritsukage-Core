@@ -13,5 +13,8 @@ namespace Ritsukage.Library.Data
 
         [Column("SmartBilibiliLink")]
         public bool SmartBilibiliLink { get; set; }
+
+        [Column("SmartMinecraftLink")]
+        public bool SmartMinecraftLink { get; set; }
     }
 }

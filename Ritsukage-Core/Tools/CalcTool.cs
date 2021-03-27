@@ -25,6 +25,13 @@ namespace Ritsukage.Tools
                 _ => -1,
             };
 
+        static bool ShouldCalcFirst(Operator old, Operator latest)
+            => (old, latest) switch {
+                (Operator.POW, Operator.POW) => false,
+                (_, _) => GetOperatorPriority(old) >= GetOperatorPriority(latest)
+            };
+        
+
         static double OpNum(Operator op, double a, double b)
             => op switch {
                 Operator.ADD => a + b,
@@ -110,70 +117,77 @@ namespace Ritsukage.Tools
                         if (op.Value == Operator.LB) {
                             if (start != idx) {
                                 var v = expr[start..idx];
-                                var maybeOp = GetOperator(v[0]);
-                                bool maybeSubFirst = false;
-                                if (maybeOp != null && maybeOp.HasValue) {
-                                    v = v[1..];
-                                    if (maybeOp.Value == Operator.SUB) {
-                                        maybeSubFirst = true;
+                                double factor = 1;
+                                bool parsedNum = false;
+                                int numOffset = v.Length - 1;
+                                while (numOffset >= 0 && ('a' <= v[numOffset] && v[numOffset] <= 'z')) {
+                                    numOffset -= 1;
+                                }
+                                numOffset += 1;
+                                if (numOffset != 0) {
+                                    if (numOffset == 1 && v[0] == '-') {
+                                        factor = -1;
+                                    } else {
+                                        factor = double.Parse(v[..numOffset]);
+                                        parsedNum = true;
                                     }
+                                    v = v[numOffset..];
                                 }
                                 switch (v) {
                                     case "sqrt": {
                                         //point '(' at begin
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Sqrt(numV) : Math.Sqrt(numV));
+                                        nums.Push(factor * Math.Sqrt(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     case "sin": {
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Sin(numV) : Math.Sin(numV));
+                                        nums.Push(factor * Math.Sin(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     case "cos": {
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Cos(numV) : Math.Cos(numV));
+                                        nums.Push(factor * Math.Cos(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     case "tan": {
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Tan(numV) : Math.Tan(numV));
+                                        nums.Push(factor * Math.Tan(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     case "abs": {
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Abs(numV) : Math.Abs(numV));
+                                        nums.Push(factor * Math.Abs(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     case "ln": {
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Log(numV) : Math.Log(numV));
+                                        nums.Push(factor * Math.Log(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     case "lg": {
                                         var (numV, endIdx) = ParseUnitValue(expr, idx);
-                                        nums.Push(maybeSubFirst ? -Math.Log10(numV) : Math.Log10(numV));
+                                        nums.Push(factor * Math.Log10(numV));
                                         idx = endIdx;
                                         start = idx + 1;
                                         break;
                                     }
                                     default: {
-                                        if (v.Length > 0) {
-                                            var numV = ParseNum(v);
-                                            nums.Push(maybeSubFirst ? -numV : numV);
-                                        } else if (maybeSubFirst) {
+                                        if (parsedNum) {
+                                            nums.Push(factor);
+                                        } else if (factor == -1) {
                                             nums.Push(0);
                                             ops.Push(Operator.SUB);
                                         }
@@ -207,7 +221,7 @@ namespace Ritsukage.Tools
                                 if (!(start == idx && nums.Count == ops.Count - brackets)) {
                                     if (ops.Count > 0) {
                                         var lastOp = ops.Peek();
-                                        while (lastOp != Operator.LB && GetOperatorPriority(op.Value) <= GetOperatorPriority(lastOp)) {
+                                        while (lastOp != Operator.LB && ShouldCalcFirst(lastOp, op.Value)) {
                                             double b = nums.Pop();
                                             double a = nums.Pop();
                                             nums.Push(OpNum(lastOp, a, b));

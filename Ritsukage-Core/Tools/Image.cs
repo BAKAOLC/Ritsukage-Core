@@ -278,6 +278,11 @@ namespace Ritsukage.Tools
         {
             Source = (Bitmap)image;
         }
+
+        public MemoryImage(Stream stream)
+        {
+            Source = (Bitmap)Image.FromStream(stream);
+        }
     }
 
     class FileImage : BaseImage
