@@ -22,5 +22,8 @@ namespace Ritsukage.QQ.Commands
             else
                 return Task.FromResult(false);
         }
+
+        public override string ToString()
+            => $"<Only for user: {string.Join(", ", Users)}>";
     }
 }

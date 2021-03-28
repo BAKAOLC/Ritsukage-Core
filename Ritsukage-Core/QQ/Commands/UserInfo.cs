@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("User")]
     public static class UserInfo
     {
         [Command("个人信息")]

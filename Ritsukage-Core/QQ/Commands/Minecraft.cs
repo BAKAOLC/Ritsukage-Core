@@ -7,11 +7,10 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Minecraft")]
     public static class Minecraft
     {
         const string Indent = "    ";

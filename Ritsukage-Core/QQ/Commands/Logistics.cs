@@ -1,6 +1,6 @@
 ﻿namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Utils")]
     public static class Logistics
     {
         [Command("快递详情"), CanWorkIn(WorkIn.Private), NeedCoins(15)]

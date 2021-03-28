@@ -1,6 +1,6 @@
 ﻿namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Utils")]
     public static class Hitokoto
     {
         [Command("一言", "hitokoto")]

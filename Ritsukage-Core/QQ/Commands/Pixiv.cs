@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Pixiv")]
     public static class Pixiv
     {
         [Command("pixiv"), NeedCoins(5)]

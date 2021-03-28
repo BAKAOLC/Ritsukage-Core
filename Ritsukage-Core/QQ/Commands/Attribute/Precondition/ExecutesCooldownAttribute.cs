@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
 {
-    public class ExecutesCooldown : PreconditionAttribute
+    public class ExecutesCooldownAttribute : PreconditionAttribute
     {
         public string Tag { get; init; }
         public int Seconds { get; init; }
         public bool IsGroup { get; init; }
 
-        public ExecutesCooldown(string tag, int seconds, bool isGroup = false)
+        public ExecutesCooldownAttribute(string tag, int seconds, bool isGroup = false)
         {
             Tag = tag;
             Seconds = seconds;
@@ -35,5 +35,8 @@ namespace Ritsukage.QQ.Commands
             else
                 return true;
         }
+
+        public override string ToString()
+            => $"<Executes cooldown: {Seconds} seconds {(IsGroup ? "for group" : "for user")} with tag {Tag}>";
     }
 }

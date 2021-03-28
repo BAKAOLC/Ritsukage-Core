@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Music")]
     public static class NeteaseCloudMusic
     {
         [Command("music")]

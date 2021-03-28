@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Bilibili")]
     public static class Bilibili
     {
         [Command]
@@ -585,39 +585,43 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command]
-        public static async void AV2BV(SoraMessage e, long av)
+        public static async void AV2BV(SoraMessage e, long av = long.MinValue)
         {
-            string msg;
-            try
+            if (av == long.MinValue)
+                await e.ReplyToOriginal("参数错误，请重新输入");
+            else
             {
-                msg = $"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}";
+                string msg;
+                try
+                {
+                    msg = $"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}";
+                }
+                catch (Exception ex)
+                {
+                    msg = ex.Message;
+                }
+                await e.ReplyToOriginal(msg);
             }
-            catch (Exception ex)
-            {
-                msg = ex.Message;
-            }
-            await e.ReplyToOriginal(msg);
         }
-        [Command]
-        public static async void AV2BV(SoraMessage e)
-            => await e.ReplyToOriginal("参数错误，请重新输入");
 
         [Command]
-        public static async void BV2AV(SoraMessage e, string bv)
+        public static async void BV2AV(SoraMessage e, string bv = "")
         {
-            string msg;
-            try
+            if (string.IsNullOrEmpty(bv))
+                await e.ReplyToOriginal("参数错误，请重新输入");
+            else
             {
-                msg = $"[Bilibili][BV→AV] {bv} → {BilibiliAVBVConverter.ToAV(bv)}";
+                string msg;
+                try
+                {
+                    msg = $"[Bilibili][BV→AV] {bv} → {BilibiliAVBVConverter.ToAV(bv)}";
+                }
+                catch (Exception ex)
+                {
+                    msg = ex.Message;
+                }
+                await e.ReplyToOriginal(msg);
             }
-            catch (Exception ex)
-            {
-                msg = ex.Message;
-            }
-            await e.ReplyToOriginal(msg);
         }
-        [Command]
-        public static async void BV2AV(SoraMessage e)
-            => await e.ReplyToOriginal("参数错误，请重新输入");
     }
 }
