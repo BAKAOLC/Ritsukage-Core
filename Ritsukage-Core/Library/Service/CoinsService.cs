@@ -13,12 +13,11 @@ namespace Ritsukage.Library.Service
         public static async Task<UserCoins> GetUserCoins(string type, long userid)
         {
             DateTime date = DateTime.Now.Date;
-            var t = await Database.Data.Table<UserData>().ToArrayAsync();
             UserData data = type switch
             {
-                "qq" => t.Where(x => x.QQ == userid).FirstOrDefault(),
-                "discord" => t.Where(x => x.Discord == userid).FirstOrDefault(),
-                "bilibili" => t.Where(x => x.Bilibili == userid).FirstOrDefault(),
+                "qq" => await Database.FindAsync<UserData>(x => x.QQ == userid),
+                "discord" => await Database.FindAsync<UserData>(x => x.Discord == userid),
+                "bilibili" => await Database.FindAsync<UserData>(x => x.Bilibili == userid),
                 _ => throw new Exception("不支持的用户来源：" + type),
             };
             if (data == null)
@@ -43,7 +42,7 @@ namespace Ritsukage.Library.Service
                     default:
                         throw new Exception("不支持的用户来源：" + type);
                 }
-                await Database.Data.InsertAsync(data);
+                await Database.InsertAsync(data);
             }
             else
             {
@@ -52,7 +51,7 @@ namespace Ritsukage.Library.Service
                     data.FreeCoins = DailyFreeCoins;
                     data.FreeCoinsDate = date;
                 }
-                await Database.Data.UpdateAsync(data);
+                await Database.UpdateAsync(data);
             }
             return new() { Coins = data.Coins, FreeCoins = data.FreeCoins };
         }
@@ -69,12 +68,11 @@ namespace Ritsukage.Library.Service
         public static async Task<UserCoins> AddUserCoins(string type, long userid, long count)
         {
             DateTime date = DateTime.Now.Date;
-            var t = await Database.Data.Table<UserData>().ToArrayAsync();
             UserData data = type switch
             {
-                "qq" => t.Where(x => x.QQ == userid).FirstOrDefault(),
-                "discord" => t.Where(x => x.Discord == userid).FirstOrDefault(),
-                "bilibili" => t.Where(x => x.Bilibili == userid).FirstOrDefault(),
+                "qq" => await Database.FindAsync<UserData>(x => x.QQ == userid),
+                "discord" => await Database.FindAsync<UserData>(x => x.Discord == userid),
+                "bilibili" => await Database.FindAsync<UserData>(x => x.Bilibili == userid),
                 _ => throw new Exception("不支持的用户来源：" + type),
             };
             if (data == null)
@@ -99,7 +97,7 @@ namespace Ritsukage.Library.Service
                     default:
                         throw new Exception("不支持的用户来源：" + type);
                 }
-                await Database.Data.InsertAsync(data);
+                await Database.InsertAsync(data);
             }
             else
             {
@@ -110,19 +108,18 @@ namespace Ritsukage.Library.Service
                 }
             }
             data.Coins += count;
-            await Database.Data.UpdateAsync(data);
+            await Database.UpdateAsync(data);
             return new() { Coins = data.Coins, FreeCoins = data.FreeCoins };
         }
 
         public static async Task<UserCoins> RemoveUserCoins(string type, long userid, long count, bool disableFree = false)
         {
             DateTime date = DateTime.Now.Date;
-            var t = await Database.Data.Table<UserData>().ToArrayAsync();
             UserData data = type switch
             {
-                "qq" => t.Where(x => x.QQ == userid).FirstOrDefault(),
-                "discord" => t.Where(x => x.Discord == userid).FirstOrDefault(),
-                "bilibili" => t.Where(x => x.Bilibili == userid).FirstOrDefault(),
+                "qq" => await Database.FindAsync<UserData>(x => x.QQ == userid),
+                "discord" => await Database.FindAsync<UserData>(x => x.Discord == userid),
+                "bilibili" => await Database.FindAsync<UserData>(x => x.Bilibili == userid),
                 _ => throw new Exception("不支持的用户来源：" + type),
             };
             if (data == null)
@@ -147,7 +144,7 @@ namespace Ritsukage.Library.Service
                     default:
                         throw new Exception("不支持的用户来源：" + type);
                 }
-                await Database.Data.InsertAsync(data);
+                await Database.InsertAsync(data);
             }
             else
             {
@@ -169,7 +166,7 @@ namespace Ritsukage.Library.Service
                     data.FreeCoins = 0;
                 }
             }
-            await Database.Data.UpdateAsync(data);
+            await Database.UpdateAsync(data);
             return new() { Coins = data.Coins, FreeCoins = data.FreeCoins };
         }
     }

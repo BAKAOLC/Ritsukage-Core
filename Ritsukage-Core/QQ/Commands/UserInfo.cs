@@ -21,8 +21,7 @@ namespace Ritsukage.QQ.Commands
                     sb.Append($"{e.PrivateSenderInfo.Nick}({e.Sender.Id})");
             }
             #endregion
-            var t = await Database.Data.Table<UserData>().ToListAsync();
-            var data = t.Where(x => x.QQ == e.Sender.Id).FirstOrDefault();
+            var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data != null)
             {
                 #region Discord

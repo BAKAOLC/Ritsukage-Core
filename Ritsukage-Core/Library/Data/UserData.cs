@@ -4,7 +4,7 @@ using System;
 namespace Ritsukage.Library.Data
 {
     [Table("UserData"), AutoInitTable]
-    public class UserData
+    public class UserData : DataTable
     {
         [Column("ID"), PrimaryKey, AutoIncrement]
         public int Id { get; set; }

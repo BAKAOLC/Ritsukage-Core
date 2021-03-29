@@ -42,59 +42,55 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
                 return new BilibiliLiveCheckResult();
             }
-            var t = await Database.Data.Table<SubscribeStatusRecord>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == RoomId.ToString());
+            if (record != null)
             {
-                var record = t.Where(x => x.Type == type && x.Target == RoomId.ToString()).FirstOrDefault();
-                if (record != null)
+                JObject status = null;
+                try
                 {
-                    JObject status = null;
-                    try
+                    status = JObject.Parse(record.Status);
+                }
+                catch (Exception e)
+                {
+                    ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
+                }
+                if (status != null)
+                {
+                    BilibiliLiveUpdateType updated = BilibiliLiveUpdateType.None;
+                    if ((int)status["LiveStatus"] != (int)room.LiveStatus)
                     {
-                        status = JObject.Parse(record.Status);
+                        updated = BilibiliLiveUpdateType.LiveStatus;
+                        status["LiveStatus"] = (int)room.LiveStatus;
+                        status["Title"] = room.Title;
                     }
-                    catch (Exception e)
+                    else if (room.LiveStatus == LiveStatus.Live && (string)status["Title"] != room.Title)
                     {
-                        ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
+                        updated = BilibiliLiveUpdateType.Title;
+                        status["Title"] = room.Title;
                     }
-                    if (status != null)
+                    if (updated != BilibiliLiveUpdateType.None)
                     {
-                        BilibiliLiveUpdateType updated = BilibiliLiveUpdateType.None;
-                        if ((int)status["LiveStatus"] != (int)room.LiveStatus)
+                        record.Status = status.ToString();
+                        await Database.UpdateAsync(record);
+                        return new BilibiliLiveCheckResult()
                         {
-                            updated = BilibiliLiveUpdateType.LiveStatus;
-                            status["LiveStatus"] = (int)room.LiveStatus;
-                            status["Title"] = room.Title;
-                        }
-                        else if (room.LiveStatus == LiveStatus.Live && (string)status["Title"] != room.Title)
-                        {
-                            updated = BilibiliLiveUpdateType.Title;
-                            status["Title"] = room.Title;
-                        }
-                        if (updated != BilibiliLiveUpdateType.None)
-                        {
-                            record.Status = status.ToString();
-                            await Database.Data.UpdateAsync(record);
-                            return new BilibiliLiveCheckResult()
-                            {
-                                Updated = true,
-                                UpdateType = updated,
-                                RoomId = room.Id,
-                                Title = room.Title,
-                                User = user.Name,
-                                Area = room.ParentAreaName + "·" + room.AreaName,
-                                Online = room.Online,
-                                Status = room.LiveStatus,
-                                Cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
-                                Url = room.Url
-                            };
-                        }
-                        else
-                            return new BilibiliLiveCheckResult();
+                            Updated = true,
+                            UpdateType = updated,
+                            RoomId = room.Id,
+                            Title = room.Title,
+                            User = user.Name,
+                            Area = room.ParentAreaName + "·" + room.AreaName,
+                            Online = room.Online,
+                            Status = room.LiveStatus,
+                            Cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
+                            Url = room.Url
+                        };
                     }
+                    else
+                        return new BilibiliLiveCheckResult();
                 }
             }
-            await Database.Data.InsertAsync(new SubscribeStatusRecord()
+            await Database.InsertAsync(new SubscribeStatusRecord()
             {
                 Type = type,
                 Target = RoomId.ToString(),

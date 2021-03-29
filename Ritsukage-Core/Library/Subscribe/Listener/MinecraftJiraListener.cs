@@ -29,8 +29,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             if (result.Updated && result is MinecraftJiraCheckResult b)
             {
                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type}");
-                var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-                var records = t.Where(x => x.Type == type && x.Target == "java")?.ToArray();
+                var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == "java");
                 if (records != null && records.Length > 0)
                 {
                     var msg = GetString(b);

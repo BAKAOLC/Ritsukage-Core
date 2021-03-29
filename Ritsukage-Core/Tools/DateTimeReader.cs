@@ -58,18 +58,28 @@ namespace Ritsukage.Tools
         static TimeSpan? GetTime(string original)
         {
             string time = string.Empty;
+            bool hour = false;
+            int index = 0;
             foreach (var tm in TimeMatch)
             {
                 var r = Regex.Match(original, tm);
                 if (r.Success)
                 {
+                    if (index < 4)
+                        hour = true;
                     time = r.Value;
                     break;
                 }
+                index++;
             }
             if (DateTime.TryParseExact(time, TimeFormats, CultureInfo.InvariantCulture,
                 DateTimeStyles.AllowWhiteSpaces, out var gotTime))
-                return gotTime.TimeOfDay;
+            {
+                if (!hour)
+                    return gotTime.TimeOfDay + new TimeSpan(DateTime.Now.Hour, 0, 0);
+                else
+                    return gotTime.TimeOfDay;
+            }
             return null;
         }
 

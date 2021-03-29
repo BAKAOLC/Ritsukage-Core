@@ -37,14 +37,13 @@ namespace Ritsukage.QQ.Commands
                     if (int.TryParse(cookie.Split(";").Where(x => x.StartsWith("DedeUserID=")).First()[11..], out var id))
                     {
                         await e.SendPrivateMessage("登录成功\n数据储存中……");
-                        var t = Database.Data.Table<UserData>();
-                        var data = await t.Where(x => x.QQ == e.Sender.Id || x.Bilibili == id).FirstOrDefaultAsync();
+                        var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id || x.Bilibili == id);
                         if (data != null)
                         {
                             data.QQ = e.Sender.Id;
                             data.Bilibili = id;
                             data.BilibiliCookie = cookie;
-                            await Database.Data.UpdateAsync(data).ContinueWith(async x =>
+                            await Database.UpdateAsync(data).ContinueWith(async x =>
                             {
                                 if (x.Result > 0)
                                     await e.SendPrivateMessage("记录数据已更新");
@@ -65,7 +64,7 @@ namespace Ritsukage.QQ.Commands
                                 Bilibili = id,
                                 BilibiliCookie = cookie
                             };
-                            await Database.Data.InsertAsync(data).ContinueWith(async x =>
+                            await Database.InsertAsync(data).ContinueWith(async x =>
                             {
                                 if (x.Result > 0)
                                     await e.SendPrivateMessage("记录数据已添加");
@@ -256,8 +255,7 @@ namespace Ritsukage.QQ.Commands
         [Command("开启直播")]
         public static async void StartLive(SoraMessage e)
         {
-            var t = Database.Data.Table<UserData>();
-            var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
+            var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
@@ -289,8 +287,7 @@ namespace Ritsukage.QQ.Commands
         [Command("关闭直播")]
         public static async void StopLive(SoraMessage e)
         {
-            var t = Database.Data.Table<UserData>();
-            var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
+            var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
@@ -319,8 +316,7 @@ namespace Ritsukage.QQ.Commands
         [Command("设置直播分区")]
         public static async void SetLiveArea(SoraMessage e, int area)
         {
-            var t = Database.Data.Table<UserData>();
-            var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
+            var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
@@ -349,8 +345,7 @@ namespace Ritsukage.QQ.Commands
         [Command("设置直播标题")]
         public static async void SetLiveTitle(SoraMessage e, string title)
         {
-            var t = Database.Data.Table<UserData>();
-            var data = await t.Where(x => x.QQ == e.Sender.Id).FirstOrDefaultAsync();
+            var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
@@ -379,18 +374,18 @@ namespace Ritsukage.QQ.Commands
         [Command("订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void AddLiveListener(SoraMessage e, int roomid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "bilibili live"
+                && x.Target == roomid.ToString()
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data != null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "bilibili live"
-                && x.Target == roomid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data != null)
-                {
-                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
-                    return;
-                }
+                await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
+                return;
             }
-            await Database.Data.InsertAsync(new SubscribeList()
+            await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "bilibili live",
@@ -413,48 +408,46 @@ namespace Ritsukage.QQ.Commands
         [Command("取消订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void RemoveLiveListener(SoraMessage e, int roomid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "bilibili live"
+                && x.Target == roomid.ToString()
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data == null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "bilibili live"
-                && x.Target == roomid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data == null)
-                {
-                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.DeleteAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await e.ReplyToOriginal("订阅项目已移除");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await e.ReplyToOriginal(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await e.ReplyToOriginal("订阅项目因未知原因导致移除失败，请稍后重试");
-                });
-            }
-            else
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
+                return;
+            }
+            await Database.DeleteAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.ReplyToOriginal("订阅项目已移除");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.ReplyToOriginal("订阅项目因未知原因导致移除失败，请稍后重试");
+            });
         }
 
         [Command("订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void AddDynamicListener(SoraMessage e, int userid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "bilibili dynamic"
+                && x.Target == userid.ToString()
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data != null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data != null)
-                {
-                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
-                    return;
-                }
+                await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
+                return;
             }
-            await Database.Data.InsertAsync(new SubscribeList()
+            await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "bilibili dynamic",
@@ -477,65 +470,59 @@ namespace Ritsukage.QQ.Commands
         [Command("取消订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void RemoveDynamicListener(SoraMessage e, int userid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "bilibili dynamic"
+                && x.Target == userid.ToString()
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data == null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString() && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data == null)
-                {
-                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.DeleteAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await e.ReplyToOriginal("订阅项目已移除");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await e.ReplyToOriginal(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await e.ReplyToOriginal("订阅项目因未知原因导致移除失败，请稍后重试");
-                });
-            }
-            else
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
+                return;
+            }
+            await Database.DeleteAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.ReplyToOriginal("订阅项目已移除");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.ReplyToOriginal("订阅项目因未知原因导致移除失败，请稍后重试");
+            });
         }
 
         [Command("启用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void EnableAutoLink(SoraMessage e)
         {
-            var t = await Database.Data.Table<QQGroupSetting>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
+            if (data != null)
             {
-                var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
-                if (data != null)
+                if (data.SmartBilibiliLink)
                 {
-                    if (data.SmartBilibiliLink)
-                    {
-                        await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
-                        return;
-                    }
-                    data.SmartBilibiliLink = true;
-                    await Database.Data.UpdateAsync(data).ContinueWith(async x =>
-                    {
-                        if (x.Result > 0)
-                            await e.ReplyToOriginal("本群已成功启用b站链接智能解析功能");
-                        else if (x.IsFaulted && x.Exception != null)
-                            await e.ReplyToOriginal(new StringBuilder()
-                                .AppendLine("因异常导致功能启用失败，错误信息：")
-                                .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                                .ToString());
-                        else
-                            await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
-                    });
+                    await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
+                    return;
                 }
+                data.SmartBilibiliLink = true;
+                await Database.UpdateAsync(data).ContinueWith(async x =>
+                {
+                    if (x.Result > 0)
+                        await e.ReplyToOriginal("本群已成功启用b站链接智能解析功能");
+                    else if (x.IsFaulted && x.Exception != null)
+                        await e.ReplyToOriginal(new StringBuilder()
+                            .AppendLine("因异常导致功能启用失败，错误信息：")
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .ToString());
+                    else
+                        await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
+                });
             }
             else
             {
-                await Database.Data.InsertAsync(new QQGroupSetting()
+                await Database.InsertAsync(new QQGroupSetting()
                 {
                     Group = e.SourceGroup.Id,
                     SmartBilibiliLink = true
@@ -557,31 +544,25 @@ namespace Ritsukage.QQ.Commands
         [Command("禁用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void DisableAutoLink(SoraMessage e)
         {
-            var t = await Database.Data.Table<QQGroupSetting>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
+            if (data == null || !data.SmartBilibiliLink)
             {
-                var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
-                if (data == null || !data.SmartBilibiliLink)
-                {
-                    await e.ReplyToOriginal("本群未启用该功能，无需禁用");
-                    return;
-                }
-                data.SmartBilibiliLink = false;
-                await Database.Data.UpdateAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await e.ReplyToOriginal("本群已成功禁用b站链接智能解析功能");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await e.ReplyToOriginal(new StringBuilder()
-                            .AppendLine("因异常导致功能禁用失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await e.ReplyToOriginal("因未知原因导致功能禁用失败，请稍后重试");
-                });
-            }
-            else
                 await e.ReplyToOriginal("本群未启用该功能，无需禁用");
+                return;
+            }
+            data.SmartBilibiliLink = false;
+            await Database.UpdateAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.ReplyToOriginal("本群已成功禁用b站链接智能解析功能");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("因异常导致功能禁用失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.ReplyToOriginal("因未知原因导致功能禁用失败，请稍后重试");
+            });
         }
 
         [Command]

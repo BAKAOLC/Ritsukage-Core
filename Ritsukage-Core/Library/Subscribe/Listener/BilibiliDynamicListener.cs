@@ -18,37 +18,29 @@ namespace Ritsukage.Library.Subscribe.Listener
     {
         const string type = "bilibili dynamic";
 
-        readonly object _lock = new();
-
         readonly List<BilibiliDynamicCheckMethod> Checker = new();
 
         public override async void RefreshListener()
         {
-            var t = Database.Data.Table<SubscribeList>();
-            var list = await t.Where(x => x.Type == type)?.ToListAsync();
+            var list = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type);
             if (list == null)
             {
                 Checker.Clear();
                 return;
             }
-            lock (_lock)
+            foreach (var c in Checker.ToArray())
             {
-                foreach (var c in Checker.ToArray())
+                if (!list.Where(x => x.Target == c.UserId.ToString()).Any())
+                    Checker.Remove(c);
+            }
+            foreach (var l in list)
+            {
+                if (!Checker.Where(x => l.Target == x.UserId.ToString()).Any())
                 {
-                    if (!list.Where(x => x.Target == c.UserId.ToString()).Any())
+                    if (int.TryParse(l.Target, out var id))
                     {
-                        Checker.Remove(c);
-                    }
-                }
-                foreach (var l in list)
-                {
-                    if (!Checker.Where(x => l.Target == x.UserId.ToString()).Any())
-                    {
-                        if (int.TryParse(l.Target, out var id))
-                        {
-                            ConsoleLog.Debug("Subscribe", $"Start subscribe listener: {type} {id}");
-                            Checker.Add(new(id));
-                        }
+                        ConsoleLog.Debug("Subscribe", $"Start subscribe listener: {type} {id}");
+                        Checker.Add(new(id));
                     }
                 }
             }
@@ -71,8 +63,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             if (result.Updated && result is BilibiliDynamicCheckResult b)
             {
                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type} {b.User.Id}");
-                var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-                var records = t.Where(x => x.Type == type && x.Target == b.User.Id.ToString())?.ToArray();
+                var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == b.User.Id.ToString());
                 if (records != null && records.Length > 0)
                 {
                     if (Program.Config.QQ)

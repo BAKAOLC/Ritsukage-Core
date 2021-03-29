@@ -11,15 +11,13 @@ namespace Ritsukage.Tools
         {
             var s = original.ToLower();
             var m = TSMatcher.Match(s);
-            if (!int.TryParse(m.Groups["day"].Value, out int day))
-                day = 0;
-            if (!int.TryParse(m.Groups["hour"].Value, out int hour))
-                hour = 0;
-            if (!int.TryParse(m.Groups["minute"].Value, out int minute))
-                minute = 0;
-            if (!int.TryParse(m.Groups["second"].Value, out int second))
-                second = 0;
-            if (string.IsNullOrWhiteSpace(m.Value))
+            bool flag = false;
+            int day = 0, hour = 0, minute = 0, second = 0;
+            flag = flag || int.TryParse(m.Groups["day"].Value, out day);
+            flag = flag || int.TryParse(m.Groups["hour"].Value, out hour);
+            flag = flag || int.TryParse(m.Groups["minute"].Value, out minute);
+            flag = flag || int.TryParse(m.Groups["second"].Value, out second);
+            if (!flag)
                 throw new ArgumentException($"{original} is not a timespan value.");
             return new TimeSpan(day, hour, minute, second);
         }

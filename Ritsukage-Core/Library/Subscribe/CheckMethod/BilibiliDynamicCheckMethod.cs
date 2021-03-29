@@ -33,31 +33,27 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
                 return new BilibiliDynamicCheckResult();
             }
-            var t = await Database.Data.Table<SubscribeStatusRecord>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == UserId.ToString());
+            if (record != null)
             {
-                var record = t.Where(x => x.Type == type && x.Target == UserId.ToString()).FirstOrDefault();
-                if (record != null)
+                if (ulong.TryParse(record.Status, out var recordId))
                 {
-                    if (ulong.TryParse(record.Status, out var recordId))
+                    if (dynamics[0].Id > recordId)
                     {
-                        if (dynamics[0].Id > recordId)
+                        record.Status = dynamics[0].Id.ToString();
+                        await Database.UpdateAsync(record);
+                        return new BilibiliDynamicCheckResult()
                         {
-                            record.Status = dynamics[0].Id.ToString();
-                            await Database.Data.UpdateAsync(record);
-                            return new BilibiliDynamicCheckResult()
-                            {
-                                Updated = true,
-                                User = user,
-                                Dynamics = dynamics.TakeWhile(x => x.Id > recordId).ToArray()
-                            };
-                        }
-                        return new BilibiliDynamicCheckResult();
+                            Updated = true,
+                            User = user,
+                            Dynamics = dynamics.TakeWhile(x => x.Id > recordId).ToArray()
+                        };
                     }
+                    return new BilibiliDynamicCheckResult();
                 }
             }
             Dynamic dy = dynamics[0];
-            await Database.Data.InsertAsync(new SubscribeStatusRecord()
+            await Database.InsertAsync(new SubscribeStatusRecord()
             {
                 Type = type,
                 Target = UserId.ToString(),

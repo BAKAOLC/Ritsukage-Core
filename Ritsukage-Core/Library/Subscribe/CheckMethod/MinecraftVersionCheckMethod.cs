@@ -30,28 +30,24 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
             }
             if (version == null)
                 return new MinecraftVersionCheckResult();
-            var t = await Database.Data.Table<SubscribeStatusRecord>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == "java");
+            if (record != null)
             {
-                var record = t.Where(x => x.Type == type && x.Target == "java").FirstOrDefault();
-                if (record != null)
+                if (record.Status != version.Content)
                 {
-                    if (record.Status != version.Content)
+                    record.Status = version.Content;
+                    await Database.UpdateAsync(record);
+                    return new MinecraftVersionCheckResult()
                     {
-                        record.Status = version.Content;
-                        await Database.Data.UpdateAsync(record);
-                        return new MinecraftVersionCheckResult()
-                        {
-                            Updated = true,
-                            Title = version.Content,
-                            Time = version.PublishDate
-                        };
-                    }
-                    else
-                        return new MinecraftVersionCheckResult();
+                        Updated = true,
+                        Title = version.Content,
+                        Time = version.PublishDate
+                    };
                 }
+                else
+                    return new MinecraftVersionCheckResult();
             }
-            await Database.Data.InsertAsync(new SubscribeStatusRecord()
+            await Database.InsertAsync(new SubscribeStatusRecord()
             {
                 Type = type,
                 Target = "java",

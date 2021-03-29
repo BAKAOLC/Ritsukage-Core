@@ -25,8 +25,7 @@ namespace Ritsukage.Discord.Commands
                 sb.AppendLine("ID：" + dcUser.Id);
             }
             #endregion
-            var t = await Database.Data.Table<UserData>().ToListAsync();
-            var data = t.Where(x => x.Discord == Convert.ToInt64(Context.User.Id)).FirstOrDefault();
+            var data = await Database.FindAsync<UserData>(x => x.Discord == Convert.ToInt64(Context.User.Id));
             if (data != null)
             {
                 #region QQ

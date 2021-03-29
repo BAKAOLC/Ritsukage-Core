@@ -19,37 +19,29 @@ namespace Ritsukage.Library.Subscribe.Listener
     {
         const string type = "bilibili live";
 
-        readonly object _lock = new();
-
         readonly List<BilibiliLiveCheckMethod> Checker = new();
 
         public override async void RefreshListener()
         {
-            var t = Database.Data.Table<SubscribeList>();
-            var list = await t.Where(x => x.Type == type)?.ToListAsync();
+            var list = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type);
             if (list == null)
             {
                 Checker.Clear();
                 return;
             }
-            lock (_lock)
+            foreach (var c in Checker.ToArray())
             {
-                foreach (var c in Checker.ToArray())
+                if (!list.Where(x => x.Target == c.RoomId.ToString()).Any())
+                    Checker.Remove(c);
+            }
+            foreach (var l in list)
+            {
+                if (!Checker.Where(x => l.Target == x.RoomId.ToString()).Any())
                 {
-                    if (!list.Where(x => x.Target == c.RoomId.ToString()).Any())
+                    if (int.TryParse(l.Target, out var id))
                     {
-                        Checker.Remove(c);
-                    }
-                }
-                foreach (var l in list)
-                {
-                    if (!Checker.Where(x => l.Target == x.RoomId.ToString()).Any())
-                    {
-                        if (int.TryParse(l.Target, out var id))
-                        {
-                            ConsoleLog.Debug("Subscribe", $"Start subscribe listener: {type} {id}");
-                            Checker.Add(new(id));
-                        }
+                        ConsoleLog.Debug("Subscribe", $"Start subscribe listener: {type} {id}");
+                        Checker.Add(new(id));
                     }
                 }
             }
@@ -72,8 +64,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             if (result.Updated && result is BilibiliLiveCheckResult b)
             {
                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type} {b.RoomId}");
-                var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-                var records = t.Where(x => x.Type == type && x.Target == b.RoomId.ToString())?.ToArray();
+                var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == b.RoomId.ToString());
                 if (records != null && records.Length > 0)
                 {
                     if (Program.Config.QQ)

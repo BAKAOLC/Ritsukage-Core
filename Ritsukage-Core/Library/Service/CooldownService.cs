@@ -16,9 +16,11 @@ namespace Ritsukage.Library.Service
             {
                 case "qq":
                     {
-                        var t = await Database.Data.Table<CooldownQQ>().ToArrayAsync();
-                        CooldownQQ data = t.Where(x => x.QQ == userid && x.Tag == tag
-                        && x.IsGroup == group).FirstOrDefault();
+                        CooldownQQ data = await Database.FindAsync<CooldownQQ>(
+                            x
+                            => x.QQ == userid
+                            && x.Tag == tag
+                            && x.IsGroup == group);
                         if (data == null)
                         {
                             data = new()
@@ -28,7 +30,7 @@ namespace Ritsukage.Library.Service
                                 QQ = userid,
                                 LastUsed = Utils.BaseUTC
                             };
-                            await Database.Data.InsertAsync(data);
+                            await Database.InsertAsync(data);
                             return true;
                         }
                         else
@@ -38,9 +40,11 @@ namespace Ritsukage.Library.Service
                     }
                 case "discord":
                     {
-                        var t = await Database.Data.Table<CooldownDiscord>().ToArrayAsync();
-                        CooldownDiscord data = t.Where(x => x.Discord == userid && x.Tag == tag
-                        && x.IsChannel == group).FirstOrDefault();
+                        CooldownDiscord data = await Database.FindAsync<CooldownDiscord>(
+                            x
+                            => x.Discord == userid
+                            && x.Tag == tag
+                            && x.IsChannel == group);
                         if (data == null)
                         {
                             data = new()
@@ -50,7 +54,7 @@ namespace Ritsukage.Library.Service
                                 Discord = userid,
                                 LastUsed = Utils.BaseUTC
                             };
-                            await Database.Data.InsertAsync(data);
+                            await Database.InsertAsync(data);
                             return true;
                         }
                         else
@@ -70,9 +74,11 @@ namespace Ritsukage.Library.Service
             {
                 case "qq":
                     {
-                        var t = await Database.Data.Table<CooldownQQ>().ToArrayAsync();
-                        CooldownQQ data = t.Where(x => x.QQ == userid && x.Tag == tag
-                        && x.IsGroup == group).FirstOrDefault();
+                        CooldownQQ data = await Database.FindAsync<CooldownQQ>(
+                            x
+                            => x.QQ == userid
+                            && x.Tag == tag
+                            && x.IsGroup == group);
                         if (data == null)
                         {
                             data = new()
@@ -82,20 +88,22 @@ namespace Ritsukage.Library.Service
                                 QQ = userid,
                                 LastUsed = date
                             };
-                            await Database.Data.InsertAsync(data);
+                            await Database.InsertAsync(data);
                         }
                         else
                         {
                             data.LastUsed = date;
-                            await Database.Data.UpdateAsync(data);
+                            await Database.UpdateAsync(data);
                         }
                     }
                     break;
                 case "discord":
                     {
-                        var t = await Database.Data.Table<CooldownDiscord>().ToArrayAsync();
-                        CooldownDiscord data = t.Where(x => x.Discord == userid && x.Tag == tag
-                        && x.IsChannel == group).FirstOrDefault();
+                        CooldownDiscord data = await Database.FindAsync<CooldownDiscord>(
+                            x
+                            => x.Discord == userid
+                            && x.Tag == tag
+                            && x.IsChannel == group);
                         if (data == null)
                         {
                             data = new()
@@ -105,12 +113,12 @@ namespace Ritsukage.Library.Service
                                 Discord = userid,
                                 LastUsed = Utils.BaseUTC
                             };
-                            await Database.Data.InsertAsync(data);
+                            await Database.InsertAsync(data);
                         }
                         else
                         {
                             data.LastUsed = date;
-                            await Database.Data.UpdateAsync(data);
+                            await Database.UpdateAsync(data);
                         }
                     }
                     break;

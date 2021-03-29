@@ -147,7 +147,7 @@ namespace Ritsukage.Discord.Commands
             else
                 await msg.ModifyAsync(x => x.Content = $"[Bilibili] 专栏cv{id}信息获取失败");
         }
-        
+
         [Command("获取b站动态信息")]
         public async Task DynamicInfo(ulong id)
         {
@@ -169,125 +169,125 @@ namespace Ritsukage.Discord.Commands
         [Command("订阅b站直播")]
         public async Task AddLiveListener(int roomid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "discord channel"
+                && x.Type == "bilibili live"
+                && x.Target == roomid.ToString()
+                && x.Listener == Context.Channel.Id.ToString());
+            if (data != null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "discord channel" && x.Type == "bilibili live"
-                && x.Target == roomid.ToString() && x.Listener == Context.Channel.Id.ToString())?.FirstOrDefault();
-                if (data != null)
-                {
-                    await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.InsertAsync(new SubscribeList()
-                {
-                    Platform = "discord channel",
-                    Type = "bilibili live",
-                    Target = roomid.ToString(),
-                    Listener = Context.Channel.Id.ToString()
-                }).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await ReplyAsync("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await ReplyAsync(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await ReplyAsync("订阅项目因未知原因导致添加失败，请稍后重试");
-                });
+                await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
+                return;
             }
+            await Database.InsertAsync(new SubscribeList()
+            {
+                Platform = "discord channel",
+                Type = "bilibili live",
+                Target = roomid.ToString(),
+                Listener = Context.Channel.Id.ToString()
+            }).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await ReplyAsync("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
+                else if (x.IsFaulted && x.Exception != null)
+                    await ReplyAsync(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致添加失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await ReplyAsync("订阅项目因未知原因导致添加失败，请稍后重试");
+            });
         }
 
         [Command("取消订阅b站直播")]
         public async Task RemoveLiveListener(int roomid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "discord channel"
+                && x.Type == "bilibili live"
+                && x.Target == roomid.ToString()
+                && x.Listener == Context.Channel.Id.ToString());
+            if (data == null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "discord channel" && x.Type == "bilibili live"
-                && x.Target == roomid.ToString() && x.Listener == Context.Channel.Id.ToString())?.FirstOrDefault();
-                if (data == null)
-                {
-                    await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.DeleteAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await ReplyAsync("订阅项目已移除");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await ReplyAsync(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await ReplyAsync("订阅项目因未知原因导致移除失败，请稍后重试");
-                });
+                await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
+                return;
             }
+            await Database.DeleteAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await ReplyAsync("订阅项目已移除");
+                else if (x.IsFaulted && x.Exception != null)
+                    await ReplyAsync(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await ReplyAsync("订阅项目因未知原因导致移除失败，请稍后重试");
+            });
         }
 
         [Command("订阅b站动态")]
         public async Task AddDynamicListener(int userid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "discord channel"
+                && x.Type == "bilibili dynamic"
+                && x.Target == userid.ToString()
+                && x.Listener == Context.Channel.Id.ToString());
+            if (data != null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "discord channel" && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString() && x.Listener == Context.Channel.Id.ToString())?.FirstOrDefault();
-                if (data != null)
-                {
-                    await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.InsertAsync(new SubscribeList()
-                {
-                    Platform = "discord channel",
-                    Type = "bilibili dynamic",
-                    Target = userid.ToString(),
-                    Listener = Context.Channel.Id.ToString()
-                }).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await ReplyAsync("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await ReplyAsync(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致添加失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await ReplyAsync("订阅项目因未知原因导致添加失败，请稍后重试");
-                });
+                await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
+                return;
             }
+            await Database.InsertAsync(new SubscribeList()
+            {
+                Platform = "discord channel",
+                Type = "bilibili dynamic",
+                Target = userid.ToString(),
+                Listener = Context.Channel.Id.ToString()
+            }).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await ReplyAsync("订阅项目已添加，如果该目标曾经未被任何人订阅过那么将会在下一次检查时发送一次初始化广播信息");
+                else if (x.IsFaulted && x.Exception != null)
+                    await ReplyAsync(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致添加失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await ReplyAsync("订阅项目因未知原因导致添加失败，请稍后重试");
+            });
         }
 
         [Command("取消订阅b站动态")]
         public async Task RemoveDynamicListener(int userid)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            var data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "discord channel"
+                && x.Type == "bilibili dynamic"
+                && x.Target == userid.ToString()
+                && x.Listener == Context.Channel.Id.ToString());
+            if (data == null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "discord channel" && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString() && x.Listener == Context.Channel.Id.ToString())?.FirstOrDefault();
-                if (data == null)
-                {
-                    await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.DeleteAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await ReplyAsync("订阅项目已移除");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await ReplyAsync(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await ReplyAsync("订阅项目因未知原因导致移除失败，请稍后重试");
-                });
+                await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
+                return;
             }
+            await Database.DeleteAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await ReplyAsync("订阅项目已移除");
+                else if (x.IsFaulted && x.Exception != null)
+                    await ReplyAsync(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await ReplyAsync("订阅项目因未知原因导致移除失败，请稍后重试");
+            });
         }
 
         [Command("login")]
@@ -318,14 +318,13 @@ namespace Ritsukage.Discord.Commands
                     await qr?.DeleteAsync();
                     if (int.TryParse(cookie.Split(";").Where(x => x.StartsWith("DedeUserID=")).First()[11..], out var id))
                     {
-                        var t = await Database.Data.Table<UserData>().ToListAsync();
-                        var data = t.Where(x => x.Discord == Convert.ToInt64(Context.User.Id) || x.Bilibili == id).FirstOrDefault();
+                        var data = await Database.FindAsync<UserData>(x => x.Discord == Convert.ToInt64(Context.User.Id) || x.Bilibili == id);
                         if (data != null)
                         {
                             data.Discord = Convert.ToInt64(Context.User.Id);
                             data.Bilibili = id;
                             data.BilibiliCookie = cookie;
-                            await Database.Data.UpdateAsync(data).ContinueWith(async x =>
+                            await Database.UpdateAsync(data).ContinueWith(async x =>
                             {
                                 if (x.Result > 0)
                                     await dmmsg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
@@ -346,7 +345,7 @@ namespace Ritsukage.Discord.Commands
                                 Bilibili = id,
                                 BilibiliCookie = cookie
                             };
-                            await Database.Data.InsertAsync(data).ContinueWith(async x =>
+                            await Database.InsertAsync(data).ContinueWith(async x =>
                             {
                                 if (x.Result > 0)
                                     await dmmsg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");

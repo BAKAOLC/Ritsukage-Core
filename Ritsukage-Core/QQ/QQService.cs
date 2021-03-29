@@ -1,5 +1,6 @@
 ﻿using Ritsukage.QQ.Commands;
 using Ritsukage.QQ.Events;
+using Ritsukage.QQ.Service;
 using Ritsukage.Tools.Console;
 using Sora.Entities.Base;
 using Sora.Net;
@@ -20,6 +21,7 @@ namespace Ritsukage.QQ
         {
             CommandManager.Init();
             EventManager.Init();
+            ServiceManager.Init();
             Server = new(config);
             CombineEvent(Server);
         }
