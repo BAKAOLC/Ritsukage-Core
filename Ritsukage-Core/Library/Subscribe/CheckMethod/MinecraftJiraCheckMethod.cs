@@ -23,7 +23,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
             Issue[] issues = null;
             try
             {
-                issues = Issue.GetIssues($"project = MC AND resolution = Fixed AND resolved > {from:yyyy-MM-dd HH:mm} AND resolved < {to:yyyy-MM-dd HH:mm} ORDER BY resolved ASC, updated DESC, created DESC");
+                issues = Issue.GetIssues($"project = MC AND resolution = Fixed AND resolved > \"{from:yyyy-MM-dd HH:mm}\" AND resolved < \"{to:yyyy-MM-dd HH:mm}\" ORDER BY resolved ASC, updated DESC, created DESC");
             }
             catch (Exception e)
             {
