@@ -46,7 +46,8 @@ namespace Ritsukage
             Console.ReadKey();
         }
 
-        static void UpdateTitle() => Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}";
+        static void UpdateTitle() => Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}"
+            + (Config.IsDebug ? " | DEBUG MODE" : string.Empty);
 
         static void Launch()
         {

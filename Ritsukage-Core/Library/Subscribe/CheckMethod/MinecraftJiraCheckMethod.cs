@@ -40,10 +40,19 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                     record.Status = from.ToString(DateFormat);
                     await Database.Data.UpdateAsync(record);
                 }
+                else if (record == null)
+                {
+                    update = true;
+                    await Database.Data.InsertAsync(new SubscribeStatusRecord()
+                    {
+                        Type = type,
+                        Target = "java",
+                        Status = from.ToString(DateFormat)
+                    });
+                }
             }
             else
             {
-                update = true;
                 await Database.Data.InsertAsync(new SubscribeStatusRecord()
                 {
                     Type = type,
@@ -51,11 +60,13 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                     Status = from.ToString(DateFormat)
                 });
             }
-            if (update && issues.Length > 0)
+            if (update && issues != null && issues.Length > 0)
             {
                 return new MinecraftJiraCheckResult()
                 {
                     Updated = true,
+                    From = from,
+                    To = to,
                     Data = issues
                 };
             }
