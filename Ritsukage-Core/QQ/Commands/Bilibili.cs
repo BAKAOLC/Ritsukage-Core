@@ -253,7 +253,7 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("开启直播")]
-        public static async void StartLive(SoraMessage e)
+        public static async void StartLive(SoraMessage e, int area = 235, string title = "")
         {
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
@@ -269,19 +269,47 @@ namespace Ritsukage.QQ.Commands
             }
             try
             {
-                var result = JObject.Parse(BiliLive.StartLive(roomid, 235, data.BilibiliCookie));
+                var result = JObject.Parse(BiliLive.StartLive(roomid, area, data.BilibiliCookie));
                 if (!string.IsNullOrEmpty((string)result["message"]))
                     await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
                 {
-                    await e.ReplyToOriginal("开播成功");
+                    await e.ReplyToOriginal("开播成功，直播分区已设置为 " + (await LiveAreaList.Get(area)).ToString());
                     await e.SendPrivateMessage($"rtmp地址: {(string)result["data"]["rtmp"]["addr"]}\n推流码: {(string)result["data"]["rtmp"]["code"]}");
+                    if (!string.IsNullOrEmpty(title))
+                        SetLiveTitle(e, title);
                 }
             }
             catch
             {
                 await e.ReplyToOriginal("操作失败");
             }
+        }
+
+        [Command("开启直播")]
+        public static async void StartLive(SoraMessage e, string area, string title = "")
+        {
+            var list = await LiveAreaList.Get(area);
+            if (!list.Any())
+            {
+                await e.ReplyToOriginal($"未能成功搜索到有关于 {area} 的直播分区，请检查输入是否正确");
+                return;
+            }
+            else if (list.Length > 1)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("搜索到多个目标分区，请使用准确的分区名称或目标分区ID进行操作：");
+                if (list.Length > 10)
+                {
+                    sb.AppendLine(string.Join(Environment.NewLine, list.Take(10)));
+                    sb.Append($"[共搜索到 {list.Length} 个目标，仅显示前 10 个]");
+                }
+                else
+                    sb.AppendLine(string.Join(Environment.NewLine, list));
+                await e.ReplyToOriginal(sb.ToString());
+                return;
+            }
+            StartLive(e, list[0].Id, title);
         }
 
         [Command("关闭直播")]
@@ -334,12 +362,38 @@ namespace Ritsukage.QQ.Commands
                 if (!string.IsNullOrEmpty((string)result["message"]))
                     await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
-                    await e.ReplyToOriginal("已成功更换直播分区");
+                    await e.ReplyToOriginal("已成功更换直播分区至 " + (await LiveAreaList.Get(area)).ToString());
             }
             catch
             {
                 await e.ReplyToOriginal("操作失败");
             }
+        }
+
+        [Command("设置直播分区")]
+        public static async void SetLiveArea(SoraMessage e, string area)
+        {
+            var list = await LiveAreaList.Get(area);
+            if (!list.Any())
+            {
+                await e.ReplyToOriginal($"未能成功搜索到有关于 {area} 的直播分区，请检查输入是否正确");
+                return;
+            }
+            else if (list.Length > 1)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("搜索到多个目标分区，请使用准确的分区名称或目标分区ID进行操作：");
+                if (list.Length > 10)
+                {
+                    sb.AppendLine(string.Join(Environment.NewLine, list.Take(10)));
+                    sb.Append($"[共搜索到 {list.Length} 个目标，仅显示前 10 个]");
+                }
+                else
+                    sb.AppendLine(string.Join(Environment.NewLine, list));
+                await e.ReplyToOriginal(sb.ToString());
+                return;
+            }
+            SetLiveArea(e, list[0].Id);
         }
 
         [Command("设置直播标题")]
@@ -360,10 +414,10 @@ namespace Ritsukage.QQ.Commands
             try
             {
                 var result = JObject.Parse(BiliLive.UpdateLiveTitle(roomid, title, data.BilibiliCookie));
-                if (!string.IsNullOrEmpty((string)result["message"]))
+                if (!string.IsNullOrEmpty((string)result["message"]) && (string)result["message"] != "ok")
                     await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
-                    await e.ReplyToOriginal("已成功更换直播分区");
+                    await e.ReplyToOriginal("已成功修改直播标题为 " + title);
             }
             catch
             {

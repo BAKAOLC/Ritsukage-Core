@@ -2,8 +2,12 @@
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -239,6 +243,8 @@ namespace Ritsukage.Library.Bilibili.Model
 
     public static class VideoExtensions
     {
+        static readonly Regex CookieParse = new Regex(@"(?<key>[^=]+)=(?<value>[^;]+)");
+
         public static string PutCoin(string bv, string cookie)
             => PutCoin(BilibiliAVBVConverter.ToAV(bv), cookie);
         public static string PutCoin(long av, string cookie)
@@ -259,5 +265,65 @@ namespace Ritsukage.Library.Bilibili.Model
         }
         public static string PutCoin(this Video video, string cookie)
             => PutCoin(video.AV, cookie);
+
+        public static async Task<bool> ShamWatchVideo(string bv, string cookie)
+            => await ShamWatchVideo(BilibiliAVBVConverter.ToAV(bv), cookie);
+        public static async Task<bool> ShamWatchVideo(long av, string cookie)
+        {
+            var jct = Bilibili.GetJCT(cookie);
+            var cookies = CookieParse.Matches(cookie.Replace(" ", string.Empty));
+            var uid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID").FirstOrDefault()?.Groups["value"].Value;
+            var sid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID__ckMd5").FirstOrDefault()?.Groups["value"].Value;
+            var video = Video.Get(av);
+            var referer = "https://www.bilibili.com/video/av" + av;
+            var time = Utils.GetTimeStamp();
+            var param = new Dictionary<string, object>()
+            {
+                { "aid", video.AV },
+                { "cid", video.CID },
+                { "part", 1},
+                { "did", sid },
+                { "mid", uid },
+                { "csrf", jct },
+                { "jsonp", "jsonp"},
+                { "ftime", time },
+                { "stime", time }
+            };
+            var result = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/report/click/h5",
+                Utils.ToUrlParameter(param), 5000, cookie, referer));
+            if ((int)result["code"] == 0)
+            {
+                param = new Dictionary<string, object>()
+                {
+                    { "aid", video.AV },
+                    { "cid", video.CID },
+                    { "did", sid },
+                    { "mid", uid },
+                    { "csrf", jct },
+                    { "played_time", 0 },
+                    { "realtime", video.Duration.TotalSeconds },
+                    { "pause", "false" },
+                    { "dt", 7 },
+                    { "play_type", 1 },
+                    { "jsonp", "jsonp"},
+                    { "start_ts", Utils.GetTimeStamp() }
+                };
+                result = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/report/web/heartbeat",
+                    Utils.ToUrlParameter(param), 5000, cookie, referer));
+                if ((int)result["code"] == 0)
+                {
+                    await Task.Delay(5000);
+                    param["played_time"] = video.Duration.TotalSeconds - 1;
+                    param["play_type"] = 0;
+                    param["start_ts"] = Utils.GetTimeStamp();
+                    result = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/report/web/heartbeat",
+                        Utils.ToUrlParameter(param), 5000, cookie, referer));
+                    return (int)result["code"] == 0;
+                }
+            }
+            return false;
+        }
+        public static async Task<bool> ShamWatchVideo(this Video video, string cookie)
+            => await ShamWatchVideo(video.AV, cookie);
     }
 }
