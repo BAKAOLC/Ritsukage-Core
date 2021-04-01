@@ -8,7 +8,7 @@ using System.Net;
 
 namespace Ritsukage.Tools
 {
-    class BaseImage
+    public class BaseImage
     {
         public Bitmap Source { get; set; }
 
@@ -264,7 +264,7 @@ namespace Ritsukage.Tools
         }
     }
 
-    class EmptyImage : BaseImage
+    public class EmptyImage : BaseImage
     {
         public EmptyImage(int Width, int Height)
         {
@@ -272,7 +272,7 @@ namespace Ritsukage.Tools
         }
     }
 
-    class MemoryImage : BaseImage
+    public class MemoryImage : BaseImage
     {
         public MemoryImage(Image image)
         {
@@ -285,7 +285,7 @@ namespace Ritsukage.Tools
         }
     }
 
-    class FileImage : BaseImage
+    public class FileImage : BaseImage
     {
         public FileImage(string path)
         {
@@ -293,7 +293,7 @@ namespace Ritsukage.Tools
         }
     }
 
-    class NetworkImage : BaseImage
+    public class NetworkImage : BaseImage
     {
         public NetworkImage(string url)
         {
@@ -301,7 +301,7 @@ namespace Ritsukage.Tools
         }
     }
 
-    class ColorTools
+    public class ColorTools
     {
         private int a = 255;
         private int r = 0;

@@ -17,6 +17,12 @@ namespace Ritsukage.QQ.Commands
         public static string GetIssueInfo(string id)
         {
             var issue = Issue.GetIssue(id);
+            if (issue == null)
+                return $"未能获取到ID为 {issue.Id} 的issue";
+            return GetIssueInfo(issue);
+        }
+        public static string GetIssueInfo(Issue issue)
+        {
             var sb = new StringBuilder().AppendLine(issue.Title);
             sb.Append("类型: " + issue.Type).Append(Indent)
                 .AppendLine("分类: " + issue.Category);
@@ -72,6 +78,37 @@ namespace Ritsukage.QQ.Commands
                         .ToString());
                 }
             }
+        }
+
+        [Command("获取mc修复列表")]
+        public static async void GetMojiraList(SoraMessage e, DateTime from, DateTime to)
+        {
+            Issue[] issues = null;
+            try
+            {
+                issues = Issue.GetIssues($"project = MC AND resolution = Fixed AND resolved > \"{from:yyyy-MM-dd HH:mm}\" AND resolved < \"{to:yyyy-MM-dd HH:mm}\" ORDER BY resolved ASC, updated DESC, created DESC");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Minecraft Jira Checker", ConsoleLog.ErrorLogBuilder(ex));
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("获取信息时发生错误：")
+                    .Append(ex.GetFormatString())
+                    .ToString());
+            }
+            if (issues.Length > 0)
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Minecraft Jira]")
+                    .AppendLine("哇哦，Bugjang杀死了这些虫子:")
+                    .AppendLine(string.Join(Environment.NewLine, issues.Select(x => x.Title)))
+                    .Append($"统计时间: {from:yyyy-MM-dd HH:mm} ~ {to:yyyy-MM-dd HH:mm}")
+                    .ToString());
+            else
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Minecraft Jira]")
+                    .AppendLine("可恶，这段时间Bugjang一个虫子也没有杀")
+                    .Append($"统计时间: {from:yyyy-MM-dd HH:mm} ~ {to:yyyy-MM-dd HH:mm}")
+                    .ToString());
         }
 
         [Command("查询mc快照更新日志")]

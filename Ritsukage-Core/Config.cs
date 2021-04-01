@@ -38,6 +38,11 @@ namespace Ritsukage
         /// </summary>
         public string SuoLinkToken = "";
 
+        /// <summary>
+        /// Mojang Jira Cookie
+        /// </summary>
+        public string MoJiraCookie = "";
+
         #region Baidu
         /// <summary>
         /// 百度翻译Api App Id

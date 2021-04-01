@@ -1,4 +1,5 @@
 ﻿using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -172,30 +173,47 @@ namespace Ritsukage.Library.Minecraft.Jila
 
         public static Issue GetIssue(string id)
         {
+            var url = $"https://bugs.mojang.com/si/jira.issueviews:issue-xml/{id}/{id}.xml";
+            ConsoleLog.Debug("Mojang Jira", $"Getting issue {id} from " + url);
             var xml = new XmlDocument();
-            var xmlreader = XmlReader.Create($"https://bugs.mojang.com/si/jira.issueviews:issue-xml/{id}/{id}.xml", new()
+            var xmlreader = XmlReader.Create(url, new()
             {
-                IgnoreComments = true,
-                Async = true
+                IgnoreComments = true
             });
             xml.Load(xmlreader);
             var item = xml.DocumentElement.SelectSingleNode("channel/item");
-            return new(item);
+            if (item == null)
+            {
+                ConsoleLog.Debug("Mojang Jira", "failed");
+                return null;
+            }
+            else
+            {
+                ConsoleLog.Debug("Mojang Jira", "success");
+                return new(item);
+            }
         }
 
         public static Issue[] GetIssues(string search)
         {
+            var url = $"https://bugs.mojang.com/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery={Utils.UrlEncode(search)}";
+            ConsoleLog.Debug("Mojang Jira", "Getting issues from " + url);
+            var page = Utils.HttpGET(url, "", 20000, Program.Config.MoJiraCookie);
             var xml = new XmlDocument();
-            var xmlreader = XmlReader.Create($"https://bugs.mojang.com/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery={Utils.UrlEncode(search)}", new()
+            var xmlreader = XmlReader.Create(new StringReader(page), new()
             {
-                IgnoreComments = true,
-                Async = true
+                IgnoreComments = true
             });
             xml.Load(xmlreader);
             List<Issue> issues = new();
             var items = xml.DocumentElement.SelectNodes("channel/item");
-            foreach (XmlNode e in items)
-                issues.Add(new(e));
+            if (items != null)
+                foreach (XmlNode e in items)
+                    issues.Add(new(e));
+            if (issues.Count == 0)
+                ConsoleLog.Debug("Mojang Jira", "No issue was found.");
+            else
+                ConsoleLog.Debug("Mojang Jira", $"Get {issues.Count} issues.");
             return issues.ToArray();
         }
 
@@ -204,3 +222,8 @@ namespace Ritsukage.Library.Minecraft.Jila
                 .GroupBy(x => x).Select(x => x.Key).ToArray());
     }
 }
+
+/*
+https://bugs.mojang.com/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=project+%3D+MC+AND+resolution+%3D+Fixed+AND+resolved+%3E+%222021-03-29+16%3A00%22+AND+resolved+%3C+%222021-03-29+17%3A00%22+ORDER+BY+resolved+ASC%2C+updated+DESC%2C+created+DESC
+https://bugs.mojang.com/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=project+%3D+MC+AND+resolution+%3D+Fixed+AND+resolved+%3E+%222021-03-29+16%3A00%22+AND+resolved+%3C+%222021-03-29+17%3A00%22+ORDER+BY+resolved+ASC%2C+updated+DESC%2C+created+DESC
+*/

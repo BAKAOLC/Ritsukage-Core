@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -17,13 +17,6 @@
     <Compile Remove="QQ\Console\**" />
     <EmbeddedResource Remove="QQ\Console\**" />
     <None Remove="QQ\Console\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Library\Minecraft\Jila\Issue.cs~RF16a84831.TMP" />
-    <None Remove="Library\Roll\Model\HistoryToday.cs~RFc9704f4.TMP" />
-    <None Remove="Library\Subscribe\SubscribeManager.cs~RF6ce1534.TMP" />
-    <None Remove="Tools\Utils.cs~RFe53c63.TMP" />
   </ItemGroup>
 
   <ItemGroup>
