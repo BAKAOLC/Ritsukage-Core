@@ -20,11 +20,9 @@ namespace Ritsukage.Discord.Services
 
         async Task UserJoined(SocketGuildUser user)
         {
-            var t = await Database.Data.Table<DiscordGuildSetting>().ToArrayAsync();
-            var data = t.Where(x => x.Guild == Convert.ToInt64(user.Guild.Id)).FirstOrDefault();
+            var data = await Database.FindAsync<DiscordGuildSetting>(x => x.Guild == Convert.ToInt64(user.Guild.Id));
             if (data != null && data.FirstCommingRole > 0 && !user.IsBot && !user.IsWebhook)
                 await user.AddRoleAsync(user.Guild.GetRole(Convert.ToUInt64(data.FirstCommingRole)));
         }
-
     }
 }

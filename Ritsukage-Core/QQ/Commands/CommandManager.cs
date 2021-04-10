@@ -101,9 +101,9 @@ namespace Ritsukage.QQ.Commands
         public string Name { get; init; }
         public PreconditionAttribute[] Preconditions { get; init; }
         internal MethodInfo Method;
-        internal Type[] ArgTypes;
+        internal ParameterInfo[] ArgTypes;
 
-        internal Command(string s, string n, MethodInfo method, Type[] args, PreconditionAttribute[] preconditions)
+        internal Command(string s, string n, MethodInfo method, ParameterInfo[] args, PreconditionAttribute[] preconditions)
         {
             StartHeader = s;
             Name = n;
@@ -161,10 +161,17 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        private static object ParseArgument(Type type, CommandArgs args)
+        private static object ParseArgument(ParameterInfo param, CommandArgs args)
         {
+            if (!args.HasNext())
+            {
+                if (param.HasDefaultValue)
+                    return param.DefaultValue;
+                else
+                    throw new IndexOutOfRangeException();
+            }
             Exception e = null;
-            if (Parsers.TryGetValue(type, out ICommandParser parser))
+            if (Parsers.TryGetValue(param.ParameterType, out ICommandParser parser))
             {
                 try
                 {
@@ -177,25 +184,25 @@ namespace Ritsukage.QQ.Commands
             }
             else
             {
-                if (type == typeof(byte))
+                if (param.ParameterType == typeof(byte))
                     return byte.Parse(args.Next());
-                else if (type == typeof(short))
+                else if (param.ParameterType == typeof(short))
                     return short.Parse(args.Next());
-                else if (type == typeof(ushort))
+                else if (param.ParameterType == typeof(ushort))
                     return ushort.Parse(args.Next());
-                else if (type == typeof(int))
+                else if (param.ParameterType == typeof(int))
                     return int.Parse(args.Next());
-                else if (type == typeof(uint))
+                else if (param.ParameterType == typeof(uint))
                     return uint.Parse(args.Next());
-                else if (type == typeof(long))
+                else if (param.ParameterType == typeof(long))
                     return long.Parse(args.Next());
-                else if (type == typeof(ulong))
+                else if (param.ParameterType == typeof(ulong))
                     return ulong.Parse(args.Next());
-                else if (type == typeof(float))
+                else if (param.ParameterType == typeof(float))
                     return float.Parse(args.Next());
-                else if (type == typeof(double))
+                else if (param.ParameterType == typeof(double))
                     return double.Parse(args.Next());
-                else if (type == typeof(bool))
+                else if (param.ParameterType == typeof(bool))
                 {
                     string original = args.Next();
                     string s = original.ToLower();
@@ -205,14 +212,14 @@ namespace Ritsukage.QQ.Commands
                         return false;
                     else throw new ArgumentException($"{original} is not a bool value.");
                 }
-                else if (type == typeof(DateTime))
+                else if (param.ParameterType == typeof(DateTime))
                     return DateTimeReader.Parse(args.Next());
-                else if (type == typeof(TimeSpan))
+                else if (param.ParameterType == typeof(TimeSpan))
                     return TimeSpanReader.Parse(args.Next());
-                else if (type == typeof(string))
+                else if (param.ParameterType == typeof(string))
                     return SoraMessage.Escape(args.Next());
             }
-            throw new ArgumentException($"the type of {type} cannot be parsed from string", e);
+            throw new ArgumentException($"the type of {param} cannot be parsed from string", e);
         }
 
         public static void RegisterAllCommands(Type type, params PreconditionAttribute[] preconditions)
@@ -220,27 +227,22 @@ namespace Ritsukage.QQ.Commands
             foreach (var method in type.GetMethods())
             {
                 var attrs = method.GetCustomAttribute<CommandAttribute>();
-
-                var list = new List<PreconditionAttribute>();
-                foreach (var a in preconditions)
-                    list.Add(a);
-                var p = method.GetCustomAttributes()?.Where(x => x is PreconditionAttribute)?.ToList();
-                if (p != null)
-                    foreach (PreconditionAttribute a in p)
-                        list.Add(a);
-
                 if (attrs != null)
                 {
-                    var ps = method.GetParameters();
-                    var ts = new Type[ps.Length];
-                    for (int i = 0; i < ps.Length; ++i)
-                        ts[i] = ps[i].ParameterType;
+                    var list = new List<PreconditionAttribute>();
+                    foreach (var a in preconditions)
+                        list.Add(a);
+
+                    var p = method.GetCustomAttributes()?.Where(x => x is PreconditionAttribute)?.ToList();
+                    if (p != null)
+                        foreach (PreconditionAttribute a in p)
+                            list.Add(a);
 
                     var name = attrs.Name;
                     if (name.Length == 0)
                         name = new[] { method.Name };
 
-                    var command = new Command(attrs.StartHeader, name[0], method, ts, list.ToArray());
+                    var command = new Command(attrs.StartHeader, name[0], method, method.GetParameters(), list.ToArray());
 
                     foreach (var n in name)
                     {
@@ -298,7 +300,7 @@ namespace Ritsukage.QQ.Commands
                             var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
                             foreach (var command in commandlist.OrderByDescending(x => x.ArgTypes.Length).ToArray())
                             {
-                                if (args.Length >= (command.ArgTypes.Length - 1) && await command.CheckPermission(arg))
+                                if (args.Length >= (command.ArgTypes.Where(a => !a.HasDefaultValue).Count() - 1) && await command.CheckPermission(arg))
                                 {
                                     object[] ps = new object[command.ArgTypes.Length];
                                     ps[0] = m;

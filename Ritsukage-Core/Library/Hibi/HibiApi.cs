@@ -10,13 +10,8 @@ namespace Ritsukage.Library.Hibi
 
         public static JToken Get(string path, Dictionary<string, object> param = null)
         {
-            if (param != null)
-            {
-                var sb = new List<string>();
-                foreach (var p in param)
-                    sb.Add($"{Utils.UrlEncode(p.Key)}={Utils.UrlEncode(p.Value.ToString())}");
-                path += "?" + string.Join("&", sb);
-            }
+            if (param != null && param.Count > 0)
+                path += "?" + Utils.ToUrlParameter(param);
             var result = Utils.HttpGET(Host + path);
             if (string.IsNullOrWhiteSpace(result))
                 return null;

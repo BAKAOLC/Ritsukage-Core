@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools.Console;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -13,6 +15,16 @@ namespace Ritsukage.Tools
     public static class Utils
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
+
+        public static string ToUrlParameter(Dictionary<string, object> param = null)
+        {
+            if (param == null)
+                return string.Empty;
+            var sb = new List<string>();
+            foreach (var p in param)
+                sb.Add($"{UrlEncode(p.Key)}={UrlEncode(p.Value == null ? string.Empty : p.Value.ToString())}");
+            return string.Join("&", sb);
+        }
 
         public static readonly DateTime BaseUTC = new DateTime(1970, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc);
 
@@ -30,6 +42,26 @@ namespace Ritsukage.Tools
                 if (long.TryParse((string)JToken.Parse(data)["data"]["t"], out var t))
                     return t;
             return GetTimeStamp();
+        }
+
+        public static string RemoveEmptyLine(string text)
+        {
+            char splitChar = '\n';
+            switch (Environment.NewLine)
+            {
+                case "\r":
+                    text = text.Replace('\n', '\r');
+                    splitChar = '\r';
+                    break;
+                case "\r\n":
+                case "\n":
+                    text = text.Replace('\r', '\n');
+                    splitChar = '\n';
+                    break;
+            }
+            return string.Join(Environment.NewLine,
+                text.Split(splitChar, StringSplitOptions.RemoveEmptyEntries)
+                .GroupBy(x => x).Select(x => x.Key));
         }
 
         public static string UrlRemoveParam(string url)
@@ -139,7 +171,8 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
+                ConsoleLog.Error("HTTP", new StringBuilder().Append("Target Url: ")
+                    .AppendLine(Url).Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
             return string.Empty;
         }
@@ -161,7 +194,8 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
+                ConsoleLog.Error("HTTP", new StringBuilder().Append("Target Url: ")
+                    .AppendLine(Url).Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
             return string.Empty;
         }
@@ -183,7 +217,8 @@ namespace Ritsukage.Tools
             catch (Exception e)
             {
                 request?.Abort();
-                ConsoleLog.Error("HTTP", ConsoleLog.ErrorLogBuilder(e, true));
+                ConsoleLog.Error("HTTP", new StringBuilder().Append("Target Url: ")
+                    .AppendLine(Url).Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
             return string.Empty;
         }
@@ -241,5 +276,7 @@ namespace Ritsukage.Tools
             request.Abort();
             return retString;
         }
+
+        public static StringBuilder CreateStringBuilder(this string s) => new StringBuilder(s);
     }
 }

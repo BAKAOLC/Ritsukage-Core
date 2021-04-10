@@ -6,9 +6,7 @@ using Sora.Entities.Info;
 using Sora.Enumeration.ApiType;
 using Sora.EventArgs.SoraEvent;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Ritsukage.QQ

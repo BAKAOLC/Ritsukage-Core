@@ -3,11 +3,11 @@ using System;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Utils")]
     public static class Time
     {
         [Command]
-        public static async void Ping(SoraMessage e) => await e.ReplyToOriginal("Pong!");
+        public static async void Ping(SoraMessage e) => await e.ReplyToOriginal($"Pong! {(DateTime.Now - e.Time).TotalMilliseconds:F0} ms");
 
         [Command("时间", "time")]
         public static async void Normal(SoraMessage e)

@@ -16,12 +16,11 @@ namespace Ritsukage.Discord.Commands
             var user = Context.Guild.GetUser(Context.User.Id);
             if (user.GuildPermissions.Administrator || user.GuildPermissions.ManageRoles)
             {
-                var t = await Database.Data.Table<DiscordGuildSetting>().ToArrayAsync();
-                var data = t.Where(x => x.Guild == Convert.ToInt64(Context.Guild.Id)).FirstOrDefault();
+                var data = await Database.FindAsync<DiscordGuildSetting>(x => x.Guild == Convert.ToInt64(Context.Guild.Id));
                 if (data != null)
                 {
                     data.FirstCommingRole = Convert.ToInt64(id);
-                    await Database.Data.UpdateAsync(data).ContinueWith(async x =>
+                    await Database.UpdateAsync(data).ContinueWith(async x =>
                     {
                         if (x.Result > 0)
                             await ReplyAsync(":white_check_mark: 设置成功");
@@ -39,7 +38,7 @@ namespace Ritsukage.Discord.Commands
                     Guild = Convert.ToInt64(Context.Guild.Id),
                     FirstCommingRole = Convert.ToInt64(id)
                 };
-                await Database.Data.InsertAsync(data).ContinueWith(async x =>
+                await Database.InsertAsync(data).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
                         await ReplyAsync(":white_check_mark: 设置成功");

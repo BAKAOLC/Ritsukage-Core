@@ -13,8 +13,7 @@ namespace Ritsukage.Discord.Commands
             sw.Start();
             var msg = await ReplyAsync("pinging...");
             sw.Stop();
-            await msg.ModifyAsync(x =>
-            x.Content = "> ok, it took me " + sw.ElapsedMilliseconds.ToString() + " ms to ping.");
+            await msg.ModifyAsync(x => x.Content = $"> Pong! {sw.ElapsedMilliseconds} ms");
         }
     }
 }

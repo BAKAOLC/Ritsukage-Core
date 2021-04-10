@@ -6,6 +6,7 @@ using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace Ritsukage
@@ -28,9 +29,15 @@ namespace Ritsukage
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var directory = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "crash-report"));
+                var now = DateTime.Now;
                 File.WriteAllText(
-                    Path.Combine(directory.FullName, $"crash-{DateTime.Now:yyyyMMdd-HHmmss-ffff}.log"),
-                    ConsoleLog.ErrorLogBuilder((Exception)args.ExceptionObject));
+                    Path.Combine(directory.FullName, $"crash-{now:yyyyMMdd-HHmmss-ffff}.log"),
+                    new StringBuilder()
+                    .AppendLine($"[启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss.ffff}]")
+                    .AppendLine($"[崩溃于 {now:yyyy-MM-dd HH:mm:ss.ffff}]")
+                    .AppendLine($"[工作时长 {now - LaunchTime}]")
+                    .Append(ConsoleLog.ErrorLogBuilder((Exception)args.ExceptionObject))
+                    .ToString());
             };
             LaunchTime = DateTime.Now;
             Console.Title = "Ritsukage Core";
@@ -46,7 +53,8 @@ namespace Ritsukage
             Console.ReadKey();
         }
 
-        static void UpdateTitle() => Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}";
+        static void UpdateTitle() => Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}"
+            + (Config.IsDebug ? " | DEBUG MODE" : string.Empty);
 
         static void Launch()
         {

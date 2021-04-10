@@ -20,5 +20,8 @@ namespace Ritsukage.QQ.Commands
             else
                 return Task.FromResult(false);
         }
+
+        public override string ToString()
+            => $"<Only for group: {string.Join(", ", Groups)}>";
     }
 }

@@ -18,6 +18,9 @@ namespace Ritsukage.QQ.Commands
             WorkIn.Private => Task.FromResult(args is PrivateMessageEventArgs),
             _ => Task.FromResult(true),
         };
+
+        public override string ToString()
+            => $"<Can work in: {CanWork}>";
     }
 
     public enum WorkIn

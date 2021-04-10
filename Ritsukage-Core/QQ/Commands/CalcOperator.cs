@@ -1,6 +1,6 @@
 ﻿namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Math")]
     public static class CalcOperator
     {
         [Command("calc")]

@@ -2,7 +2,7 @@
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Poem")]
     public static class Poem
     {
         [Command("飞花令"), NeedCoins(2)]

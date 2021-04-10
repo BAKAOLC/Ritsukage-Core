@@ -74,6 +74,8 @@ namespace Ritsukage.Tools
 
             public static Language GetById(string id)
                 => LanguageTable.Find(x => x.Id == id);
+
+            public override string ToString() => Name;
         }
 
         public struct ResultCode
@@ -111,7 +113,7 @@ namespace Ritsukage.Tools
 
             public TranslateResult(JToken data)
             {
-                if (data["error_code"].HasValues)
+                if (data["error_code"] != null)
                 {
                     Code = ResultCode.GetById((string)data["error_code"]);
                     OriginalLanguage = null;
@@ -130,7 +132,8 @@ namespace Ritsukage.Tools
             }
         }
 
-        public static string Translate(string appId, string secretKey, string salt, string str, string from = "en", string to = "zh")
+        public static string Translate(string appId, string secretKey, string salt,
+            string str, string from = "auto", string to = "zh")
         {
             string sign = EncryptString(appId + str + salt + secretKey);
             string url = "http://api.fanyi.baidu.com/api/trans/vip/translate?";
@@ -153,15 +156,16 @@ namespace Ritsukage.Tools
             myResponseStream.Close();
             return retString;
         }
-        public static string Translate(string str, string from = "en", string to = "zh")
+        public static string Translate(string str, string from = "auto", string to = "zh")
             => Translate(Program.Config.BaiduTranslateAppId,
                 Program.Config.BaiduTranslateKey,
                 new Rand().Int(100000000, 999999999).ToString(),
                 str, from, to);
 
-        public static TranslateResult GetTranslateResult(string appId, string secretKey, string salt, string str, string from = "en", string to = "zh")
+        public static TranslateResult GetTranslateResult(string appId, string secretKey, string salt,
+            string str, string from = "auto", string to = "zh")
             => new(JObject.Parse(Translate(appId, secretKey, salt, str, from, to)));
-        public static TranslateResult GetTranslateResult(string str, string from = "en", string to = "zh")
+        public static TranslateResult GetTranslateResult(string str, string from = "auto", string to = "zh")
             => new(JObject.Parse(Translate(str, from, to)));
 
         public static string EncryptString(string str)

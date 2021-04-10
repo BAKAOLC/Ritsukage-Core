@@ -26,5 +26,8 @@ namespace Ritsukage.QQ.Commands
                 return false;
             return await CoinsService.CheckUserCoins("qq", user, Coins, DisableFree);
         }
+
+        public override string ToString()
+            => $"<Need coins: {Coins}{(DisableFree ? " (not free)" : "")}>";
     }
 }

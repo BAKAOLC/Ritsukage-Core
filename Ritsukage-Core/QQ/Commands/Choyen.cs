@@ -3,7 +3,7 @@ using Sora.Entities.CQCodes;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Image Generator")]
     public static class Choyen
     {
         [Command("5000choyen"), NeedCoins(1)]

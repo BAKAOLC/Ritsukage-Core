@@ -20,5 +20,8 @@ namespace Ritsukage.QQ.Commands
             else
                 return Task.FromResult(false);
         }
+
+        public override string ToString()
+            => $"<Limit member role type: {Role}>";
     }
 }

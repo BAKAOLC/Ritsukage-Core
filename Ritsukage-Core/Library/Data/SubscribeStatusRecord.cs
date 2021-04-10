@@ -3,7 +3,7 @@
 namespace Ritsukage.Library.Data
 {
     [Table("SubscribeStatusRecord"), AutoInitTable]
-    public class SubscribeStatusRecord
+    public class SubscribeStatusRecord : DataTable
     {
         [Column("ID"), PrimaryKey, AutoIncrement]
         public int Id { get; set; }

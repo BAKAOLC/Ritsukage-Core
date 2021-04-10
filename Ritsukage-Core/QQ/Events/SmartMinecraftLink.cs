@@ -12,7 +12,7 @@ namespace Ritsukage.QQ.Events
         [Event(typeof(GroupMessageEventArgs))]
         public static async void Receiver(object sender, GroupMessageEventArgs args)
         {
-            var data = await Database.Data.Table<QQGroupSetting>()?.Where(x => x.Group == args.SourceGroup.Id).FirstOrDefaultAsync();
+            var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == args.SourceGroup.Id);
             if (data != null && data.SmartMinecraftLink)
                 Trigger(args);
         }

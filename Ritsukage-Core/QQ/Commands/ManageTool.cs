@@ -1,6 +1,6 @@
 ﻿namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup, CanWorkIn(WorkIn.Group), LimitMemberRoleType(Sora.Enumeration.EventParamsType.MemberRoleType.Admin)]
+    [CommandGroup("Manage Tools"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(Sora.Enumeration.EventParamsType.MemberRoleType.Admin)]
     public static class ManageTool
     {
         [Command("公告")]

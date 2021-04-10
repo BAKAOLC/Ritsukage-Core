@@ -8,5 +8,7 @@ namespace Ritsukage.QQ.Commands
     public abstract class PreconditionAttribute : Attribute
     {
         public abstract Task<bool> CheckPermissionsAsync(BaseSoraEventArgs args);
+
+        public override string ToString() => $"<{GetType().Name}>";
     }
 }

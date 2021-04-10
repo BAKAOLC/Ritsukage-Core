@@ -1,23 +1,29 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Library.Minecraft.Changelog;
 using Ritsukage.Library.Minecraft.Jila;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Minecraft")]
     public static class Minecraft
     {
         const string Indent = "    ";
         public static string GetIssueInfo(string id)
         {
             var issue = Issue.GetIssue(id);
+            if (issue == null)
+                return $"未能获取到ID为 {issue.Id} 的issue";
+            return GetIssueInfo(issue);
+        }
+        public static string GetIssueInfo(Issue issue)
+        {
             var sb = new StringBuilder().AppendLine(issue.Title);
             sb.Append("类型: " + issue.Type).Append(Indent)
                 .AppendLine("分类: " + issue.Category);
@@ -73,6 +79,37 @@ namespace Ritsukage.QQ.Commands
                         .ToString());
                 }
             }
+        }
+
+        [Command("获取mc修复列表")]
+        public static async void GetMojiraList(SoraMessage e, DateTime from, DateTime to)
+        {
+            Issue[] issues = null;
+            try
+            {
+                issues = Issue.GetIssues($"project = MC AND resolution = Fixed AND resolved > \"{from:yyyy-MM-dd HH:mm}\" AND resolved < \"{to:yyyy-MM-dd HH:mm}\" ORDER BY resolved ASC, updated DESC, created DESC");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Minecraft Jira Checker", ConsoleLog.ErrorLogBuilder(ex));
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("获取信息时发生错误：")
+                    .Append(ex.GetFormatString())
+                    .ToString());
+            }
+            if (issues.Length > 0)
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Minecraft Jira]")
+                    .AppendLine("哇哦，Bugjang杀死了这些虫子:")
+                    .AppendLine(string.Join(Environment.NewLine, issues.Select(x => x.Title)))
+                    .Append($"统计时间: {from:yyyy-MM-dd HH:mm} ~ {to:yyyy-MM-dd HH:mm}")
+                    .ToString());
+            else
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Minecraft Jira]")
+                    .AppendLine("可恶，这段时间Bugjang一个虫子也没有杀")
+                    .Append($"统计时间: {from:yyyy-MM-dd HH:mm} ~ {to:yyyy-MM-dd HH:mm}")
+                    .ToString());
         }
 
         [Command("查询mc快照更新日志")]
@@ -139,7 +176,10 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("无效的目标文章网址");
                     return;
                 }
-                await e.ReplyToOriginal(article.Markdown);
+                var bin = UbuntuPastebin.Paste(article.Markdown, "md", "Mojang");
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("目标文章已格式化至以下地址暂存，请及时查阅以免数据过期")
+                    .Append(bin).ToString());
             }
             catch (Exception ex)
             {
@@ -152,18 +192,18 @@ namespace Ritsukage.QQ.Commands
         [Command("订阅minecraft更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void AddVersionListener(SoraMessage e)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            SubscribeList data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "minecraft version"
+                && x.Target == "java"
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data != null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "minecraft version"
-                && x.Target == "java" && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data != null)
-                {
-                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
-                    return;
-                }
+                await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
+                return;
             }
-            await Database.Data.InsertAsync(new SubscribeList()
+            await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "minecraft version",
@@ -186,48 +226,46 @@ namespace Ritsukage.QQ.Commands
         [Command("取消订阅minecraft更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void RemoveVersionListener(SoraMessage e)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            SubscribeList data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "minecraft version"
+                && x.Target == "java"
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data == null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "minecraft version"
-                && x.Target == "java" && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data == null)
-                {
-                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.DeleteAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await e.ReplyToOriginal("订阅项目已移除");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await e.ReplyToOriginal(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
-                });
-            }
-            else
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
+                return;
+            }
+            await Database.DeleteAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.ReplyToOriginal("订阅项目已移除");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
+            });
         }
 
         [Command("订阅mojira更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void AddJiraListener(SoraMessage e)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            SubscribeList data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "minecraft jira"
+                && x.Target == "java"
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data != null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "minecraft jira"
-                && x.Target == "java" && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data != null)
-                {
-                    await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
-                    return;
-                }
+                await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
+                return;
             }
-            await Database.Data.InsertAsync(new SubscribeList()
+            await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "minecraft jira",
@@ -250,65 +288,59 @@ namespace Ritsukage.QQ.Commands
         [Command("取消订阅mojira更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void RemoveJiraListener(SoraMessage e)
         {
-            var t = await Database.Data.Table<SubscribeList>().ToListAsync();
-            if (t != null && t.Count > 0)
+            SubscribeList data = await Database.FindAsync<SubscribeList>(
+                x
+                => x.Platform == "qq group"
+                && x.Type == "minecraft jira"
+                && x.Target == "java"
+                && x.Listener == e.SourceGroup.Id.ToString());
+            if (data == null)
             {
-                SubscribeList data = t.Where(x => x.Platform == "qq group" && x.Type == "minecraft jira"
-                && x.Target == "java" && x.Listener == e.SourceGroup.Id.ToString())?.FirstOrDefault();
-                if (data == null)
-                {
-                    await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
-                    return;
-                }
-                await Database.Data.DeleteAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await e.ReplyToOriginal("订阅项目已移除");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await e.ReplyToOriginal(new StringBuilder()
-                            .AppendLine("订阅项目因异常导致移除失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
-                });
-            }
-            else
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
+                return;
+            }
+            await Database.DeleteAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.ReplyToOriginal("订阅项目已移除");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("订阅项目因异常导致移除失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.AutoAtReply("订阅项目因未知原因导致移除失败，请稍后重试");
+            });
         }
 
         [Command("启用mojira智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void EnableAutoLink(SoraMessage e)
         {
-            var t = await Database.Data.Table<QQGroupSetting>().ToListAsync();
-            if (t != null && t.Count > 0)
+            QQGroupSetting data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
+            if (data != null)
             {
-                var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
-                if (data != null)
+                if (data.SmartMinecraftLink)
                 {
-                    if (data.SmartMinecraftLink)
-                    {
-                        await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
-                        return;
-                    }
-                    data.SmartMinecraftLink = true;
-                    await Database.Data.UpdateAsync(data).ContinueWith(async x =>
-                    {
-                        if (x.Result > 0)
-                            await e.ReplyToOriginal("本群已成功启用mojira智能解析功能");
-                        else if (x.IsFaulted && x.Exception != null)
-                            await e.ReplyToOriginal(new StringBuilder()
-                                .AppendLine("因异常导致功能启用失败，错误信息：")
-                                .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                                .ToString());
-                        else
-                            await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
-                    });
+                    await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
+                    return;
                 }
+                data.SmartMinecraftLink = true;
+                await Database.UpdateAsync(data).ContinueWith(async x =>
+                {
+                    if (x.Result > 0)
+                        await e.ReplyToOriginal("本群已成功启用mojira智能解析功能");
+                    else if (x.IsFaulted && x.Exception != null)
+                        await e.ReplyToOriginal(new StringBuilder()
+                            .AppendLine("因异常导致功能启用失败，错误信息：")
+                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                            .ToString());
+                    else
+                        await e.ReplyToOriginal("因未知原因导致功能启用失败，请稍后重试");
+                });
             }
             else
             {
-                await Database.Data.InsertAsync(new QQGroupSetting()
+                await Database.InsertAsync(new QQGroupSetting()
                 {
                     Group = e.SourceGroup.Id,
                     SmartMinecraftLink = true
@@ -330,31 +362,25 @@ namespace Ritsukage.QQ.Commands
         [Command("禁用mojira智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void DisableAutoLink(SoraMessage e)
         {
-            var t = await Database.Data.Table<QQGroupSetting>().ToListAsync();
-            if (t != null && t.Count > 0)
+            QQGroupSetting data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
+            if (data == null || !data.SmartMinecraftLink)
             {
-                var data = t.Where(x => x.Group == e.SourceGroup.Id)?.FirstOrDefault();
-                if (data == null || !data.SmartMinecraftLink)
-                {
-                    await e.ReplyToOriginal("本群未启用该功能，无需禁用");
-                    return;
-                }
-                data.SmartMinecraftLink = false;
-                await Database.Data.UpdateAsync(data).ContinueWith(async x =>
-                {
-                    if (x.Result > 0)
-                        await e.ReplyToOriginal("本群已成功禁用mojira智能解析功能");
-                    else if (x.IsFaulted && x.Exception != null)
-                        await e.ReplyToOriginal(new StringBuilder()
-                            .AppendLine("因异常导致功能禁用失败，错误信息：")
-                            .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
-                            .ToString());
-                    else
-                        await e.ReplyToOriginal("因未知原因导致功能禁用失败，请稍后重试");
-                });
-            }
-            else
                 await e.ReplyToOriginal("本群未启用该功能，无需禁用");
+                return;
+            }
+            data.SmartMinecraftLink = false;
+            await Database.UpdateAsync(data).ContinueWith(async x =>
+            {
+                if (x.Result > 0)
+                    await e.ReplyToOriginal("本群已成功禁用mojira智能解析功能");
+                else if (x.IsFaulted && x.Exception != null)
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("因异常导致功能禁用失败，错误信息：")
+                        .Append(ConsoleLog.ErrorLogBuilder(x.Exception))
+                        .ToString());
+                else
+                    await e.ReplyToOriginal("因未知原因导致功能禁用失败，请稍后重试");
+            });
         }
     }
 }

@@ -3,10 +3,10 @@ using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Utils")]
     public static class Holiday
     {
-        [Command("最近节日", "holiday"), ExecutesCooldown("holiday", 120, true)]
+        [Command("最近节日", "holiday"), ExecutesCooldownAttribute("holiday", 120, true)]
         public static async void Normal(SoraMessage e)
         {
             try

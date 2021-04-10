@@ -1,12 +1,13 @@
 ﻿using HtmlAgilityPack;
 using Ritsukage.Tools;
+using System;
 
 namespace Ritsukage.Library.Minecraft.Changelog
 {
     public class Article
     {
         public string Title { get; init; }
-        
+
         public string Html { get; init; }
 
         public string Markdown { get; init; }
@@ -23,6 +24,7 @@ namespace Ritsukage.Library.Minecraft.Changelog
             Markdown = new ReverseMarkdown.Converter().Convert(Html);
         }
 
-        public override string ToString() => Markdown;
+        public override string ToString() => Utils.RemoveEmptyLine(Markdown)
+            .Replace(Environment.NewLine, "  " + Environment.NewLine);
     }
 }

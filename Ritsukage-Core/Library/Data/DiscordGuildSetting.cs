@@ -3,7 +3,7 @@
 namespace Ritsukage.Library.Data
 {
     [Table("DiscordGuildSetting"), AutoInitTable]
-    public class DiscordGuildSetting
+    public class DiscordGuildSetting : DataTable
     {
         [Column("ID"), PrimaryKey, AutoIncrement]
         public int Id { get; set; }

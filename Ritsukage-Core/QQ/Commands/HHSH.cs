@@ -3,7 +3,7 @@ using System;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup]
+    [CommandGroup("Utils")]
     public static class HHSH
     {
         [Command("guess")]
