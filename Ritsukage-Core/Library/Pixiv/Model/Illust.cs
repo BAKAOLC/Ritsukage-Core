@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
+using Ritsukage.Tools;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -53,7 +53,7 @@ namespace Ritsukage.Library.Pixiv.Model
             IsUgoira = (string)data["type"] == "ugoira";
             Id = (int)data["id"];
             Title = (string)data["title"];
-            Caption = Escape(RemoveEmptyLine(HtmlTagParser.Replace((string)data["caption"], (s) =>
+            Caption = Escape(Utils.RemoveEmptyLine(HtmlTagParser.Replace((string)data["caption"], (s) =>
             {
                 var text = s.Value;
                 if (text == "<br />")
@@ -110,10 +110,6 @@ namespace Ritsukage.Library.Pixiv.Model
                 else
                     return new Illust(data["illust"]);
             });
-
-        static string RemoveEmptyLine(string text)
-            => string.Join(Environment.NewLine, text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-                .GroupBy(x => x).Select(x => x.Key).ToArray());
 
         public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
     }

@@ -96,13 +96,15 @@ namespace Ritsukage.QQ
                 else
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
 
-                await Task.Run(() => CommandManager.ReceiveMessage(e));
+                if (!Apis.ContainsKey(e.SenderInfo.UserId))
+                    await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
             server.Event.OnPrivateMessage += async (s, e) =>
             {
                 ConsoleLog.Info(e.EventName, $"[{e.LoginUid}] {e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
 
-                await Task.Run(() => CommandManager.ReceiveMessage(e));
+                if (!Apis.ContainsKey(e.SenderInfo.UserId))
+                    await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
             server.Event.OnSelfMessage += async (s, e) =>
             {

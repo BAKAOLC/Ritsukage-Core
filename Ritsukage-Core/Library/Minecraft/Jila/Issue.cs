@@ -45,7 +45,7 @@ namespace Ritsukage.Library.Minecraft.Jila
             Id = data["key"].InnerText;
             Project = data["project"].InnerText;
             Title = data["title"].InnerText;
-            Description = RemoveEmptyLine(HtmlTagParser.Replace(data["description"].InnerText, (s) =>
+            Description = Utils.RemoveEmptyLine(HtmlTagParser.Replace(data["description"].InnerText, (s) =>
             {
                 var text = s.Value;
                 if (text == "<br/>")
@@ -62,8 +62,7 @@ namespace Ritsukage.Library.Minecraft.Jila
                 }
                 else
                     return "";
-            })
-                .Replace("\r", string.Empty).Replace("\n", Environment.NewLine));
+            }));
             Summary = data["summary"].InnerText;
             Type = data["type"].InnerText;
             Status = data["status"].InnerText;
@@ -216,10 +215,6 @@ namespace Ritsukage.Library.Minecraft.Jila
                 ConsoleLog.Debug("Mojang Jira", $"Get {issues.Count} issues.");
             return issues.ToArray();
         }
-
-        static string RemoveEmptyLine(string text)
-            => string.Join(Environment.NewLine, text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-                .GroupBy(x => x).Select(x => x.Key).ToArray());
     }
 }
 

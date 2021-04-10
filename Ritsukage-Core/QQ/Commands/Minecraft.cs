@@ -1,6 +1,7 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Library.Minecraft.Changelog;
 using Ritsukage.Library.Minecraft.Jila;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using Sora.Enumeration.EventParamsType;
 using System;
@@ -175,7 +176,10 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("无效的目标文章网址");
                     return;
                 }
-                await e.ReplyToOriginal(article.Markdown);
+                var bin = UbuntuPastebin.Paste(article.Markdown, "md", "Mojang");
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("目标文章已格式化至以下地址暂存，请及时查阅以免数据过期")
+                    .Append(bin).ToString());
             }
             catch (Exception ex)
             {

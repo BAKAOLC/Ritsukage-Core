@@ -5,7 +5,7 @@ namespace Ritsukage.Tools
 {
     public static class TimeSpanReader
     {
-        static readonly Regex TSMatcher = new Regex(@"((?<day>\d+)(天|日|days|day|d))?((?<hour>\d+)(小?时|hours|hour|h))?((?<minute>\d+)(分钟?|minutes|minute|min|m))?((?<second>\d+)(秒|seconds|second|sec|s))?");
+        static readonly Regex TSMatcher = new Regex(@"((?<day>\d+)(天|日|d(ays?)?))?((?<hour>\d+)(小?时|h(ours?)?))?((?<minute>\d+)(分钟?|m(in(utes?)?)?))?((?<second>\d+)(秒|s(ec(onds?)?)?))?");
 
         public static TimeSpan Parse(string original)
         {

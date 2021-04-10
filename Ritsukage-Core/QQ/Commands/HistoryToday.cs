@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ritsukage.Tools;
+using System;
 using System.Text;
 
 namespace Ritsukage.QQ.Commands
@@ -14,12 +15,16 @@ namespace Ritsukage.QQ.Commands
                 var h = Library.Roll.Model.HistoryToday.Today();
                 StringBuilder sb = new();
                 sb.AppendLine("[" + DateTime.Today.ToString("yyyy-MM-dd") + "]");
-                sb.Append(h[0].ToString());
-                for (var i = 1; i < h.Length && i < 50; i++)
-                    sb.AppendLine().Append(h[i].ToString());
-                if (h.Length >= 50)
-                    sb.AppendLine().Append("<更多条目已被过滤，如果需要请自行搜索>");
-                await e.Reply(sb.ToString());
+                sb.AppendJoin(Environment.NewLine, h);
+                if (h.Length > 30)
+                {
+                    var bin = UbuntuPastebin.Paste(sb.ToString(), "text", "Hitsory Today");
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine("数据过多，请前往以下链接查看")
+                        .Append(bin).ToString());
+                }
+                else
+                    await e.Reply(sb.ToString());
                 await e.RemoveCoins(3);
                 await e.UpdateGroupCooldown("historytoday");
             }
