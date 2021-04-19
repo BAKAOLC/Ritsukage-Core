@@ -6,6 +6,7 @@ using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
+using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -110,12 +111,19 @@ namespace Ritsukage.Library.Subscribe.Listener
                 case "snapshot":
                 case "pre":
                 case "rc":
-                    var articles = new ArticleList("snapshot");
-                    var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
-                    && subType == "snapshot" || ((subType == "pre" ? x.Key.Contains("PRE-RELEASE")
-                    : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(article.Key))
-                        changelog = article.Value;
+                    try
+                    {
+                        var articles = new ArticleList("snapshot");
+                        var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
+                        && subType == "snapshot" || ((subType == "pre" ? x.Key.Contains("PRE-RELEASE")
+                        : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
+                        if (!string.IsNullOrEmpty(article.Key))
+                            changelog = article.Value;
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleLog.Error("Subscribe", ex.GetFormatString());
+                    }
                     break;
             }
             var sb = new StringBuilder()

@@ -1,5 +1,4 @@
-﻿using Ritsukage.Tools;
-using System;
+﻿using System;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -12,16 +11,6 @@ namespace Ritsukage.QQ.Commands
         [Command("时间", "time")]
         public static async void Normal(SoraMessage e)
             => await e.Reply(DateTime.Now.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
-
-        static long GetEorzeaHour(long unix) => unix / 175 % 24;
-        static long GetEorzeaMinute(long unix) => Convert.ToInt64(60 * ((double)unix / 175 % 1));
-
-        [Command("艾欧泽亚时间", "et")]
-        public static async void ET(SoraMessage e)
-        {
-            long unix = DateTimeOffset.FromUnixTimeSeconds(Utils.GetNetworkTimeStamp()).ToUniversalTime().ToUnixTimeSeconds();
-            await e.Reply($"当前为艾欧泽亚时间：ET {GetEorzeaHour(unix),2:D2}:{GetEorzeaMinute(unix),2:D2}");
-        }
 
         [Command("北欧历")]
         public static async void BOL(SoraMessage e)
