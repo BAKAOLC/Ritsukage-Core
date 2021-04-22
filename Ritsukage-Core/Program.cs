@@ -67,6 +67,9 @@ namespace Ritsukage
             {
                 ConsoleLog.SetLogLevel(LogLevel.Debug);
                 ConsoleLog.Debug("Main", "当前正在使用Debug模式");
+                ConsoleLog.Debug("Main", "！！DEBUG MODE 会导致程序运行速度降低，如果没有必要请不要保持开启！！");
+                ConsoleLog.Debug("Main", "！！DEBUG MODE 会导致程序运行速度降低，如果没有必要请不要保持开启！！");
+                ConsoleLog.Debug("Main", "！！DEBUG MODE 会导致程序运行速度降低，如果没有必要请不要保持开启！！");
             }
             else
                 ConsoleLog.SetLogLevel(LogLevel.Info);

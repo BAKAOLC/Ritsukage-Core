@@ -5,7 +5,8 @@
   "Roll_Api_Id": "", //Roll Api Id (https://github.com/MZCretin/RollToolsApi)
   "Roll_Api_Secret": "", //Roll Api Secret
   "SuoLinkToken": "", //缩链API(http://suolink.cn/) Token(用于短链接)
-  "MoJiraCookie": "", //Mojang Jira Cookie
+  "MoJiraUsername": "", //Mojang Jira Username
+  "MoJiraPassword": "", //Mojang Jira Password
   "BaiduTranslateAppId": "", //百度翻译Api App Id
   "BaiduTranslateKey": "", //百度翻译Api Key
   "GetLoveApiKey": "", //灵犀API(https://account.getlove.cn/login/) Key(用于诗词)
