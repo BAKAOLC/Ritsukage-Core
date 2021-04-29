@@ -33,6 +33,24 @@ namespace Ritsukage.QQ.Commands
             await e.Reply($"当前为新新北欧历时间：\n2021年07月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
         }
 
+        [Command("高考倒计时")]
+        public static async void Examination(SoraMessage e)
+        {
+            var day = Math.Floor((new DateTime(2021, 6, 7, 0, 0, 0) - DateTime.Now.Date).TotalDays);
+            if (day > 3)
+                await e.Reply($"距离高考还有 {day} 天");
+            else if (day == 3)
+                await e.Reply("距离高考还有 3 天，冲冲冲");
+            else if (day == 2)
+                await e.Reply("距离高考还有 2 天，加油啊");
+            else if (day == 1)
+                await e.Reply("明天就开始高考啦，祝你们好运！");
+            else if (day < 1 && day > -4)
+                await e.Reply("已经在高考期间啦，考个好成绩回来哦！");
+            else
+                await e.Reply("考完啦，放松一下吧");
+        }
+
         [Command("日期测试")]
         public static async void DateTimeTest(SoraMessage e, DateTime dt)
             => await e.Reply(dt.ToString("yyyy年MM月dd日 HH时mm分ss秒"));

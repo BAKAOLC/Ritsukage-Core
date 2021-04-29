@@ -2,17 +2,125 @@
 using Sora.Entities;
 using Sora.Entities.Base;
 using Sora.Entities.CQCodes;
+using Sora.Entities.CQCodes.CQCodeModel;
 using Sora.Entities.Info;
+using Sora.Enumeration;
 using Sora.Enumeration.ApiType;
 using Sora.EventArgs.SoraEvent;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Group = Sora.Entities.Group;
 
 namespace Ritsukage.QQ
 {
     public class SoraMessage
     {
+        public static class AdditionalMethod
+        {
+            readonly static Regex _CQ_Regex = new Regex(@"^\[CQ:(?<type>[^,]+)(,(?<data>[^]]+))?\]$");
+
+            public static CQCode[] ToCQCodes(string msg)
+            {
+                List<CQCode> codes = new();
+                int n = 0;
+                int i = msg.IndexOf("[", n);
+                while (i < msg.Length && i >= n)
+                {
+                    var e = msg.IndexOf("]", i);
+                    codes.Add(CQCode.CQText(Escape(msg[n..i])));
+                    if (e >= i)
+                    {
+                        var m = _CQ_Regex.Match(msg[i..(e + 1)]);
+                        if (m.Success)
+                        {
+                            Dictionary<string, string> param = new();
+                            if (m.Groups["data"].Success && !string.IsNullOrWhiteSpace(m.Groups["data"].Value))
+                            {
+                                var p = m.Groups["data"].Value.Split(",");
+                                foreach (var kv in p)
+                                {
+                                    var x = kv.Split("=");
+                                    param[x[0]] = Escape(x[1]);
+                                }
+                            }
+                            switch (m.Groups["type"].Value)
+                            {
+                                case "text":
+                                    codes.Add(CQCode.CQText(param["text"]));
+                                    break;
+                                case "face":
+                                    codes.Add(CQCode.CQFace(int.Parse(param["id"])));
+                                    break;
+                                case "image":
+                                    codes.Add(CQCode.CQImage(param["file"] ?? param["url"]));
+                                    break;
+                                case "record":
+                                    codes.Add(CQCode.CQRecord(param["file"] ?? param["url"]));
+                                    break;
+                                case "video":
+                                    codes.Add(CQCode.CQVideo(param["file"] ?? param["url"]));
+                                    break;
+                                case "at":
+                                    if (param["qq"] == "all")
+                                        codes.Add(CQCode.CQAtAll());
+                                    else
+                                        codes.Add(CQCode.CQAt(long.Parse(param["qq"])));
+                                    break;
+                                case "share":
+                                    codes.Add(CQCode.CQShare(param["url"], param["title"], param["content"], param["image"]));
+                                    break;
+                            }
+                        }
+                        else
+                            codes.Add(CQCode.CQText(Escape(msg[i..(e + 1)])));
+                        i = msg.IndexOf("[", n = e + 1);
+                    }
+                    else
+                    {
+                        codes.Add(CQCode.CQText("["));
+                        i = msg.IndexOf("[", n = i + 1);
+                    }
+                }
+                codes.Add(CQCode.CQText(Escape(msg[n..])));
+                return codes.ToArray();
+            }
+
+            public static string ToCQString(IEnumerable<CQCode> codes)
+            {
+                var sb = new StringBuilder();
+                foreach (var code in codes)
+                {
+                    switch (code.Function)
+                    {
+                        case CQFunction.Text:
+                            sb.Append(Encode(((Text)code.CQData).Content));
+                            break;
+                        case CQFunction.Face:
+                            sb.Append($"[CQ:face,id={((Face)code.CQData).Id}]");
+                            break;
+                        case CQFunction.Image:
+                            sb.Append($"[CQ:image,file={Encode(((Image)code.CQData).ImgFile)}]");
+                            break;
+                        case CQFunction.Record:
+                            sb.Append($"[CQ:record,file={Encode(((Image)code.CQData).ImgFile)}]");
+                            break;
+                        case CQFunction.At:
+                            sb.Append($"[CQ:at,qq={((At)code.CQData).Traget}]");
+                            break;
+                        case CQFunction.Share:
+                            Share s = (Share)code.CQData;
+                            sb.Append($"[CQ:share,url={Encode(s.Url)},title={Encode(s.Title)},content={Encode(s.Content)},image={Encode(s.ImageUrl)}]");
+                            break;
+                    }
+                }
+                return sb.ToString();
+            }
+        }
+
         /// <summary>
         /// 源事件
         /// </summary>
@@ -174,5 +282,7 @@ namespace Ritsukage.QQ
             => await CooldownService.UpdateCooldown("qq", SourceGroup.Id, tag, true);
 
         public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
+
+        public static string Encode(string s) => s.Replace("&", "&amp;").Replace("[", "&#91;").Replace("]", "&#93;").Replace(",", "&#44;");
     }
 }
