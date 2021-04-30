@@ -232,8 +232,9 @@ namespace Ritsukage.QQ.Commands
             {
                 dynamic = Dynamic.Get(id);
             }
-            catch
+            catch (Exception ex)
             {
+                ConsoleLog.Error("Bilibili", ex.GetFormatString(true));
             }
             if (dynamic != null)
             {

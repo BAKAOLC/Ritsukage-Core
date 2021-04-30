@@ -1,5 +1,8 @@
 ﻿using Ritsukage.Library.Service;
 using System;
+using System.Linq;
+using System.Text;
+using static Ritsukage.Library.Data.TipMessage;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -27,7 +30,7 @@ namespace Ritsukage.QQ.Commands
             }
             try
             {
-                await TipMessageService.AddTipMessage(Library.Data.TipMessage.TipTargetType.QQGroup,
+                await TipMessageService.AddTipMessage(TipTargetType.QQGroup,
                     e.SourceGroup, time, message, true, interval, endTime);
                 await e.ReplyToOriginal("已添加多次提示信息");
             }
@@ -53,13 +56,52 @@ namespace Ritsukage.QQ.Commands
             }
             try
             {
-                await TipMessageService.AddTipMessage(Library.Data.TipMessage.TipTargetType.QQGroup, e.SourceGroup, time, message);
+                await TipMessageService.AddTipMessage(TipTargetType.QQGroup, e.SourceGroup, time, message);
                 await e.ReplyToOriginal("已添加单次提示信息");
             }
             catch (Exception ex)
             {
                 await e.ReplyToOriginal(ex.Message);
             }
+        }
+
+        [Command("tiplist")]
+        public static async void TipList(SoraMessage e)
+        {
+            var list = await TipMessageService.GetTipMessages(TipTargetType.QQGroup, e.SourceGroup.Id);
+            if (list.Length > 0)
+            {
+                var sb = new StringBuilder("本群现有的所有的提醒项目：");
+                foreach (var tip in list)
+                {
+                    sb.AppendLine().AppendLine($"[ID:{tip.Id}]");
+                    if (tip.Duplicate)
+                    {
+                        sb.AppendLine($"下一次提醒时间：{tip.TipTime:yyyy-MM-dd HH:mm:ss}");
+                        sb.AppendLine($"提醒间隔：{tip.Interval.Days}天{tip.Interval.Hours}时{tip.Interval.Minutes}分{tip.Interval.Seconds}秒");
+                        sb.AppendLine($"提醒结束于：{tip.EndTime:yyyy-MM-dd HH:mm:ss}");
+                    }
+                    else
+                        sb.AppendLine($"提醒时间：{tip.TipTime:yyyy-MM-dd HH:mm:ss}");
+                    sb.AppendLine("提醒内容：");
+                    sb.Append(tip.Message);
+                }
+                await e.Reply(sb.ToString());
+            }
+            else
+                await e.Reply("本群目前不存在提示信息");
+        }
+
+        [Command("tipremove")]
+        public static async void TipRemove(SoraMessage e, int id)
+        {
+            var tip = await TipMessageService.GetTipMessageById(id);
+            if (tip != null && tip.TargetType == TipTargetType.QQGroup && tip.TargetID == e.SourceGroup.Id)
+            {
+                await tip.DeleteAsync();
+                await e.ReplyToOriginal("操作成功");
+            }
+            await e.ReplyToOriginal($"不存在ID为 {id} 的提示消息");
         }
     }
 }

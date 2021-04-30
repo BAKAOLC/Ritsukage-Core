@@ -30,6 +30,12 @@ namespace Ritsukage.Library.Service
         public static async Task AddTipMessage(TipMessage.TipTargetType type, long id, DateTime time, string message)
             => await AddTipMessage(type, id, time, message, false, TimeSpan.Zero, time);
 
+        public static async Task<TipMessage> GetTipMessageById(int id)
+            => await Database.GetAsync<TipMessage>(x => x.Id == id);
+
+        public static async Task<TipMessage[]> GetTipMessages(TipMessage.TipTargetType type, long targetID)
+            => await Database.GetArrayAsync<TipMessage>(x => x.TargetType == type && x.TargetID == targetID);
+
         public static async Task<TipMessage[]> GetTipMessages(TipMessage.TipTargetType type, DateTime now)
             => await Database.GetArrayAsync<TipMessage>(x => x.TargetType == type && x.TipTime <= now);
 

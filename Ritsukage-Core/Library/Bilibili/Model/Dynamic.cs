@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using System;
 using System.Linq;
 using System.Text;
@@ -113,7 +114,7 @@ namespace Ritsukage.Library.Bilibili.Model
             var card = JObject.Parse((string)data["card"]);
             var dynamic = new Dynamic()
             {
-                Id = (ulong)data["desc"]["dynamic_id"],
+                Id = ulong.Parse((string)data["desc"]["dynamic_id_str"]),
                 UserId = (int)data["desc"]["user_profile"]["info"]["uid"],
                 UserName = (string)data["desc"]["user_profile"]["info"]["uname"],
                 UserFaceUrl = (string)data["desc"]["user_profile"]["info"]["face"],
@@ -122,121 +123,153 @@ namespace Ritsukage.Library.Bilibili.Model
                 Like = (int)data["desc"]["like"],
                 Time = Utils.GetDateTime((long)data["desc"]["timestamp"]),
             };
-            #region 动态自身解析
             dynamic.Card = new DynamicCard()
             {
                 Id = dynamic.Id,
                 Type = DynamicCardType.Normal,
                 OwnerName = dynamic.UserName,
             };
-            if (card["duration"] != null) //视频
+            #region 动态自身解析
+            try
             {
-                dynamic.Card.Type = DynamicCardType.Video;
-                dynamic.Card.Reply = (int)card["stat"]["reply"];
-                dynamic.Card.Content = new DynamicContent() { Text = (string)card["dynamic"] };
-                dynamic.Card.Video = Video.GetByJson(card);
-            }
-            else if (card["words"] != null) //专栏
-            {
-                dynamic.Card.Type = DynamicCardType.Article;
-                dynamic.Card.Reply = (int)card["stats"]["reply"];
-                dynamic.Card.Content = new DynamicContent() { Text = (string)card["dynamic"] };
-                dynamic.Card.Article = Article.Get((int)card["id"]);
-            }
-            else if (card["intro"] != null) //音频
-            {
-                dynamic.Card.Type = DynamicCardType.Audio;
-                dynamic.Card.Reply = (int)card["replyCnt"];
-                dynamic.Card.Content = new DynamicContent() { Text = (string)card["intro"] };
-                dynamic.Card.Audio = Audio.GetByJson(card);
-            }
-            else if (card["item"] != null) //相簿 & 普通动态
-            {
-                dynamic.Card.Reply = (int)(card["item"]["reply"]);
-                if (card["item"]["pictures"] != null)
+                switch ((int)data["desc"]["type"])
                 {
-                    var pics = (JArray)card["item"]["pictures"];
-                    dynamic.Card.Content = new DynamicContent()
-                    {
-                        Text = (string)card["item"]["description"],
-                        Pictures = new string[pics.Count],
-                    };
-                    for (var i = 0; i < pics.Count; i++)
-                        dynamic.Card.Content.Pictures[i] = (string)pics[i]["img_src"];
+                    case 1: //转发
+                    case 2: //图文
+                    case 4: //纯文本
+                        {
+                            dynamic.Card.Reply = (int)card["item"]["reply"];
+                            if (card["item"]["pictures"] != null)
+                            {
+                                var pics = (JArray)card["item"]["pictures"];
+                                dynamic.Card.Content = new DynamicContent()
+                                {
+                                    Text = (string)card["item"]["description"],
+                                    Pictures = new string[pics.Count],
+                                };
+                                for (var i = 0; i < pics.Count; i++)
+                                    dynamic.Card.Content.Pictures[i] = (string)pics[i]["img_src"];
+                            }
+                            else if (card["item"]["content"] != null)
+                                dynamic.Card.Content = new DynamicContent() { Text = (string)card["item"]["content"] };
+                            else
+                                dynamic.Card.Content = new DynamicContent() { Text = (string)card["item"]["description"] };
+                            break;
+                        }
+                    case 8: //视频
+                        {
+                            dynamic.Card.Type = DynamicCardType.Video;
+                            dynamic.Card.Reply = (int)card["stat"]["reply"];
+                            dynamic.Card.Content = new DynamicContent() { Text = (string)card["dynamic"] };
+                            dynamic.Card.Video = Video.GetByJson(card);
+                            break;
+                        }
+                    case 64: //专栏
+                        {
+                            dynamic.Card.Type = DynamicCardType.Article;
+                            dynamic.Card.Reply = (int)card["stats"]["reply"];
+                            dynamic.Card.Content = new DynamicContent() { Text = (string)card["dynamic"] };
+                            dynamic.Card.Article = Article.Get((int)card["id"]);
+                            break;
+                        }
+                    case 256: //音频
+                        {
+                            dynamic.Card.Type = DynamicCardType.Audio;
+                            dynamic.Card.Reply = (int)card["replyCnt"];
+                            dynamic.Card.Content = new DynamicContent() { Text = (string)card["intro"] };
+                            dynamic.Card.Audio = Audio.GetByJson(card);
+                            break;
+                        }
+                };
+                if (data["extension"] != null && data["extension"]["vote"] != null) //投票
+                {
+                    dynamic.Card.Type = DynamicCardType.Vote;
+                    dynamic.Card.Vote = Vote.Get((int)data["extension"]["vote_cfg"]["vote_id"]);
                 }
-                else if (card["item"]["content"] != null)
-                    dynamic.Card.Content = new DynamicContent() { Text = (string)card["item"]["content"] };
-                else
-                    dynamic.Card.Content = new DynamicContent() { Text = (string)card["item"]["description"] };
             }
-            if (data["extension"] != null && data["extension"]["vote"] != null) //投票
+            catch (Exception ex)
             {
-                dynamic.Card.Type = DynamicCardType.Vote;
-                dynamic.Card.Vote = Vote.Get((int)data["extension"]["vote_cfg"]["vote_id"]);
+                throw new Exception($"Error in parsing dynamic(ID: {dynamic.Id})", ex);
             }
             #endregion
             #region 源动态解析
             if (card["origin"] != null)
             {
-                var original = JObject.Parse((string)card["origin"]);
-                dynamic.OriginalCard = new DynamicCard()
+                try
                 {
-                    Id = ulong.Parse((string)data["desc"]["pre_dy_id_str"]),
-                    Type = DynamicCardType.Normal,
-                    IsForwarded = true,
-                };
-                if (original["duration"] != null) //视频
-                {
-                    dynamic.OriginalCard.OwnerName = (string)original["owner"]["name"];
-                    dynamic.OriginalCard.Type = DynamicCardType.Video;
-                    dynamic.OriginalCard.Reply = (int)original["stat"]["reply"];
-                    dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["dynamic"] };
-                    dynamic.OriginalCard.Video = Video.GetByJson(original);
-                }
-                else if (original["words"] != null) //专栏
-                {
-                    dynamic.OriginalCard.OwnerName = (string)original["author"]["name"];
-                    dynamic.OriginalCard.Type = DynamicCardType.Article;
-                    dynamic.OriginalCard.Reply = (int)original["stats"]["reply"];
-                    dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["dynamic"] };
-                    dynamic.OriginalCard.Article = Article.Get((int)original["id"]);
-                }
-                else if (original["intro"] != null) //音频
-                {
-                    dynamic.OriginalCard.OwnerName = (string)original["upper"];
-                    dynamic.OriginalCard.Type = DynamicCardType.Audio;
-                    dynamic.OriginalCard.Reply = (int)original["replyCnt"];
-                    dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["intro"] };
-                    dynamic.OriginalCard.Audio = Audio.GetByJson(original);
-                }
-                else if (original["item"] != null) //相簿 & 普通动态
-                {
-                    dynamic.OriginalCard.Reply = (int)(original["item"]["reply"]);
-                    if (original["item"]["pictures"] != null)
+                    var original = JObject.Parse((string)card["origin"]);
+                    dynamic.OriginalCard = new DynamicCard()
                     {
-                        dynamic.OriginalCard.OwnerName = (string)original["user"]["name"];
-                        var pics = (JArray)original["item"]["pictures"];
-                        dynamic.OriginalCard.Content = new DynamicContent()
-                        {
-                            Text = (string)original["item"]["description"],
-                            Pictures = new string[pics.Count],
-                        };
-                        for (var i = 0; i < pics.Count; i++)
-                            dynamic.OriginalCard.Content.Pictures[i] = (string)pics[i]["img_src"];
-                    }
-                    else
+                        Id = ulong.Parse((string)data["desc"]["orig_dy_id_str"]),
+                        Type = DynamicCardType.Normal,
+                        IsForwarded = true,
+                    };
+                    switch ((int)data["desc"]["orig_type"])
                     {
-                        dynamic.OriginalCard.OwnerName = (string)original["user"]["uname"];
-                        if (original["item"]["content"] != null)
-                            dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["item"]["content"] };
-                        else
-                            dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["item"]["description"] };
+                        case 1: //转发
+                        case 2: //图文
+                        case 4: //纯文本
+                            {
+                                dynamic.OriginalCard.Reply = (int)original["item"]["reply"];
+                                if (original["item"]["pictures"] != null)
+                                {
+                                    dynamic.OriginalCard.OwnerName = (string)original["user"]["name"];
+                                    var pics = (JArray)original["item"]["pictures"];
+                                    dynamic.OriginalCard.Content = new DynamicContent()
+                                    {
+                                        Text = (string)original["item"]["description"],
+                                        Pictures = new string[pics.Count],
+                                    };
+                                    for (var i = 0; i < pics.Count; i++)
+                                        dynamic.OriginalCard.Content.Pictures[i] = (string)pics[i]["img_src"];
+                                }
+                                else
+                                {
+                                    dynamic.OriginalCard.OwnerName = (string)original["user"]["uname"];
+                                    if (original["item"]["content"] != null)
+                                        dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["item"]["content"] };
+                                    else
+                                        dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["item"]["description"] };
+                                }
+                                break;
+                            }
+                        case 8: //视频
+                            {
+                                dynamic.OriginalCard.OwnerName = (string)original["owner"]["name"];
+                                dynamic.OriginalCard.Type = DynamicCardType.Video;
+                                dynamic.OriginalCard.Reply = (int)original["stat"]["reply"];
+                                dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["dynamic"] };
+                                dynamic.OriginalCard.Video = Video.GetByJson(original);
+                                break;
+                            }
+                        case 64: //专栏
+                            {
+                                dynamic.OriginalCard.OwnerName = (string)original["author"]["name"];
+                                dynamic.OriginalCard.Type = DynamicCardType.Article;
+                                dynamic.OriginalCard.Reply = (int)original["stats"]["reply"];
+                                dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["dynamic"] };
+                                dynamic.OriginalCard.Article = Article.Get((int)original["id"]);
+                                break;
+                            }
+                        case 256: //音频
+                            {
+                                dynamic.OriginalCard.OwnerName = (string)original["upper"];
+                                dynamic.OriginalCard.Type = DynamicCardType.Audio;
+                                dynamic.OriginalCard.Reply = (int)original["replyCnt"];
+                                dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["intro"] };
+                                dynamic.OriginalCard.Audio = Audio.GetByJson(original);
+                                break;
+                            }
+                    }
+                    if (dynamic.Card.Type == DynamicCardType.Vote) //投票
+                    {
+                        dynamic.OriginalCard.Type = DynamicCardType.Vote;
+                        dynamic.OriginalCard.Vote = dynamic.Card.Vote;
                     }
                 }
-                if (dynamic.Card.Type == DynamicCardType.Vote) //投票
+                catch (Exception ex)
                 {
-                    dynamic.OriginalCard.Type = DynamicCardType.Vote;
-                    dynamic.OriginalCard.Vote = dynamic.Card.Vote;
+                    throw new Exception($"Error in parsing dynamic(ID: {dynamic.Id})", ex);
                 }
             }
             #endregion
