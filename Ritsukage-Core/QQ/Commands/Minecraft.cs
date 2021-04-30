@@ -1,10 +1,14 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Library.Minecraft.Changelog;
 using Ritsukage.Library.Minecraft.Jila;
+using Ritsukage.Library.Minecraft.Server;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using Sora.Entities.CQCodes;
 using Sora.Enumeration.EventParamsType;
 using System;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -58,6 +62,39 @@ namespace Ritsukage.QQ.Commands
                 sb.AppendLine("解决于: " + issue.ResolvedTime.Value.ToString("yyyy-MM-dd HH:mm:ss"));
             sb.Append(issue.Url);
             return sb.ToString();
+        }
+
+        static readonly Regex _ServerRegex = new Regex(@"^(?<host>[^:]+)(:(?<port>\d+))?$");
+
+        [Command("获取mc服务器状态")]
+        public static async void ServerStatus(SoraMessage e, string target)
+        {
+            var x = _ServerRegex.Match(target);
+            string host = x.Groups["host"].Value;
+            ushort port = 25565;
+            if (ushort.TryParse(x.Groups["port"].Value, out ushort _port))
+                port = _port;
+            ServerInfo info = new ServerInfo(host, port);
+            await info.StartGetServerInfoAsync();
+            if (info.State == ServerInfo.StateType.GOOD)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("[Minecraft Server Status]");
+                sb.AppendLine($"IP: {host}:{port}");
+                sb.AppendLine($"Version: {info.GameVersion}");
+                sb.AppendLine($"Players: {info.CurrentPlayerCount} / {info.MaxPlayerCount}");
+                sb.AppendLine($"Latency: {info.Ping}ms");
+                sb.AppendLine($"MOTD：").Append(info.MOTD);
+                if (info.IconData != null)
+                {
+                    var icon = new MemoryImage(new Bitmap(new MemoryStream(info.IconData)));
+                    await e.Reply(CQCode.CQImage(icon.ToBase64File()), Environment.NewLine, sb.ToString());
+                }
+                else
+                    await e.Reply(sb.ToString());
+            }
+            else
+                await e.ReplyToOriginal("未能成功获取到目标服务器的数据，可能为参数输入错误或目标已离线");
         }
 
         [Command]

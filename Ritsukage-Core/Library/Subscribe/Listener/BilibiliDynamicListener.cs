@@ -1,48 +1,74 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Ritsukage.Library.Data;
-using Ritsukage.Library.Minecraft.Changelog;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
+using Sora.Entities.CQCodes;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Subscribe.Listener
 {
-    public class MinecraftVersionListener : Base.SubscribeListener
+    public class BilibiliDynamicListener : Base.SubscribeListener
     {
-        const string type = "minecraft version";
+        const string type = "bilibili dynamic";
 
-        readonly MinecraftVersionCheckMethod Checker = new();
+        readonly List<BilibiliDynamicCheckMethod> Checker = new();
 
         public override async void RefreshListener()
-            => await Task.CompletedTask;
+        {
+            var list = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type);
+            if (list == null)
+            {
+                Checker.Clear();
+                return;
+            }
+            foreach (var c in Checker.ToArray())
+            {
+                if (!list.Where(x => x.Target == c.UserId.ToString()).Any())
+                    Checker.Remove(c);
+            }
+            foreach (var l in list)
+            {
+                if (!Checker.Where(x => l.Target == x.UserId.ToString()).Any())
+                {
+                    if (int.TryParse(l.Target, out var id))
+                    {
+                        ConsoleLog.Debug("Subscribe", $"Start subscribe listener: {type} {id}");
+                        Checker.Add(new(id));
+                    }
+                }
+            }
+        }
 
         public override async void Listen()
         {
             await Task.Run(async () =>
             {
-                Broadcast(await Checker.Check());
-                await Task.Delay(5000);
+                foreach (var c in Checker.ToArray())
+                {
+                    Broadcast(await c.Check());
+                    await Task.Delay(10 * 1000);
+                }
             });
         }
 
         public override async void Broadcast(CheckResult.Base.SubscribeCheckResult result)
         {
-            if (result.Updated && result is MinecraftVersionCheckResult b)
+            if (result.Updated && result is BilibiliDynamicCheckResult b)
             {
-                ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type}");
-                var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == "java");
+                ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type} {b.User.Id}");
+                var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == b.User.Id.ToString());
                 if (records != null && records.Length > 0)
                 {
-                    var msg = GetString(b);
                     if (Program.Config.QQ)
                     {
+                        var qqmsg = await GetQQMessageChain(b);
                         var bots = Program.QQServer.GetBotList();
                         var qqgroups = records.Where(x => x.Platform == "qq group")?.Select(x => x.Listener)?.ToArray();
                         if (qqgroups != null && qqgroups.Length > 0)
@@ -58,7 +84,8 @@ namespace Ritsukage.Library.Subscribe.Listener
                                         {
                                             ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
                                             var api = Program.QQServer.GetSoraApi(bot);
-                                            await api.SendGroupMessage(group, msg);
+                                            foreach (var m in qqmsg)
+                                                await api.SendGroupMessage(group, m);
                                         }
                                     }
                                 }
@@ -67,6 +94,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                     }
                     if (Program.Config.Discord && Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
                     {
+                        var dcmsg = await GetDiscordMessageChain(b);
                         var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)?.ToArray();
                         if (channels != null && channels.Length > 0)
                         {
@@ -78,7 +106,10 @@ namespace Ritsukage.Library.Subscribe.Listener
                                     try
                                     {
                                         var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
-                                        await channel?.SendMessageAsync(msg);
+                                        foreach (var m in dcmsg)
+                                        {
+                                            await channel?.SendMessageAsync(m);
+                                        }
                                     }
                                     catch
                                     {
@@ -91,48 +122,33 @@ namespace Ritsukage.Library.Subscribe.Listener
             }
         }
 
-        static string GetString(MinecraftVersionCheckResult result)
+        static async Task<object[][]> GetQQMessageChain(BilibiliDynamicCheckResult result)
         {
-            var m = Regex.Match(result.Title.Trim(), "^(?<version>[^ ]+) (?<type>快照|正式版)更新$");
-            var type = m.Groups["type"].Value;
-            var version = m.Groups["version"].Value.Trim();
-            var vm = Regex.Match(version, @"^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\d+))?$");
-            var mainVersion = vm.Groups["mainVersion"].Value;
-            var subType = type == "快照" ? "snapshot" : "release";
-            var subNum = "";
-            if (vm.Groups["sub"].Success && !string.IsNullOrWhiteSpace(vm.Groups["sub"].Value))
+            List<object[]> records = new();
+            foreach (var dynamic in result.Dynamics)
             {
-                subType = vm.Groups["subType"].Value;
-                subNum = vm.Groups["subNum"].Value;
+                ArrayList msg = new();
+                foreach (var pic in dynamic.Pictures)
+                {
+                    msg.Add(CQCode.CQImage(pic));
+                    msg.Add(Environment.NewLine);
+                }
+                msg.Add(dynamic.BaseToString());
+                records.Add(msg.ToArray());
+                await Task.Delay(3000);
             }
-            string changelog = null;
-            switch (subType)
+            return records.ToArray();
+        }
+        
+        static async Task<string[]> GetDiscordMessageChain(BilibiliDynamicCheckResult result)
+        {
+            List<string> records = new();
+            foreach (var dynamic in result.Dynamics)
             {
-                case "snapshot":
-                case "pre":
-                case "rc":
-                    try
-                    {
-                        var articles = new ArticleList("snapshot");
-                        var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
-                        && subType == "snapshot" || ((subType == "pre" ? x.Key.Contains("PRE-RELEASE")
-                        : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(article.Key))
-                            changelog = article.Value;
-                    }
-                    catch (Exception ex)
-                    {
-                        ConsoleLog.Error("Subscribe", ex.GetFormatString());
-                    }
-                    break;
+                records.Add(dynamic.ToString());
+                await Task.Delay(3000);
             }
-            var sb = new StringBuilder()
-                .AppendLine("[Minecraft]")
-                .AppendLine(result.Title)
-                .Append(result.Time.ToString("yyyy-MM-dd HH:mm:ss"));
-            if (!string.IsNullOrEmpty(changelog))
-                sb.AppendLine().Append("Change logs: " + changelog);
-            return sb.ToString();
+            return records.ToArray();
         }
     }
 }

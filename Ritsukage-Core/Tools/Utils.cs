@@ -149,7 +149,7 @@ namespace Ritsukage.Tools
                 "pc" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
                 _ => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
             };
-            if (cookie != "")
+            if (!string.IsNullOrEmpty(cookie))
                 request.Headers.Add("cookie", cookie);
         }
 

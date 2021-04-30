@@ -1,7 +1,10 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Library.Service;
 using Ritsukage.Tools.Console;
+using Sora.Entities.CQCodes;
 using System;
+using System.Collections;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,7 +41,21 @@ namespace Ritsukage.QQ.Service
                                 {
                                     ConsoleLog.Debug("TipMessage", $"Send tip message to group {msg.TargetID} with bot {bot}");
                                     var api = Program.QQServer.GetSoraApi(bot);
-                                    await api.SendGroupMessage(msg.TargetID, "[Tip Message]" + Environment.NewLine + msg.Message);
+                                    var m = new ArrayList
+                                    {
+                                        "[Tip Message]",
+                                        Environment.NewLine
+                                    };
+                                    int n = 0;
+                                    int i = msg.Message.IndexOf("[@all]", n);
+                                    while (i < msg.Message.Length && i >= n)
+                                    {
+                                        m.Add(msg.Message[n..i]);
+                                        m.Add(CQCode.CQAtAll());
+                                        i = msg.Message.IndexOf("[@all]", n = i + 6);
+                                    }
+                                    m.Add(msg.Message[n..]);
+                                    await api.SendGroupMessage(msg.TargetID, m.ToArray());
                                 }
                         await TipMessageService.RefreshTipMessages(now);
                         _lock = false;

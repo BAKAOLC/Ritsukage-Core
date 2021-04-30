@@ -38,10 +38,16 @@ namespace Ritsukage
         /// </summary>
         public string SuoLinkToken = "";
 
+        #region Mojang Jira
         /// <summary>
-        /// Mojang Jira Cookie
+        /// Mojang Jira Username
         /// </summary>
-        public string MoJiraCookie = "";
+        public string MoJiraUsername = "";
+        /// <summary>
+        /// Mojang Jira Password
+        /// </summary>
+        public string MoJiraPassword = "";
+        #endregion
 
         #region Baidu
         /// <summary>
