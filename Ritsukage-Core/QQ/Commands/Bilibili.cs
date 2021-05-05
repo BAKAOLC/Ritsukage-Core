@@ -121,9 +121,7 @@ namespace Ritsukage.QQ.Commands
             {
                 string cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl;
                 await e.Reply(CQCode.CQImage(cover), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(room.BaseToString())
-                    .ToString());
+                    .AppendLine().Append(room.BaseToString()).ToString());
             }
             else
                 await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
@@ -177,9 +175,7 @@ namespace Ritsukage.QQ.Commands
             if (video != null)
             {
                 await e.Reply(CQCode.CQImage(video.PicUrl), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(video.BaseToString())
-                    .ToString());
+                    .AppendLine().Append(video.BaseToString()).ToString());
             }
             else
                 await e.Reply($"[Bilibili] 视频{id}信息获取失败");
@@ -199,9 +195,7 @@ namespace Ritsukage.QQ.Commands
             if (audio != null)
             {
                 await e.Reply(CQCode.CQImage(audio.CoverUrl), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(audio.BaseToString())
-                    .ToString());
+                    .AppendLine().Append(audio.BaseToString()).ToString());
             }
             else
                 await e.Reply($"[Bilibili] 音频{id}信息获取失败");

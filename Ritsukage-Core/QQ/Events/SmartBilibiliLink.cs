@@ -2,6 +2,7 @@
 using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using Sora.Entities.CQCodes;
 using Sora.EventArgs.SoraEvent;
 using System;
@@ -83,8 +84,9 @@ namespace Ritsukage.QQ.Events
                             SendUserInfo(args, User.Get(id));
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                     }
                 }
                 return;
@@ -105,8 +107,9 @@ namespace Ritsukage.QQ.Events
                             SendVideoInfo(args, Video.Get(_av));
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                     }
                 }
                 return;
@@ -125,8 +128,9 @@ namespace Ritsukage.QQ.Events
                         SendVideoInfo(args, Video.Get(baseStr));
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                 }
                 return;
             }
@@ -146,8 +150,9 @@ namespace Ritsukage.QQ.Events
                             SendLiveRoomInfo(args, LiveRoom.Get(id));
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                     }
                 }
                 return;
@@ -168,8 +173,9 @@ namespace Ritsukage.QQ.Events
                             SendDynamicInfo(args, Dynamic.Get(id));
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                     }
                 }
                 return;
@@ -212,8 +218,9 @@ namespace Ritsukage.QQ.Events
                                 SendUserInfo(args, User.Get(id));
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                         }
                     }
                     continue;
@@ -239,8 +246,9 @@ namespace Ritsukage.QQ.Events
                                     SendVideoInfo(args, Video.Get(_av));
                                 }
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                             }
                         }
                         continue;
@@ -259,8 +267,9 @@ namespace Ritsukage.QQ.Events
                                 SendVideoInfo(args, Video.Get(bv));
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                         }
                         continue;
                     }
@@ -284,8 +293,9 @@ namespace Ritsukage.QQ.Events
                                 SendLiveRoomInfo(args, room);
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                         }
                     }
                     continue;
@@ -306,8 +316,9 @@ namespace Ritsukage.QQ.Events
                                 SendDynamicInfo(args, Dynamic.Get(id));
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
                         }
                     }
                     continue;
@@ -318,28 +329,30 @@ namespace Ritsukage.QQ.Events
         }
 
         static async void SendUserInfo(GroupMessageEventArgs e, User user)
-            => await e.Reply(CQCode.CQImage(user.FaceUrl), new StringBuilder()
-                .AppendLine()
-                .AppendLine(user.BaseToString())
-                .ToString());
+        {
+            ConsoleLog.Debug("Smart Bilibili Link", $"Sending user info: {user.Id}");
+            await e.Reply(CQCode.CQImage(user.FaceUrl), new StringBuilder()
+                .AppendLine().Append(user.BaseToString()).ToString());
+        }
 
         static async void SendVideoInfo(GroupMessageEventArgs e, Video video)
-            => await e.Reply(CQCode.CQImage(video.PicUrl), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(video.BaseToString())
-                    .ToString());
+        {
+            ConsoleLog.Debug("Smart Bilibili Link", $"Sending video info: {video.AV}");
+            await e.Reply(CQCode.CQImage(video.PicUrl), new StringBuilder()
+                    .AppendLine().Append(video.BaseToString()).ToString());
+        }
 
         static async void SendLiveRoomInfo(GroupMessageEventArgs e, LiveRoom room)
         {
+            ConsoleLog.Debug("Smart Bilibili Link", $"Sending live room info: {room.Id}");
             string cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl;
             await e.Reply(CQCode.CQImage(cover), new StringBuilder()
-                .AppendLine()
-                .AppendLine(room.BaseToString())
-                .ToString());
+                .AppendLine().Append(room.BaseToString()).ToString());
         }
 
         static async void SendDynamicInfo(GroupMessageEventArgs e, Dynamic dynamic)
         {
+            ConsoleLog.Debug("Smart Bilibili Link", $"Sending dynamic info: {dynamic.Id}");
             ArrayList msg = new();
             foreach (var pic in dynamic.Pictures)
             {

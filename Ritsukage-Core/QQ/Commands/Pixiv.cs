@@ -27,6 +27,7 @@ namespace Ritsukage.QQ.Commands
                 foreach (var img in detail.Images)
                     msg.Add(CQCode.CQImage(ImageUrls.ToPixivCat(img.Medium)));
                 msg.Add(detail.ToString());
+                await e.ReplyToOriginal("数据获取中，请稍后");
                 await e.Reply(msg.ToArray());
                 await e.RemoveCoins(5);
             }

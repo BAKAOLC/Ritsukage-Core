@@ -92,16 +92,16 @@ namespace Ritsukage.QQ
             server.Event.OnGroupMessage += async (s, e) =>
             {
                 if (e.IsAnonymousMessage)
-                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
+                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 else
-                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
+                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
 
                 if (!Apis.ContainsKey(e.SenderInfo.UserId))
                     await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
             server.Event.OnPrivateMessage += async (s, e) =>
             {
-                ConsoleLog.Info(e.EventName, $"[{e.LoginUid}] {e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
+                ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}{e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
 
                 if (!Apis.ContainsKey(e.SenderInfo.UserId))
                     await Task.Run(() => CommandManager.ReceiveMessage(e));
@@ -109,9 +109,9 @@ namespace Ritsukage.QQ
             server.Event.OnSelfMessage += async (s, e) =>
             {
                 if (e.IsAnonymousMessage)
-                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
+                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Send({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 else
-                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
+                    ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Send({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 await ValueTask.CompletedTask;
             };
             #endregion
