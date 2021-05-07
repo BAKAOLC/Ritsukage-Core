@@ -16,6 +16,8 @@ namespace Ritsukage.QQ.Commands
     public static class Pixiv
     {
         [Command("pixiv"), NeedCoins(5)]
+        [CommandDescription("获取指定Pixiv作品信息")]
+        [ParameterDescription(1, "Issust ID", "接口来自 https://github.com/mixmoe/HibiAPI")]
         public static async void GetIllustDetail(SoraMessage e, int id)
         {
             var detail = await Illust.Get(id);

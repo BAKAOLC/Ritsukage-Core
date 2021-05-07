@@ -4,6 +4,8 @@
     public static class CalcOperator
     {
         [Command("calc")]
+        [CommandDescription("进行\"简单\"的数学计算")]
+        [ParameterDescription(1, "表达式")]
         public static async void CalcMath(SoraMessage e, string expr)
         {
             try

@@ -8,6 +8,8 @@ namespace Ritsukage.QQ.Commands
     public static class NeteaseCloudMusic
     {
         [Command("music")]
+        [CommandDescription("搜索曲目")]
+        [ParameterDescription(1, "关键词", "接口来自 https://music.163.com")]
         public static async void Search(SoraMessage e, string keyword)
         {
             var search = await CloudMusicApi.SearchSong(keyword);
@@ -18,6 +20,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("music")]
+        [CommandDescription("播放指定曲目", "接口来自 https://music.163.com")]
+        [ParameterDescription(1, "歌曲ID")]
         public static async void Play(SoraMessage e, long id)
         {
             var detail = await CloudMusicApi.GetSongDetail(id);

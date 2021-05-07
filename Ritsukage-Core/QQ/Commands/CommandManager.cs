@@ -222,36 +222,34 @@ namespace Ritsukage.QQ.Commands
             throw new ArgumentException($"the type of {param} cannot be parsed from string", e);
         }
 
+        public static void RegisterCommand(MethodInfo method, params PreconditionAttribute[] preconditions)
+        {
+            var attrs = method.GetCustomAttribute<CommandAttribute>();
+            if (attrs != null)
+            {
+                var list = new List<PreconditionAttribute>();
+                foreach (var a in preconditions)
+                    list.Add(a);
+                var p = method.GetCustomAttributes()?.Where(x => x is PreconditionAttribute)?.ToList();
+                if (p != null)
+                    foreach (PreconditionAttribute a in p)
+                        list.Add(a);
+                var name = attrs.Name;
+                if (name.Length == 0)
+                    name = new[] { method.Name };
+                var command = new Command(attrs.StartHeader, name[0], method, method.GetParameters(), list.ToArray());
+                foreach (var n in name)
+                {
+                    ConsoleLog.Debug("Commands", $"Register command: {n} for {command.Method}");
+                    GetCommandList(attrs.StartHeader, n.ToLower()).Add(command);
+                }
+            }
+        }
+
         public static void RegisterAllCommands(Type type, params PreconditionAttribute[] preconditions)
         {
             foreach (var method in type.GetMethods())
-            {
-                var attrs = method.GetCustomAttribute<CommandAttribute>();
-                if (attrs != null)
-                {
-                    var list = new List<PreconditionAttribute>();
-                    foreach (var a in preconditions)
-                        list.Add(a);
-
-                    var p = method.GetCustomAttributes()?.Where(x => x is PreconditionAttribute)?.ToList();
-                    if (p != null)
-                        foreach (PreconditionAttribute a in p)
-                            list.Add(a);
-
-                    var name = attrs.Name;
-                    if (name.Length == 0)
-                        name = new[] { method.Name };
-
-                    var command = new Command(attrs.StartHeader, name[0], method, method.GetParameters(), list.ToArray());
-
-                    foreach (var n in name)
-                    {
-                        ConsoleLog.Debug("Commands", $"Register command: {n} for {command.Method}");
-                        GetCommandList(attrs.StartHeader, n.ToLower()).Add(command);
-                    }
-
-                }
-            }
+                RegisterCommand(method, preconditions);
         }
 
         public static void RegisterAllCommands()

@@ -9,6 +9,8 @@ namespace Ritsukage.QQ.Commands
     public static class Baidu
     {
         [Command("翻译")]
+        [CommandDescription("翻译指定的文本", "当源语言为中文时会翻译为英文", "当前使用接口为百度翻译")]
+        [ParameterDescription(1, "目标文本")]
         public static async void Translate(SoraMessage e, string text)
         {
             var result = BaiduTranslate.GetTranslateResult(text);

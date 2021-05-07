@@ -6,6 +6,8 @@ namespace Ritsukage.QQ.Commands
     public static class Poem
     {
         [Command("飞花令"), NeedCoins(2)]
+        [CommandDescription("搜索带有某个字的诗歌")]
+        [ParameterDescription(1, "关键字")]
         public static async void FHL(SoraMessage e, string _char)
         {
             if (_char.Length != 1)
@@ -37,6 +39,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("诗歌搜索"), NeedCoins(2)]
+        [CommandDescription("搜索带有某个字段的诗歌")]
+        [ParameterDescription(1, "关键字段")]
         public static async void SearchOrigin(SoraMessage e, string poem)
         {
             try

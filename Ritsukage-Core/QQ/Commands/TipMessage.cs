@@ -10,6 +10,11 @@ namespace Ritsukage.QQ.Commands
     public static class TipMessage
     {
         [Command("tip")]
+        [CommandDescription("添加提示信息")]
+        [ParameterDescription(1, "提示时间")]
+        [ParameterDescription(2, "提示文本")]
+        [ParameterDescription(3, "提示间隔")]
+        [ParameterDescription(4, "结束时间")]
         public static async void AddTip(SoraMessage e, DateTime time, string message, TimeSpan interval, DateTime endTime)
         {
             var now = DateTime.Now;
@@ -41,6 +46,9 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("tip")]
+        [CommandDescription("添加提示信息")]
+        [ParameterDescription(1, "提示时间")]
+        [ParameterDescription(2, "提示文本")]
         public static async void AddTip(SoraMessage e, DateTime time, string message)
         {
             var now = DateTime.Now;
@@ -66,6 +74,7 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("tiplist")]
+        [CommandDescription("查看本群所有的提示信息")]
         public static async void TipList(SoraMessage e)
         {
             var list = await TipMessageService.GetTipMessages(TipTargetType.QQGroup, e.SourceGroup.Id);
@@ -93,6 +102,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("tipremove")]
+        [CommandDescription("移除指定的提示信息")]
+        [ParameterDescription(1, "提示信息ID")]
         public static async void TipRemove(SoraMessage e, int id)
         {
             var tip = await TipMessageService.GetTipMessageById(id);
