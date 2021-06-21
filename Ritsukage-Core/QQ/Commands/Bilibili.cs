@@ -192,6 +192,60 @@ namespace Ritsukage.QQ.Commands
                 await e.Reply($"[Bilibili] 视频{id}信息获取失败");
         }
 
+        [Command("获取b站视频分P信息")]
+        [CommandDescription("获取指定B站视频的分P信息", "为了避免一些东西所以将不会支持视频地址的解析")]
+        [ParameterDescription(1, "视频AV号/BV号")]
+        public static async void VideoPageInfo(SoraMessage e, string id)
+        {
+            Video video = null;
+            try
+            {
+                if (id.ToLower().StartsWith("av"))
+                    id = id[2..];
+                if (long.TryParse(id, out var av))
+                    video = Video.Get(av);
+                else
+                    video = Video.Get(id);
+            }
+            catch
+            {
+            }
+            if (video != null)
+            {
+                int hour = video.Duration.Days * 24 + video.Duration.Hours;
+                string hourStr = hour > 0 ? $"{hour}时" : string.Empty;
+                var sb = new StringBuilder();
+                sb.AppendLine(video.Title);
+                sb.AppendLine($"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : ("  分区：" + video.AreaName))}");
+                sb.AppendLine($"UP：{video.UserName}(https://space.bilibili.com/{video.UserId})");
+                sb.AppendLine($"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒");
+                sb.AppendLine("分P列表如下：");
+                foreach (var page in video.Pages)
+                {
+                    int ph = page.Duration.Days * 24 + page.Duration.Hours;
+                    string phStr = ph > 0 ? $"{ph}时" : string.Empty;
+                    sb.AppendLine($"  P{page.Index}  长度：{phStr}{page.Duration.Minutes:D2}分{page.Duration.Seconds:D2}秒");
+                    sb.Append("    ").AppendLine(page.Name);
+                }
+                sb.Append(video.Url);
+                if (video.Pages.Length > 10)
+                {
+                    var bin = UbuntuPastebin.Paste(sb.ToString(), "text", "Bilibili Video Pages");
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine(video.Title)
+                        .AppendLine($"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : ("  分区：" + video.AreaName))}")
+                        .AppendLine($"UP：{video.UserName}(https://space.bilibili.com/{video.UserId})")
+                        .AppendLine($"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒")
+                        .AppendLine("数据过多，请前往以下链接查看")
+                        .Append(bin).ToString());
+                }
+                else
+                    await e.Reply(sb.ToString());
+            }
+            else
+                await e.Reply($"[Bilibili] 视频{id}信息获取失败");
+        }
+
         [Command("获取b站音频信息")]
         [CommandDescription("获取指定B站音频的信息", "为了避免一些东西所以将不会支持音频地址的解析")]
         [ParameterDescription(1, "音频AU号")]
