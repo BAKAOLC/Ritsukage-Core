@@ -38,6 +38,17 @@ namespace Ritsukage.QQ.Commands
             await e.Reply($"当前为新新北欧历时间：\n2021年07月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
         }
 
+        [Command("新新新北欧历")]
+        [CommandDescription("获取bot服务器当前的时间所对应的不存在的新新新北欧历时间")]
+        public static async void NewNewNewBOL(SoraMessage e)
+        {
+            var day = Math.Floor((DateTime.Now.Date - new DateTime(2021, 6, 25, 0, 0, 0)).TotalDays);
+            if (day > 0)
+                await e.Reply($"当前为新新新北欧历时间：\nxxxx年xx月xx-{day}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+            else
+                await e.Reply($"当前为新新新北欧历时间：\nxxxx年xx月xx日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+        }
+
         [Command("高考倒计时")]
         [CommandDescription("获取bot服务器当前的时间到高考开始所差的时间")]
         public static async void Examination(SoraMessage e)

@@ -213,6 +213,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "网页URL")]
         public static async void MoChangeLogsFormat(SoraMessage e, string url)
         {
+            url = SoraMessage.Escape(url);
             if (!url.StartsWith("https://feedback.minecraft.net/hc/en-us/articles/"))
             {
                 await e.ReplyToOriginal("无效的目标文章网址");

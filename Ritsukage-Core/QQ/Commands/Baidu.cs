@@ -1,5 +1,7 @@
 ﻿using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using Sora.Entities.CQCodes;
+using System;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,24 +15,33 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "目标文本")]
         public static async void Translate(SoraMessage e, string text)
         {
-            var result = BaiduTranslate.GetTranslateResult(text);
-            if (result.Success)
+            text = SoraMessage.Escape(text);
+            try
             {
-                if (result.OriginalLanguage.Equals(result.TranslateLanguage))
-                {
-                    await Task.Delay(1000);
-                    result = BaiduTranslate.GetTranslateResult(text, result.OriginalLanguage?.Id ?? "zh", "en");
-                }
+                var result = BaiduTranslate.GetTranslateResult(text);
                 if (result.Success)
                 {
-                    await e.ReplyToOriginal(new StringBuilder()
-                        .AppendLine($"[{result.OriginalLanguage}=>{result.TranslateLanguage}]")
-                        .Append(result.TranslateString).ToString());
-                    return;
+                    if (result.OriginalLanguage.Equals(result.TranslateLanguage))
+                    {
+                        await Task.Delay(1000);
+                        result = BaiduTranslate.GetTranslateResult(text, result.OriginalLanguage?.Id ?? "zh", "en");
+                    }
+                    if (result.Success)
+                    {
+                        await e.ReplyToOriginal(new StringBuilder()
+                            .AppendLine($"[{result.OriginalLanguage}=>{result.TranslateLanguage}]")
+                            .Append(result.TranslateString).ToString());
+                        return;
+                    }
                 }
+                await e.ReplyToOriginal(new StringBuilder().Append("翻译失败，")
+                    .AppendLine(result.Info).Append(result.TipMessage).ToString());
             }
-            await e.ReplyToOriginal(new StringBuilder().Append("翻译失败，")
-                .AppendLine(result.Info).Append(result.TipMessage).ToString());
+            catch (Exception ex)
+            {
+                await e.ReplyToOriginal(new StringBuilder().Append("翻译失败，")
+                    .AppendLine(ex.GetFormatString()).ToString());
+            }
         }
     }
 }

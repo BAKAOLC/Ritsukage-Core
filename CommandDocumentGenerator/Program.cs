@@ -68,7 +68,7 @@ namespace CommandDocumentGenerator
                         var pd = pds.Where(x => x.Index == pm.Position).FirstOrDefault();
                         file.Write("    ");
                         if (pd == null)
-                            file.WriteLine($"Parameter#{pm.Position} {pm.Name}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={pm.DefaultValue}" : string.Empty)}");
+                            file.WriteLine($"Parameter#{pm.Position} {pm.Name}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}");
                         else
                             file.WriteLine($"{pd}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}{(string.IsNullOrWhiteSpace(pd.Desc) ? string.Empty : (" " + pd.Desc))}");
                     }

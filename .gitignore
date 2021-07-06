@@ -16,3 +16,7 @@ TestResults
 /Ritsukage-Core/QQ/Commands/SuperAdminTool.cs
 /Ritsukage-Core/QQ/Console
 /Ritsukage-Core/QQ/Commands/Arknights.cs
+/Ritsukage-Core/Library/Bank
+/Ritsukage-Core/QQ/Service/Command
+/Ritsukage-Core/QQ/Service/Event
+/Ritsukage-Core/QQ/Service/Service.cs

@@ -324,6 +324,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(2, "标题", "默认保持原样不变")]
         public static async void StartLive(SoraMessage e, int area = 235, string title = "")
         {
+            title = SoraMessage.Escape(title);
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
@@ -361,6 +362,8 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(2, "标题", "默认保持原样不变")]
         public static async void StartLive(SoraMessage e, string area, string title = "")
         {
+            area = SoraMessage.Escape(area);
+            title = SoraMessage.Escape(title);
             var list = await LiveAreaList.Get(area);
             if (!list.Any())
             {
@@ -450,6 +453,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "分区关键词", "当只有一个目标时才会切换分区")]
         public static async void SetLiveArea(SoraMessage e, string area)
         {
+            area = SoraMessage.Escape(area);
             var list = await LiveAreaList.Get(area);
             if (!list.Any())
             {
@@ -478,6 +482,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "标题")]
         public static async void SetLiveTitle(SoraMessage e, string title)
         {
+            title = SoraMessage.Escape(title);
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {

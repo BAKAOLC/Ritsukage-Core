@@ -25,7 +25,7 @@ namespace Ritsukage.Library.Bilibili.Model
             {
                 if (OriginalCard != null)
                 {
-                    if (OriginalCard.Content.Pictures != null)
+                    if (OriginalCard.Content != null && OriginalCard.Content.Pictures != null)
                         return OriginalCard.Content.Pictures;
                     else if (OriginalCard.Video != null)
                         return new[] { OriginalCard.Video.PicUrl };
@@ -34,7 +34,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 }
                 else
                 {
-                    if (Card.Content.Pictures != null)
+                    if (Card.Content != null && Card.Content.Pictures != null)
                         return Card.Content.Pictures;
                     else if (Card.Video != null)
                         return new[] { Card.Video.PicUrl };

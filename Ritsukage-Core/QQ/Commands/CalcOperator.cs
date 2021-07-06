@@ -8,6 +8,7 @@
         [ParameterDescription(1, "表达式")]
         public static async void CalcMath(SoraMessage e, string expr)
         {
+            expr = SoraMessage.Escape(expr);
             try
             {
                 double result = Tools.CalcTool.GetExprValue(expr.Replace(" ", ""));

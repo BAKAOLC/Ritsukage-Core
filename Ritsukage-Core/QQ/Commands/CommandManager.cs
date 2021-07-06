@@ -2,6 +2,7 @@
 using Ritsukage.Tools.Console;
 using Sora.EventArgs.SoraEvent;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -161,7 +162,7 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        private static object ParseArgument(ParameterInfo param, CommandArgs args)
+        private static object ParseArgument(ParameterInfo param, CommandArgs args, bool isArray = false)
         {
             if (!args.HasNext())
             {
@@ -171,7 +172,8 @@ namespace Ritsukage.QQ.Commands
                     throw new IndexOutOfRangeException();
             }
             Exception e = null;
-            if (Parsers.TryGetValue(param.ParameterType, out ICommandParser parser))
+            Type t = isArray ? param.ParameterType.GetElementType() : param.ParameterType;
+            if (Parsers.TryGetValue(t, out ICommandParser parser))
             {
                 try
                 {
@@ -184,25 +186,25 @@ namespace Ritsukage.QQ.Commands
             }
             else
             {
-                if (param.ParameterType == typeof(byte))
+                if (t == typeof(byte))
                     return byte.Parse(args.Next());
-                else if (param.ParameterType == typeof(short))
+                else if (t == typeof(short))
                     return short.Parse(args.Next());
-                else if (param.ParameterType == typeof(ushort))
+                else if (t == typeof(ushort))
                     return ushort.Parse(args.Next());
-                else if (param.ParameterType == typeof(int))
+                else if (t == typeof(int))
                     return int.Parse(args.Next());
-                else if (param.ParameterType == typeof(uint))
+                else if (t == typeof(uint))
                     return uint.Parse(args.Next());
-                else if (param.ParameterType == typeof(long))
+                else if (t == typeof(long))
                     return long.Parse(args.Next());
-                else if (param.ParameterType == typeof(ulong))
+                else if (t == typeof(ulong))
                     return ulong.Parse(args.Next());
-                else if (param.ParameterType == typeof(float))
+                else if (t == typeof(float))
                     return float.Parse(args.Next());
-                else if (param.ParameterType == typeof(double))
+                else if (t == typeof(double))
                     return double.Parse(args.Next());
-                else if (param.ParameterType == typeof(bool))
+                else if (t == typeof(bool))
                 {
                     string original = args.Next();
                     string s = original.ToLower();
@@ -212,12 +214,12 @@ namespace Ritsukage.QQ.Commands
                         return false;
                     else throw new ArgumentException($"{original} is not a bool value.");
                 }
-                else if (param.ParameterType == typeof(DateTime))
+                else if (t == typeof(DateTime))
                     return DateTimeReader.Parse(args.Next());
-                else if (param.ParameterType == typeof(TimeSpan))
+                else if (t == typeof(TimeSpan))
                     return TimeSpanReader.Parse(args.Next());
-                else if (param.ParameterType == typeof(string))
-                    return SoraMessage.Escape(args.Next());
+                else if (t == typeof(string))
+                    return args.Next();
             }
             throw new ArgumentException($"the type of {param} cannot be parsed from string", e);
         }
@@ -270,6 +272,8 @@ namespace Ritsukage.QQ.Commands
             ConsoleLog.Debug("Commands", "Finish.");
         }
 
+        static bool IsParams(ParameterInfo info) => info.GetCustomAttributes(typeof(ParamArrayAttribute), false).Length > 0;
+
         public static async void ReceiveMessage(BaseSoraEventArgs arg)
         {
             string msg = string.Empty;
@@ -298,22 +302,43 @@ namespace Ritsukage.QQ.Commands
                             var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
                             foreach (var command in commandlist.OrderByDescending(x => x.ArgTypes.Length).ToArray())
                             {
-                                if (args.Length >= (command.ArgTypes.Where(a => !a.HasDefaultValue).Count() - 1) && await command.CheckPermission(arg))
+                                if (args.Length >= (command.ArgTypes.Where(a => !a.HasDefaultValue && !IsParams(a)).Count() - 1)
+                                    && await command.CheckPermission(arg))
                                 {
-                                    object[] ps = new object[command.ArgTypes.Length];
-                                    ps[0] = m;
+                                    var ps = new ArrayList
+                                    {
+                                        m
+                                    };
                                     try
                                     {
                                         ConsoleLog.Debug("Commands", $"Try to parse parameters for {command.Method}.");
                                         args.Reset();
-                                        for (int i = 1; i < ps.Length; ++i)
-                                            ps[i] = ParseArgument(command.ArgTypes[i], args);
+                                        bool p = false;
+                                        ParameterInfo pt = null;
+                                        for (int i = 1; i < command.ArgTypes.Length; ++i)
+                                        {
+                                            if (i == command.ArgTypes.Length - 1 && IsParams(command.ArgTypes[i]))
+                                            {
+                                                p = true;
+                                                pt = command.ArgTypes[i];
+                                            }
+                                            else
+                                                ps.Add(ParseArgument(command.ArgTypes[i], args));
+                                        }
+                                        if (p)
+                                        {
+                                            var pp = new ArrayList();
+                                            while (args.HasNext())
+                                                pp.Add(ParseArgument(pt, args, true));
+                                            ps.Add(pp.ToArray(pt.ParameterType.GetElementType()));
+                                        }
                                         ConsoleLog.Debug("Commands", $"Invoke {command.Method}.");
-                                        command.Method.Invoke(null, ps);
+                                        command.Method.Invoke(null, ps.ToArray());
                                         return;
                                     }
-                                    catch
+                                    catch (Exception ex)
                                     {
+                                        ConsoleLog.Debug("Commands", ex.GetFormatString());
                                     }
                                 }
                             }

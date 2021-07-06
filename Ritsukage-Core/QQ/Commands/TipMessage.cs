@@ -17,6 +17,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(4, "结束时间")]
         public static async void AddTip(SoraMessage e, DateTime time, string message, TimeSpan interval, DateTime endTime)
         {
+            message = SoraMessage.Escape(message);
             var now = DateTime.Now;
             if (time < now)
             {
@@ -51,6 +52,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(2, "提示文本")]
         public static async void AddTip(SoraMessage e, DateTime time, string message)
         {
+            message = SoraMessage.Escape(message);
             var now = DateTime.Now;
             if (time < now)
             {

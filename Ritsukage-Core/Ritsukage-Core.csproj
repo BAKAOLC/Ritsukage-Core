@@ -13,6 +13,10 @@
     <Version>0.0.3.0</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\bin\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="QQ\Console\**" />
     <EmbeddedResource Remove="QQ\Console\**" />
