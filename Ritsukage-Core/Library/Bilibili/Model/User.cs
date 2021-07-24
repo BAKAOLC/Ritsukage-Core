@@ -80,9 +80,11 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
             if (((int)info["code"]) != 0)
                 throw new Exception((string)info["message"]);
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[User Info Parser] Parser: ")
                 .AppendLine().Append(info["data"].ToString()).ToString());
+            */
             return new User()
             {
                 Id = (int)info["data"]["card"]["mid"],

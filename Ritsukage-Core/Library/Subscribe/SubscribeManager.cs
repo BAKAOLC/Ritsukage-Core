@@ -33,7 +33,7 @@ namespace Ritsukage.Library.Subscribe
                 {
                     foreach (var listener in Listeners)
                     {
-                        ConsoleLog.Debug("Subscribe", "Refresh subscribe listener: " + listener.Key.GetType().FullName);
+                        //ConsoleLog.Debug("Subscribe", "Refresh subscribe listener: " + listener.Key.GetType().FullName);
                         listener.Key.RefreshListener();
                     }
                     Thread.Sleep(RefreshDelay);
@@ -54,7 +54,7 @@ namespace Ritsukage.Library.Subscribe
                 while (true)
                 {
                     Thread.Sleep(delay);
-                    ConsoleLog.Debug("Subscribe", "Trigger subscribe listener: " + listener.GetType().FullName);
+                    //ConsoleLog.Debug("Subscribe", "Trigger subscribe listener: " + listener.GetType().FullName);
                     listener.Listen();
                 }
             })

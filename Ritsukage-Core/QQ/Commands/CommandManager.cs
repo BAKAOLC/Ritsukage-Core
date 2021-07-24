@@ -115,11 +115,19 @@ namespace Ritsukage.QQ.Commands
 
         public async Task<bool> CheckPermission(BaseSoraEventArgs args)
         {
+            ConsoleLog.Debug("Commands", $">> Start the precondition check for {Method}");
             foreach (var p in Preconditions)
             {
                 if (!await p.CheckPermissionsAsync(args))
+                {
+                    ConsoleLog.Debug("Commands", $"  >> Precondition: [{p}] × Failed.");
+                    ConsoleLog.Debug("Commands", $">> Precondition check failed.");
                     return false;
+                }
+                else
+                    ConsoleLog.Debug("Commands", $"  >> Precondition: [{p}] √ Passed.");
             }
+            ConsoleLog.Debug("Commands", $">> Precondition check passed.");
             return true;
         }
     }

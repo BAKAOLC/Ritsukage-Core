@@ -132,9 +132,11 @@ namespace Ritsukage.Library.Bilibili.Model
         }
         public static Video GetByJson(JToken data)
         {
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Video Info Parser] Parser: ")
                 .AppendLine().Append(data.ToString()).ToString());
+            */
             var video = new Video()
             {
                 AV = (long)data["aid"],

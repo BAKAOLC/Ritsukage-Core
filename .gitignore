@@ -20,3 +20,4 @@ TestResults
 /Ritsukage-Core/QQ/Service/Command
 /Ritsukage-Core/QQ/Service/Event
 /Ritsukage-Core/QQ/Service/Service.cs
+/Ritsukage-Core/QQ/Service/ArknightsService.cs

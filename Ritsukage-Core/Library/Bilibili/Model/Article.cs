@@ -38,9 +38,11 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/article/viewinfo?id=" + id));
             if ((int)info["code"] != 0)
                 throw new Exception((string)info["msg"]);
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Article Info Parser] Parser: ")
                 .AppendLine().Append(info["data"].ToString()).ToString());
+            */
             return new Article()
             {
                 Id = id,
