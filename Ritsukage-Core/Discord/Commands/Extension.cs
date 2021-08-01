@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Discord.Commands
 {
-    public static class Exceptions
+    public static class Extension
     {
         public static async Task<UserCoins> GetCoins(this SocketUser user)
             => await CoinsService.GetUserCoins("discord", Convert.ToInt64(user.Id));
