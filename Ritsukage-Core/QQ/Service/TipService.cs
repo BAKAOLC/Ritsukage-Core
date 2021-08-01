@@ -4,6 +4,7 @@ using Ritsukage.Tools.Console;
 using Sora.Entities.CQCodes;
 using System;
 using System.Collections;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,15 @@ namespace Ritsukage.QQ.Service
 
         static readonly TimeSpan CheckSpan = new TimeSpan(0, 0, 0, 0, 500);
 
+        static async Task<bool> HasGroup(long bot, long group)
+        {
+            var api = Program.QQServer.GetSoraApi(bot);
+            var list = (await api.GetGroupList()).groupList;
+            if (list != null && list.Where(x => x.GroupId == group).Any())
+                return true;
+            return false;
+        }
+
         static object _lock = new object();
         public static void CheckMethod()
         {
@@ -36,7 +46,7 @@ namespace Ritsukage.QQ.Service
                         var msgs = await TipMessageService.GetTipMessages(TipMessage.TipTargetType.QQGroup, now);
                         foreach (var msg in msgs)
                             foreach (var bot in bots)
-                                if (GroupList.GetInfo(bot, msg.TargetID).GroupId == msg.TargetID)
+                                if (await HasGroup(bot, msg.TargetID))
                                 {
                                     ConsoleLog.Debug("TipMessage", $"Send tip message to group {msg.TargetID} with bot {bot}");
                                     var api = Program.QQServer.GetSoraApi(bot);
