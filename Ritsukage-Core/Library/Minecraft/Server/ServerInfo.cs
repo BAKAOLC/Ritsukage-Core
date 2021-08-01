@@ -1,4 +1,5 @@
-﻿using Heijden.DNS;
+﻿using DnsClient;
+using DnsClient.Protocol;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -137,12 +138,13 @@ namespace Ritsukage.Library.Minecraft.Server
                 }
                 catch (SocketException)
                 {
-                    RecordSRV result = (RecordSRV)new Resolver().Query("_minecraft._tcp." + this.ServerAddress, QType.SRV).Answers?.FirstOrDefault()?.RECORD;
+                    var client = new LookupClient();
+                    var result = client.Query("_minecraft._tcp." + ServerAddress, QueryType.SRV).Answers.OfType<SrvRecord>().FirstOrDefault();
                     if (result != null)
                     {
-                        tcp = new TcpClient(result.TARGET, result.PORT);
-                        ServerAddress = result.TARGET;
-                        ServerPort = result.PORT;
+                        tcp = new TcpClient(result.Target, result.Port);
+                        ServerAddress = result.Target;
+                        ServerPort = result.Port;
                     }
                     else
                     {

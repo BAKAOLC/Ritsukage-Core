@@ -97,6 +97,22 @@ namespace Ritsukage.QQ
             return list.Remove(target, out _);
         }
 
+        public static bool HasGroup(long bot, long group)
+        {
+            var list = GetList(bot);
+            if (list == null)
+                return false;
+            return list.TryGetValue(group, out _);
+        }
+
+        public static bool HasMember(long group, long target)
+        {
+            var list = GetMemberList(group);
+            if (list == null)
+                return false;
+            return list.TryGetValue(target, out _);
+        }
+
         public static bool AddMember(long group, GroupMemberInfo target)
         {
             var list = GetMemberList(group);
