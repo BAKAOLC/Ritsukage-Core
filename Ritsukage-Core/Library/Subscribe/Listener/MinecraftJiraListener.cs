@@ -24,15 +24,6 @@ namespace Ritsukage.Library.Subscribe.Listener
         public override async void Listen()
             => Broadcast(await Checker.Check());
 
-        static async Task<bool> HasGroup(long bot, long group)
-        {
-            var api = Program.QQServer.GetSoraApi(bot);
-            var list = (await api.GetGroupList()).groupList;
-            if (list != null && list.Where(x => x.GroupId == group).Any())
-                return true;
-            return false;
-        }
-
         public override async void Broadcast(CheckResult.Base.SubscribeCheckResult result)
         {
             if (result.Updated && result is MinecraftJiraCheckResult b)
@@ -55,10 +46,10 @@ namespace Ritsukage.Library.Subscribe.Listener
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                     foreach (var bot in bots)
                                     {
-                                        if (await HasGroup(bot, group))
+                                        var api = Program.QQServer.GetSoraApi(bot);
+                                        if (await api.CheckHasGroup(group))
                                         {
                                             ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
-                                            var api = Program.QQServer.GetSoraApi(bot);
                                             await api.SendGroupMessage(group, msg);
                                         }
                                     }

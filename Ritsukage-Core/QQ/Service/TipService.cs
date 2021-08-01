@@ -22,15 +22,6 @@ namespace Ritsukage.QQ.Service
 
         static readonly TimeSpan CheckSpan = new TimeSpan(0, 0, 0, 0, 500);
 
-        static async Task<bool> HasGroup(long bot, long group)
-        {
-            var api = Program.QQServer.GetSoraApi(bot);
-            var list = (await api.GetGroupList()).groupList;
-            if (list != null && list.Where(x => x.GroupId == group).Any())
-                return true;
-            return false;
-        }
-
         static object _lock = new object();
         public static void CheckMethod()
         {
@@ -46,10 +37,11 @@ namespace Ritsukage.QQ.Service
                         var msgs = await TipMessageService.GetTipMessages(TipMessage.TipTargetType.QQGroup, now);
                         foreach (var msg in msgs)
                             foreach (var bot in bots)
-                                if (await HasGroup(bot, msg.TargetID))
+                            {
+                                var api = Program.QQServer.GetSoraApi(bot);
+                                if (await api.CheckHasGroup(msg.TargetID))
                                 {
                                     ConsoleLog.Debug("TipMessage", $"Send tip message to group {msg.TargetID} with bot {bot}");
-                                    var api = Program.QQServer.GetSoraApi(bot);
                                     var m = new ArrayList
                                     {
                                         "[Tip Message]",
@@ -66,6 +58,7 @@ namespace Ritsukage.QQ.Service
                                     m.Add(msg.Message[n..]);
                                     await api.SendGroupMessage(msg.TargetID, m.ToArray());
                                 }
+                            }
                         await TipMessageService.RefreshTipMessages(now);
                         _lock = false;
                     });
