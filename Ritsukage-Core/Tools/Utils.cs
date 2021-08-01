@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools.Console;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -128,6 +129,90 @@ namespace Ritsukage.Tools
             return stream;
         }
 
+        /*
+        public static async Task<Stream> GetFileAsync(string url, int thread)
+        {
+            if (!await CheckAllowBreakpoint(url))
+            {
+                ConsoleLog.Warning("Http", $"The target ({url}) does not support breakpoint continuation. It is processed by single thread operation");
+                return await GetFileAsync(url);
+            }
+            else if (thread < 1)
+            {
+                ConsoleLog.Warning("Http", $"The number of threads should not be less than 1.");
+                return await GetFileAsync(url);
+            }
+            else
+            {
+                var length = await GetContentLength(url);
+                var threadCount = ((length / thread) < (1024 * 1024)) ? Math.Max(1, length / (1024 * 1024)) : thread;
+                var partLength = length / threadCount;
+                ArrayList tasks = new();
+                List<Stream> streams = new();
+                for (var i = 0; i < threadCount; i++)
+                {
+                    var stream = new MemoryStream();
+                    streams.Add(stream);
+                    var t = Task.Run(async () =>
+                    {
+                        var request = CreateHttpWebRequest(url);
+                        long total = -1;
+                        if (i == threadCount - 1)
+                        {
+                            request.AddRange(i * partLength, length);
+                            total = length - i * partLength;
+                        }
+                        else
+                        {
+                            request.AddRange(i * partLength, (i + 1) * partLength - 1);
+                            total = (i + 1) * partLength - 1 - i * partLength;
+                        }
+                        var response = await request.GetResponseAsync();
+                        var responseStream = response.GetResponseStream();
+                        var buffer = new byte[1024];
+                        int osize = -1;
+                        while ((osize = stream.Read(buffer, 0, buffer.Length)) > 0)
+                            stream.Write(buffer, 0, osize);
+                        responseStream.Close();
+                        responseStream.Dispose();
+                        response.Close();
+                        if (stream.Length < total)
+                            throw new WebException($"Download thread #{i} failed.");
+                    });
+                    tasks.Add(t);
+                }
+                Task.WaitAll((Task[])tasks.ToArray(typeof(Task)));
+                MemoryStream ms = new();
+                for (var i = 0; i < threadCount; i++)
+                {
+                    ms.Seek(i * partLength, SeekOrigin.Begin);
+                    streams[i].Seek(0, SeekOrigin.Begin);
+                    ((MemoryStream)streams[i]).WriteTo(ms);
+                    streams[i].Close();
+                    streams[i].Dispose();
+                }
+                return ms;
+            }
+        }
+        */
+
+        public static async Task<bool> CheckAllowBreakpoint(string url)
+        {
+            var request = CreateHttpWebRequest(url);
+            request.AddRange(0, 1);
+            request.Timeout = 10000;
+            HttpWebResponse response;
+            try
+            {
+                response = (HttpWebResponse)await request.GetResponseAsync();
+            }
+            catch (WebException ex)
+            {
+                response = (HttpWebResponse)ex.Response;
+            }
+            return response != null && response.StatusCode == HttpStatusCode.PartialContent;
+        }
+
         public static HttpWebRequest CreateHttpWebRequest(string url)
         {
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
@@ -135,6 +220,16 @@ namespace Ritsukage.Tools
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.ServerCertificateValidationCallback = delegate { return true; };
             return request;
+        }
+
+        public static async Task<long> GetContentLength(string url)
+        {
+            var request = CreateHttpWebRequest(url);
+            var response = await request.GetResponseAsync();
+            var length = response.ContentLength;
+            request.Abort();
+            response.Close();
+            return length;
         }
 
         public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")

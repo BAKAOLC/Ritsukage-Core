@@ -21,15 +21,14 @@ namespace Ritsukage.QQ.Service
 
         static readonly TimeSpan CheckSpan = new TimeSpan(0, 0, 0, 0, 500);
 
-        static bool _lock = false;
+        static object _lock = new object();
         public static void CheckMethod()
         {
             while (true)
             {
                 Thread.Sleep(CheckSpan);
-                if (!_lock)
+                lock (_lock)
                 {
-                    _lock = true;
                     Task.Run(async () =>
                     {
                         var now = DateTime.Now;

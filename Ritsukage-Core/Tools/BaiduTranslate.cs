@@ -169,7 +169,7 @@ namespace Ritsukage.Tools
             => new(JObject.Parse(Translate(str, from, to)));
 
         public static string EncryptString(string str)
-       {
+        {
             MD5 md5 = MD5.Create();
             byte[] byteOld = Encoding.UTF8.GetBytes(str);
             byte[] byteNew = md5.ComputeHash(byteOld);

@@ -73,5 +73,13 @@ namespace Ritsukage.QQ
                 return false;
             return list.TryRemove(target, out _);
         }
+
+        public static bool HasFriend(long bot, long target)
+        {
+            var list = GetList(bot);
+            if (list == null)
+                return false;
+            return list.TryGetValue(target, out _);
+        }
     }
 }

@@ -104,9 +104,11 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("http://api.live.bilibili.com/room/v1/Room/get_info?room_id=" + id));
             if ((int)info["code"] != 0)
                 throw new Exception((string)info["message"]);
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Live Room Info Parser] Parser: ")
                 .AppendLine().Append(info["data"].ToString()).ToString());
+            */
             var room = new LiveRoom()
             {
                 UserId = (int)info["data"]["uid"],

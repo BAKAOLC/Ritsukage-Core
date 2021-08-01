@@ -6,8 +6,11 @@ namespace Ritsukage.QQ.Commands
     public static class Poem
     {
         [Command("飞花令"), NeedCoins(2)]
+        [CommandDescription("搜索带有某个字的诗歌")]
+        [ParameterDescription(1, "关键字")]
         public static async void FHL(SoraMessage e, string _char)
         {
+            _char = SoraMessage.Escape(_char);
             if (_char.Length != 1)
             {
                 await e.ReplyToOriginal("参数错误，请检查后重试");
@@ -37,11 +40,13 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("诗歌搜索"), NeedCoins(2)]
+        [CommandDescription("搜索带有某个字段的诗歌")]
+        [ParameterDescription(1, "关键字段")]
         public static async void SearchOrigin(SoraMessage e, string poem)
         {
             try
             {
-                var result = await Tools.Poem.GetOrigin(poem);
+                var result = await Tools.Poem.GetOrigin(SoraMessage.Escape(poem));
                 await e.ReplyToOriginal(result);
                 await e.RemoveCoins(2);
             }

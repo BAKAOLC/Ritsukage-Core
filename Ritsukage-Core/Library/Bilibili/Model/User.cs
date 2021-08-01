@@ -80,9 +80,11 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
             if (((int)info["code"]) != 0)
                 throw new Exception((string)info["message"]);
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[User Info Parser] Parser: ")
                 .AppendLine().Append(info["data"].ToString()).ToString());
+            */
             return new User()
             {
                 Id = (int)info["data"]["card"]["mid"],
@@ -109,24 +111,14 @@ namespace Ritsukage.Library.Bilibili.Model
         #endregion
     }
 
-    public class MyUserInfo
+    public class MyUserInfo : User
     {
-        public int Id { get; private set; }
-        public string Name { get; private set; }
-        public string Sex { get; private set; }
-        public string FaceUrl { get; private set; }
-        public string Sign { get; private set; }
-        public int Level { get; private set; }
         public int Exp { get; private set; }
         public int ExpMin { get; private set; }
         public int ExpNext { get; private set; }
         public string Birth { get; private set; }
         public double Coin { get; private set; }
         public int Moral { get; private set; }
-        public int Follower { get; private set; }
-        public int Following { get; private set; }
-
-        public string Url { get => "https://space.bilibili.com/" + Id; }
 
         public MyUserInfo(string cookie = "")
         {
@@ -154,8 +146,6 @@ namespace Ritsukage.Library.Bilibili.Model
             Follower = (int)data4["data"]["follower"];
             Following = (int)data4["data"]["following"];
         }
-
-        public User GetUserInfo() => User.Get(Id);
 
         public override string ToString()
         {

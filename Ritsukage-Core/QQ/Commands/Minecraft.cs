@@ -67,6 +67,8 @@ namespace Ritsukage.QQ.Commands
         static readonly Regex _ServerRegex = new Regex(@"^(?<host>[^:]+)(:(?<port>\d+))?$");
 
         [Command("获取mc服务器状态")]
+        [CommandDescription("获取指定MC服务器的状态信息")]
+        [ParameterDescription(1, "服务器IP")]
         public static async void ServerStatus(SoraMessage e, string target)
         {
             var x = _ServerRegex.Match(target);
@@ -98,6 +100,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command]
+        [CommandDescription("获取指定MOJIRA问题的信息")]
+        [ParameterDescription(1, "ID")]
         public static async void MOJIRA(SoraMessage e, string id)
         {
             if (!Regex.IsMatch(id, @"^MC(PE)?-\d+$"))
@@ -119,6 +123,9 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取mc修复列表")]
+        [CommandDescription("获取指定时间区间内修复的问题内容")]
+        [ParameterDescription(1, "起始时间")]
+        [ParameterDescription(2, "结束时间")]
         public static async void GetMojiraList(SoraMessage e, DateTime from, DateTime to)
         {
             Issue[] issues = null;
@@ -150,6 +157,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("查询mc快照更新日志")]
+        [CommandDescription("获取指定版本的快照更新日志")]
+        [ParameterDescription(1, "版本号")]
         public static async void FindMCSnapshot(SoraMessage e, string version)
         {
             var vm = Regex.Match(version.Trim(), @"^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\d+))?$");
@@ -175,6 +184,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command]
+        [CommandDescription("获取指定类型的更新日志")]
+        [ParameterDescription(1, "类型")]
         public static async void MoChangeLogs(SoraMessage e, string type)
         {
             try
@@ -198,8 +209,11 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command]
+        [CommandDescription("格式化指定的更新日志页面为Markdown文本")]
+        [ParameterDescription(1, "网页URL")]
         public static async void MoChangeLogsFormat(SoraMessage e, string url)
         {
+            url = SoraMessage.Escape(url);
             if (!url.StartsWith("https://feedback.minecraft.net/hc/en-us/articles/"))
             {
                 await e.ReplyToOriginal("无效的目标文章网址");

@@ -105,7 +105,7 @@ namespace Ritsukage.Library.Pixiv.Model
             => await Task.Run(() =>
             {
                 var data = Hibi.HibiPixiv.GetIllustDetail(id);
-                if (data == null)
+                if (data == null || data["illust"] == null)
                     return null;
                 else
                     return new Illust(data["illust"]);

@@ -104,9 +104,11 @@ namespace Ritsukage.Library.Bilibili.Model
         }
         public static Audio GetByJson(JToken data)
         {
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Audio Info Parser] Parser: ")
                 .AppendLine().Append(data.ToString()).ToString());
+            */
             return new Audio()
             {
                 Id = (int)data["id"],

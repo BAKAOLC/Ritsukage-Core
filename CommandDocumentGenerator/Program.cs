@@ -16,7 +16,7 @@ namespace CommandDocumentGenerator
 
             Type[] types = Assembly.GetAssembly(typeof(CommandAttribute)).GetExportedTypes();
             Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is CommandGroupAttribute).Any()).ToArray();
-            foreach (var type in cosType.OrderBy(t=>t.GetCustomAttribute<CommandGroupAttribute>().Name))
+            foreach (var type in cosType.OrderBy(t => t.GetCustomAttribute<CommandGroupAttribute>().Name))
             {
                 file.WriteLine(type.GetCustomAttribute<CommandGroupAttribute>().ToString());
                 var preconditions = new List<PreconditionAttribute>();
@@ -27,7 +27,8 @@ namespace CommandDocumentGenerator
                 foreach (var method in type.GetMethods()
                     .Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is CommandAttribute).Any())
                     .OrderBy(t => t.GetCustomAttribute<CommandAttribute>().StartHeader)
-                    .ThenBy(t => {
+                    .ThenBy(t =>
+                    {
                         var n = t.GetCustomAttribute<CommandAttribute>().Name;
                         if (n.Length > 0)
                             return n[0];
@@ -55,13 +56,21 @@ namespace CommandDocumentGenerator
                         name = new[] { method.Name };
                     //file.WriteLine("Header: " + attrs.StartHeader);
                     file.WriteLine("Command: " + string.Join("|", name));
+                    var cd = method.GetCustomAttribute<CommandDescriptionAttribute>();
+                    if (cd != null)
+                        file.WriteLine(cd.ToString());
                     var param = method.GetParameters();
                     if (param.Length > 1)
-                    file.WriteLine("Parameters:");
+                        file.WriteLine("Parameters:");
+                    var pds = method.GetCustomAttributes<ParameterDescriptionAttribute>();
                     foreach (var pm in param.Skip(1))
                     {
+                        var pd = pds.Where(x => x.Index == pm.Position).FirstOrDefault();
                         file.Write("    ");
-                        file.WriteLine($"{pm.Name}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={pm.DefaultValue}" : string.Empty)}");
+                        if (pd == null)
+                            file.WriteLine($"Parameter#{pm.Position} {pm.Name}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}");
+                        else
+                            file.WriteLine($"{pd}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}{(string.IsNullOrWhiteSpace(pd.Desc) ? string.Empty : (" " + pd.Desc))}");
                     }
                 }
                 file.WriteLine(Environment.NewLine);

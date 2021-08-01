@@ -90,16 +90,22 @@ namespace Ritsukage.Library.Bilibili.Model
         public User GetUserInfo() => User.Get(UserId);
 
         public string BaseToString()
-            => new StringBuilder()
-            .AppendLine(Title)
-            .AppendLine($"av{AV}  {BV}{(string.IsNullOrEmpty(AreaName) ? "" : ("  分区：" + AreaName))}")
-            .AppendLine($"UP：{UserName}(https://space.bilibili.com/{UserId})")
-            .AppendLine($"播放量：{Statistic.View} 弹幕：{Statistic.Danmaku} 评论：{Statistic.Reply}")
-            .AppendLine($"收藏：{Statistic.Favorite} 投币：{Statistic.Coin} 分享：{Statistic.Share} 点赞：{Statistic.Like}")
-            .AppendLine("发布时间：" + PubDate.ToString("yyyy-MM-dd HH:mm:ss"))
-            .AppendLine(Desc)
-            .Append(Url)
-            .ToString();
+        {
+            int hour = Duration.Days * 24 + Duration.Hours;
+            string hourStr = hour > 0 ? $"{hour}时" : string.Empty;
+            var sb = new StringBuilder();
+            sb.AppendLine(Title);
+            sb.AppendLine($"av{AV}  {BV}{(string.IsNullOrEmpty(AreaName) ? "" : ("  分区：" + AreaName))}");
+            sb.AppendLine($"UP：{UserName}(https://space.bilibili.com/{UserId})");
+            if (Pages != null)
+                sb.AppendLine($"视频共{Pages.Length}P 总长度：{hourStr}{Duration.Minutes:D2}分{Duration.Seconds:D2}秒");
+            sb.AppendLine($"播放量：{Statistic.View} 弹幕：{Statistic.Danmaku} 评论：{Statistic.Reply}");
+            sb.AppendLine($"收藏：{Statistic.Favorite} 投币：{Statistic.Coin} 分享：{Statistic.Share} 点赞：{Statistic.Like}");
+            sb.AppendLine("发布时间：" + PubDate.ToString("yyyy-MM-dd HH:mm:ss"));
+            sb.AppendLine(Desc);
+            sb.Append(Url);
+            return sb.ToString();
+        }
         public override string ToString()
             => new StringBuilder()
             .AppendLine(PicUrl)
@@ -126,9 +132,11 @@ namespace Ritsukage.Library.Bilibili.Model
         }
         public static Video GetByJson(JToken data)
         {
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Video Info Parser] Parser: ")
                 .AppendLine().Append(data.ToString()).ToString());
+            */
             var video = new Video()
             {
                 AV = (long)data["aid"],

@@ -4,6 +4,7 @@
     public static class Hitokoto
     {
         [Command("一言", "hitokoto")]
+        [CommandDescription("获取一言", "API接口来自 https://hitokoto.cn")]
         public static async void Normal(SoraMessage e)
         {
             try
@@ -17,6 +18,7 @@
         }
 
         [Command("毒一言", "anotherhitokoto")]
+        [CommandDescription("获取毒一言", "API接口来自 http://lkblog.net")]
         public static async void Another(SoraMessage e)
         {
             try

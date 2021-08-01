@@ -6,7 +6,8 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Utils")]
     public static class Holiday
     {
-        [Command("最近节日", "holiday"), ExecutesCooldownAttribute("holiday", 120, true)]
+        [Command("最近节日", "holiday"), ExecutesCooldown("holiday", 120, true)]
+        [CommandDescription("获取最近节日的相关信息", "API接口来自 https://www.mxnzp.com")]
         public static async void Normal(SoraMessage e)
         {
             try

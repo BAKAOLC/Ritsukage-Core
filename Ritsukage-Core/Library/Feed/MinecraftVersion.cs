@@ -21,65 +21,62 @@ namespace Ritsukage.Library.Feed
 
         public override Task<IEnumerable<RssSchema>> Read()
         {
-            var result = base.Read();
-            if (result == null)
+            IEnumerable<RssSchema> rss = null;
+            try
             {
-                IEnumerable<RssSchema> rss = null;
-                try
+                var jdata = JObject.Parse(Utils.HttpGET(MojangMeta));
+                var sb = new StringBuilder();
+                sb.AppendLine("<rss xmlns:atom=\"http://www.w3.org/2005/Atom\" version=\"2.0\">");
+                sb.AppendLine("<channel>");
+                sb.AppendLine("<title><![CDATA[ Minecraft Java版游戏更新 ]]></title>");
+                sb.AppendLine("<link>https://www.minecraft.net/</link>");
+                sb.AppendLine("<description><![CDATA[ Minecraft Java版游戏更新 - Made with love by Ritsukage-Core]]></description>");
+                sb.AppendLine("<generator>Ritsukage-Core</generator>");
+                sb.AppendLine("<language>zh-cn</language>");
+                sb.AppendLine($"<lastBuildDate>{DateTime.Now:R}T</lastBuildDate>");
+                foreach (var version in (JArray)jdata["versions"])
                 {
-                    var jdata = JObject.Parse(Utils.HttpGET(MojangMeta));
-                    var sb = new StringBuilder();
-                    sb.AppendLine("<rss xmlns:atom=\"http://www.w3.org/2005/Atom\" version=\"2.0\">");
-                    sb.AppendLine("<channel>");
-                    sb.AppendLine("<title><![CDATA[ Minecraft Java版游戏更新 ]]></title>");
-                    sb.AppendLine("<link>https://www.minecraft.net/</link>");
-                    sb.AppendLine("<description><![CDATA[ Minecraft Java版游戏更新 - Made with love by Ritsukage-Core]]></description>");
-                    sb.AppendLine("<generator>Ritsukage-Core</generator>");
-                    sb.AppendLine("<language>zh-cn</language>");
-                    sb.AppendLine($"<lastBuildDate>{DateTime.Now:R}T</lastBuildDate>");
-                    foreach (var version in (JArray)jdata["versions"])
+                    sb.AppendLine("<item>");
+                    var v = (string)version["id"];
+                    switch ((string)version["type"])
                     {
-                        sb.AppendLine("<item>");
-                        var v = (string)version["id"];
-                        switch ((string)version["type"])
-                        {
-                            case "snapshot":
-                                sb.AppendLine($"<title><![CDATA[ {v} 快照更新 ]]></title>");
-                                sb.AppendLine($"<description><![CDATA[ {v} 快照更新 ]]></description>");
-                                break;
-                            case "release":
-                                sb.AppendLine($"<title><![CDATA[ {v} 正式版更新 ]]></title>");
-                                sb.AppendLine($"<description><![CDATA[ {v} 正式版更新 ]]></description>");
-                                break;
-                            case "old_alpha":
-                                sb.AppendLine($"<title><![CDATA[ {v} 过时的预览版更新 ]]></title>");
-                                sb.AppendLine($"<description><![CDATA[ {v} 过时的预览版更新 ]]></description>");
-                                break;
-                            case "old_beta":
-                                sb.AppendLine($"<title><![CDATA[ {v} 过时的测试版更新 ]]></title>");
-                                sb.AppendLine($"<description><![CDATA[ {v} 过时的测试版更新 ]]></description>");
-                                break;
-                        }
-                        sb.AppendLine($"<pubDate>{Convert.ToDateTime((string)version["releaseTime"]):R}</pubDate>");
-                        sb.AppendLine($"<guid isPermaLink=\"false\">{(string)version["url"]}</guid>");
-                        sb.AppendLine("<link>https://www.minecraft.net/</link>");
-                        sb.AppendLine("</item>");
+                        case "snapshot":
+                            sb.AppendLine($"<title><![CDATA[ {v} 快照更新 ]]></title>");
+                            sb.AppendLine($"<description><![CDATA[ {v} 快照更新 ]]></description>");
+                            break;
+                        case "release":
+                            sb.AppendLine($"<title><![CDATA[ {v} 正式版更新 ]]></title>");
+                            sb.AppendLine($"<description><![CDATA[ {v} 正式版更新 ]]></description>");
+                            break;
+                        case "old_alpha":
+                            sb.AppendLine($"<title><![CDATA[ {v} 过时的预览版更新 ]]></title>");
+                            sb.AppendLine($"<description><![CDATA[ {v} 过时的预览版更新 ]]></description>");
+                            break;
+                        case "old_beta":
+                            sb.AppendLine($"<title><![CDATA[ {v} 过时的测试版更新 ]]></title>");
+                            sb.AppendLine($"<description><![CDATA[ {v} 过时的测试版更新 ]]></description>");
+                            break;
                     }
-                    sb.AppendLine("</channel>");
-                    sb.Append("</rss>");
-                    var parser = new RssParser();
-                    rss = parser.Parse(sb.ToString());
+                    sb.AppendLine($"<pubDate>{Convert.ToDateTime((string)version["releaseTime"]):R}</pubDate>");
+                    sb.AppendLine($"<guid isPermaLink=\"false\">{(string)version["url"]}</guid>");
+                    sb.AppendLine("<link>https://www.minecraft.net/</link>");
+                    sb.AppendLine("</item>");
                 }
-                catch (Exception ex)
-                {
-                    ConsoleLog.Error("Feed", "Failed to format json data from "
-                        .CreateStringBuilder().AppendLine(MojangMeta)
-                        .Append(ex.GetFormatString()).ToString());
-                }
-                return Task.FromResult(rss);
+                sb.AppendLine("</channel>");
+                sb.Append("</rss>");
+                var parser = new RssParser();
+                rss = parser.Parse(sb.ToString());
             }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Feed", "Failed to format json data from "
+                    .CreateStringBuilder().AppendLine(MojangMeta)
+                    .Append(ex.GetFormatString()).ToString());
+            }
+            if (rss == null)
+                return base.Read();
             else
-                return result;
+                return Task.FromResult(rss);
         }
     }
 }

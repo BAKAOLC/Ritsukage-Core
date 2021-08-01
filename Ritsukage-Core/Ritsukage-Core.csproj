@@ -13,6 +13,10 @@
     <Version>0.0.3.0</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\bin\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="QQ\Console\**" />
     <EmbeddedResource Remove="QQ\Console\**" />
@@ -20,17 +24,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AnimatedGif" Version="1.0.5" />
     <PackageReference Include="Discord.Net" Version="2.3.1" />
-    <PackageReference Include="Heijden.Dns" Version="2.0.0" />
+    <PackageReference Include="DnsClient" Version="1.5.0" />
+    <PackageReference Include="Downloader" Version="2.2.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Toolkit.Parsers" Version="6.1.1" />
+    <PackageReference Include="NetCoreHTMLToImage" Version="1.1.1.7" />
     <PackageReference Include="NeteaseCloudMusicApi" Version="3.25.3.10000" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Octokit" Version="0.50.0" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="ReverseMarkdown" Version="3.19.0" />
     <PackageReference Include="SharpZipLib" Version="1.3.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
   </ItemGroup>
 

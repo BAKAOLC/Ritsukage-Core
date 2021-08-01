@@ -7,6 +7,8 @@ namespace Ritsukage.QQ.Commands
     public static class HHSH
     {
         [Command("guess")]
+        [CommandDescription("猜测指定的缩写字符的原本意义", "API接口来自 https://lab.magiconch.com/nbnhhsh")]
+        [ParameterDescription(1, "缩写字符")]
         public static async void Normal(SoraMessage e, string origin)
         {
             try

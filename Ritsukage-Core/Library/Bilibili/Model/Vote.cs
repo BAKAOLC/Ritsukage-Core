@@ -92,9 +92,11 @@ namespace Ritsukage.Library.Bilibili.Model
             var info = JObject.Parse(Utils.HttpGET("https://api.vc.bilibili.com/vote_svr/v1/vote_svr/vote_info?vote_id=" + id));
             if ((int)info["code"] != 0)
                 throw new Exception($"投票id{id}不存在");
+            /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Vote Info Parser] Parser: ")
                 .AppendLine().Append(info["data"].ToString()).ToString());
+            */
             var vote = new Vote()
             {
                 Id = (int)info["data"]["info"]["vote_id"],

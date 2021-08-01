@@ -12,6 +12,12 @@ namespace Ritsukage.Tools
         const long XOR = 177451812;
         const long ADD = 8728348608;
 
+        public static string ToBV(string av)
+        {
+            if (av.ToLower().StartsWith("av"))
+                av = av[2..];
+            return ToBV(long.Parse(av));
+        }
         public static string ToBV(long av)
         {
             if (av <= 0)

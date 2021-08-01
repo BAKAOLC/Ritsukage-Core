@@ -18,6 +18,7 @@ namespace Ritsukage.QQ.Commands
     public static class Bilibili
     {
         [Command]
+        [CommandDescription("登录b站账户", "使用二维码扫描登录", "用于部分需要用户登录才能执行的操作")]
         public static async void Login(SoraMessage e)
         {
             await Task.Run(() => Library.Bilibili.Bilibili.QRCodeLoginRequest(
@@ -85,6 +86,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取b站用户信息")]
+        [CommandDescription("获取并格式化指定B站用户的个人信息")]
+        [ParameterDescription(1, "用户UID")]
         public static async void UserInfo(SoraMessage e, int uid)
         {
             User user = null;
@@ -107,6 +110,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取b站直播间信息")]
+        [CommandDescription("获取并格式化指定B站直播间的信息")]
+        [ParameterDescription(1, "直播间ID")]
         public static async void LiveRoomInfo(SoraMessage e, int roomid)
         {
             LiveRoom room = null;
@@ -121,15 +126,15 @@ namespace Ritsukage.QQ.Commands
             {
                 string cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl;
                 await e.Reply(CQCode.CQImage(cover), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(room.BaseToString())
-                    .ToString());
+                    .AppendLine().Append(room.BaseToString()).ToString());
             }
             else
                 await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
         }
 
         [Command("获取b站直播间推流地址")]
+        [CommandDescription("获取指定B站直播间的直接推流链接", "可用于如PotPlayer之类的软件进行直接观看而不需要开启浏览器")]
+        [ParameterDescription(1, "直播间ID")]
         public static async void LiveRoomStream(SoraMessage e, int roomid)
         {
             LiveStream stream = null;
@@ -161,11 +166,15 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取b站视频信息")]
+        [CommandDescription("获取指定B站视频的信息", "为了避免一些东西所以将不会支持视频地址的解析")]
+        [ParameterDescription(1, "视频AV号/BV号")]
         public static async void VideoInfo(SoraMessage e, string id)
         {
             Video video = null;
             try
             {
+                if (id.ToLower().StartsWith("av"))
+                    id = id[2..];
                 if (long.TryParse(id, out var av))
                     video = Video.Get(av);
                 else
@@ -177,15 +186,69 @@ namespace Ritsukage.QQ.Commands
             if (video != null)
             {
                 await e.Reply(CQCode.CQImage(video.PicUrl), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(video.BaseToString())
-                    .ToString());
+                    .AppendLine().Append(video.BaseToString()).ToString());
+            }
+            else
+                await e.Reply($"[Bilibili] 视频{id}信息获取失败");
+        }
+
+        [Command("获取b站视频分P信息")]
+        [CommandDescription("获取指定B站视频的分P信息", "为了避免一些东西所以将不会支持视频地址的解析")]
+        [ParameterDescription(1, "视频AV号/BV号")]
+        public static async void VideoPageInfo(SoraMessage e, string id)
+        {
+            Video video = null;
+            try
+            {
+                if (id.ToLower().StartsWith("av"))
+                    id = id[2..];
+                if (long.TryParse(id, out var av))
+                    video = Video.Get(av);
+                else
+                    video = Video.Get(id);
+            }
+            catch
+            {
+            }
+            if (video != null)
+            {
+                int hour = video.Duration.Days * 24 + video.Duration.Hours;
+                string hourStr = hour > 0 ? $"{hour}时" : string.Empty;
+                var sb = new StringBuilder();
+                sb.AppendLine(video.Title);
+                sb.AppendLine($"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : ("  分区：" + video.AreaName))}");
+                sb.AppendLine($"UP：{video.UserName}(https://space.bilibili.com/{video.UserId})");
+                sb.AppendLine($"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒");
+                sb.AppendLine("分P列表如下：");
+                foreach (var page in video.Pages)
+                {
+                    int ph = page.Duration.Days * 24 + page.Duration.Hours;
+                    string phStr = ph > 0 ? $"{ph}时" : string.Empty;
+                    sb.AppendLine($"  P{page.Index}  长度：{phStr}{page.Duration.Minutes:D2}分{page.Duration.Seconds:D2}秒");
+                    sb.Append("    ").AppendLine(page.Name);
+                }
+                sb.Append(video.Url);
+                if (video.Pages.Length > 10)
+                {
+                    var bin = UbuntuPastebin.Paste(sb.ToString(), "text", "Bilibili Video Pages");
+                    await e.ReplyToOriginal(new StringBuilder()
+                        .AppendLine(video.Title)
+                        .AppendLine($"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : ("  分区：" + video.AreaName))}")
+                        .AppendLine($"UP：{video.UserName}(https://space.bilibili.com/{video.UserId})")
+                        .AppendLine($"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒")
+                        .AppendLine("数据过多，请前往以下链接查看")
+                        .Append(bin).ToString());
+                }
+                else
+                    await e.Reply(sb.ToString());
             }
             else
                 await e.Reply($"[Bilibili] 视频{id}信息获取失败");
         }
 
         [Command("获取b站音频信息")]
+        [CommandDescription("获取指定B站音频的信息", "为了避免一些东西所以将不会支持音频地址的解析")]
+        [ParameterDescription(1, "音频AU号")]
         public static async void AudioInfo(SoraMessage e, int id)
         {
             Audio audio = null;
@@ -199,15 +262,15 @@ namespace Ritsukage.QQ.Commands
             if (audio != null)
             {
                 await e.Reply(CQCode.CQImage(audio.CoverUrl), new StringBuilder()
-                    .AppendLine()
-                    .AppendLine(audio.BaseToString())
-                    .ToString());
+                    .AppendLine().Append(audio.BaseToString()).ToString());
             }
             else
                 await e.Reply($"[Bilibili] 音频{id}信息获取失败");
         }
 
         [Command("获取b站专栏信息")]
+        [CommandDescription("获取指定B站专栏的信息")]
+        [ParameterDescription(1, "专栏CV号")]
         public static async void ArticleInfo(SoraMessage e, int id)
         {
             Article article = null;
@@ -225,6 +288,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取b站动态信息")]
+        [CommandDescription("获取指定B站动态的信息")]
+        [ParameterDescription(1, "动态ID")]
         public static async void DynamicInfo(SoraMessage e, ulong id)
         {
             Dynamic dynamic = null;
@@ -254,8 +319,12 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("开启直播")]
+        [CommandDescription("开启用户直播间", "需要进行过B站登录操作才可使用")]
+        [ParameterDescription(1, "分区ID", "默认单机▪其他单机")]
+        [ParameterDescription(2, "标题", "默认保持原样不变")]
         public static async void StartLive(SoraMessage e, int area = 235, string title = "")
         {
+            title = SoraMessage.Escape(title);
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
@@ -288,8 +357,13 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("开启直播")]
+        [CommandDescription("开启用户直播间", "需要进行过B站登录操作才可使用")]
+        [ParameterDescription(1, "分区关键词", "当只有一个目标时才会切换分区")]
+        [ParameterDescription(2, "标题", "默认保持原样不变")]
         public static async void StartLive(SoraMessage e, string area, string title = "")
         {
+            area = SoraMessage.Escape(area);
+            title = SoraMessage.Escape(title);
             var list = await LiveAreaList.Get(area);
             if (!list.Any())
             {
@@ -314,6 +388,7 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("关闭直播")]
+        [CommandDescription("关闭用户直播间", "需要进行过B站登录操作才可使用")]
         public static async void StopLive(SoraMessage e)
         {
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
@@ -343,6 +418,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("设置直播分区")]
+        [CommandDescription("切换用户分区为指定分区", "需要进行过B站登录操作才可使用")]
+        [ParameterDescription(1, "分区ID")]
         public static async void SetLiveArea(SoraMessage e, int area)
         {
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
@@ -372,8 +449,11 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("设置直播分区")]
+        [CommandDescription("切换用户分区为指定分区", "需要进行过B站登录操作才可使用")]
+        [ParameterDescription(1, "分区关键词", "当只有一个目标时才会切换分区")]
         public static async void SetLiveArea(SoraMessage e, string area)
         {
+            area = SoraMessage.Escape(area);
             var list = await LiveAreaList.Get(area);
             if (!list.Any())
             {
@@ -398,8 +478,11 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("设置直播标题")]
+        [CommandDescription("修改直播标题", "需要进行过B站登录操作才可使用")]
+        [ParameterDescription(1, "标题")]
         public static async void SetLiveTitle(SoraMessage e, string title)
         {
+            title = SoraMessage.Escape(title);
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data == null)
             {
@@ -427,6 +510,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [CommandDescription("订阅目标B站直播间的状态更新事件")]
+        [ParameterDescription(1, "直播间ID")]
         public static async void AddLiveListener(SoraMessage e, int roomid)
         {
             var data = await Database.FindAsync<SubscribeList>(
@@ -461,6 +546,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("取消订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [CommandDescription("取消订阅目标B站直播间的状态更新事件")]
+        [ParameterDescription(1, "直播间ID")]
         public static async void RemoveLiveListener(SoraMessage e, int roomid)
         {
             var data = await Database.FindAsync<SubscribeList>(
@@ -489,6 +576,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [CommandDescription("订阅目标B站用户动态更新事件")]
+        [ParameterDescription(1, "用户UID")]
         public static async void AddDynamicListener(SoraMessage e, int userid)
         {
             var data = await Database.FindAsync<SubscribeList>(
@@ -523,6 +612,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("取消订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [CommandDescription("取消订阅目标B站用户动态更新事件")]
+        [ParameterDescription(1, "用户UID")]
         public static async void RemoveDynamicListener(SoraMessage e, int userid)
         {
             var data = await Database.FindAsync<SubscribeList>(
@@ -551,6 +642,7 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("启用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [CommandDescription("启用B站相关链接的自动信息解析功能")]
         public static async void EnableAutoLink(SoraMessage e)
         {
             var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
@@ -597,6 +689,7 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("禁用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [CommandDescription("禁用B站相关链接的自动信息解析功能")]
         public static async void DisableAutoLink(SoraMessage e)
         {
             var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
@@ -621,16 +714,21 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command]
-        public static async void AV2BV(SoraMessage e, long av = long.MinValue)
+        [CommandDescription("转换指定AV号为BV号")]
+        [ParameterDescription(1, "AV号")]
+        public static async void AV2BV(SoraMessage e, string av = "")
         {
-            if (av == long.MinValue)
+            if (string.IsNullOrEmpty(av))
                 await e.ReplyToOriginal("参数错误，请重新输入");
             else
             {
+                if (av.ToLower().StartsWith("av"))
+                    av = av[2..];
+                long id = long.Parse(av);
                 string msg;
                 try
                 {
-                    msg = $"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}";
+                    msg = $"[Bilibili][AV→BV] {id} → {BilibiliAVBVConverter.ToBV(id)}";
                 }
                 catch (Exception ex)
                 {
@@ -641,6 +739,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command]
+        [CommandDescription("转换指定BV号为AV号")]
+        [ParameterDescription(1, "BV号")]
         public static async void BV2AV(SoraMessage e, string bv = "")
         {
             if (string.IsNullOrEmpty(bv))
