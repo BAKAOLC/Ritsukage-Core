@@ -17,6 +17,9 @@ namespace Ritsukage.Tools
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
 
+        public static string ToSignNumberString(int num)
+            => num < 0 ? num.ToString() : ("+" + num);
+
         public static string ToUrlParameter(Dictionary<string, object> param = null)
         {
             if (param == null)

@@ -170,6 +170,15 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
+        private static string FormatNumberString(string arg)
+        {
+            if (arg.StartsWith("0x"))
+                arg = Convert.ToInt64(arg[2..], 16).ToString();
+            else if (arg.StartsWith("0b"))
+                arg = Convert.ToInt64(arg[2..], 2).ToString();
+            return arg;
+        }
+
         private static object ParseArgument(ParameterInfo param, CommandArgs args, bool isArray = false)
         {
             if (!args.HasNext())
@@ -195,19 +204,19 @@ namespace Ritsukage.QQ.Commands
             else
             {
                 if (t == typeof(byte))
-                    return byte.Parse(args.Next());
+                    return byte.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(short))
-                    return short.Parse(args.Next());
+                    return short.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(ushort))
-                    return ushort.Parse(args.Next());
+                    return ushort.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(int))
-                    return int.Parse(args.Next());
+                    return int.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(uint))
-                    return uint.Parse(args.Next());
+                    return uint.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(long))
-                    return long.Parse(args.Next());
+                    return long.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(ulong))
-                    return ulong.Parse(args.Next());
+                    return ulong.Parse(FormatNumberString(args.Next()));
                 else if (t == typeof(float))
                     return float.Parse(args.Next());
                 else if (t == typeof(double))
@@ -220,7 +229,7 @@ namespace Ritsukage.QQ.Commands
                         return true;
                     else if (s == "假" || s == "false" || s == "f" || s == "0")
                         return false;
-                    else throw new ArgumentException($"{original} is not a bool value.");
+                    else throw new FormatException($"{original} is not a bool value.");
                 }
                 else if (t == typeof(DateTime))
                     return DateTimeReader.Parse(args.Next());
@@ -343,6 +352,9 @@ namespace Ritsukage.QQ.Commands
                                         ConsoleLog.Debug("Commands", $"Invoke {command.Method}.");
                                         command.Method.Invoke(null, ps.ToArray());
                                         return;
+                                    }
+                                    catch (FormatException ex)
+                                    {
                                     }
                                     catch (Exception ex)
                                     {
