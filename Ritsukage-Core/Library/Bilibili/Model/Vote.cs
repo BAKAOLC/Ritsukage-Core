@@ -91,7 +91,7 @@ namespace Ritsukage.Library.Bilibili.Model
         {
             var info = JObject.Parse(Utils.HttpGET("https://api.vc.bilibili.com/vote_svr/v1/vote_svr/vote_info?vote_id=" + id));
             if ((int)info["code"] != 0)
-                throw new Exception($"投票id{id}不存在");
+                throw new NullReferenceException($"投票id{id}不存在");
             /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[Vote Info Parser] Parser: ")
@@ -120,6 +120,19 @@ namespace Ritsukage.Library.Bilibili.Model
                 };
             return vote;
         }
+
+        public static Vote CreateNullVote(int id)
+            => new Vote()
+            {
+                Id = id,
+                UserId = 0,
+                UserName = "未知",
+                Title = "投票已删除或不存在",
+                ChooseNumber = 1,
+                Join = 0,
+                EndTime = DateTime.MinValue,
+                Options = Array.Empty<VoteOption>()
+            };
         #endregion
     }
 

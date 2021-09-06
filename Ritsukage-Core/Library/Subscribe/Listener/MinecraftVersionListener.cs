@@ -54,12 +54,15 @@ namespace Ritsukage.Library.Subscribe.Listener
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                     foreach (var bot in bots)
                                     {
-                                        var api = Program.QQServer.GetSoraApi(bot);
-                                        if (await api.CheckHasGroup(group))
+                                        _ = Task.Factory.StartNew(async () =>
                                         {
-                                            ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
-                                            await api.SendGroupMessage(group, msg);
-                                        }
+                                            var api = Program.QQServer.GetSoraApi(bot);
+                                            if (await api.CheckHasGroup(group))
+                                            {
+                                                ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
+                                                await api.SendGroupMessage(group, msg);
+                                            }
+                                        });
                                     }
                                 }
                             }
@@ -74,15 +77,18 @@ namespace Ritsukage.Library.Subscribe.Listener
                             {
                                 if (ulong.TryParse(id, out var cid))
                                 {
-                                    ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
-                                    try
+                                    _ = Task.Factory.StartNew(async () =>
                                     {
-                                        var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
-                                        await channel?.SendMessageAsync(msg);
-                                    }
-                                    catch
-                                    {
-                                    }
+                                        ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
+                                        try
+                                        {
+                                            var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                            await channel?.SendMessageAsync(msg);
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    });
                                 }
                             }
                         }

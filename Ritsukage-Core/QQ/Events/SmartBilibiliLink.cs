@@ -175,7 +175,7 @@ namespace Ritsukage.QQ.Events
                     }
                     catch (Exception ex)
                     {
-                        ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
+                        ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString(true));
                     }
                 }
                 return;
@@ -318,7 +318,7 @@ namespace Ritsukage.QQ.Events
                         }
                         catch (Exception ex)
                         {
-                            ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString());
+                            ConsoleLog.Error("Smark Bilibili Link", ex.GetFormatString(true));
                         }
                     }
                     continue;

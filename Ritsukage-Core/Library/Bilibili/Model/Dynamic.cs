@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
-using Ritsukage.Tools.Console;
 using System;
 using System.Linq;
 using System.Text;
@@ -177,14 +176,41 @@ namespace Ritsukage.Library.Bilibili.Model
                             dynamic.Card.Type = DynamicCardType.Audio;
                             dynamic.Card.Reply = (int)card["replyCnt"];
                             dynamic.Card.Content = new DynamicContent() { Text = (string)card["intro"] };
-                            dynamic.Card.Audio = Audio.GetByJson(card);
+                            dynamic.Card.Audio = Audio.Get((int)card["id"]);
+                            break;
+                        }
+                    case 2048: //分享
+                        {
+                            dynamic.Card.Type = DynamicCardType.Extra;
+                            dynamic.Card.Reply = (int)data["desc"]["comment"];
+                            dynamic.Card.Content = new DynamicContent() { Text = (string)card["vest"]["content"] };
+                            dynamic.Card.Sketch = DynamicSketch.GetByJson(card["sketch"]);
                             break;
                         }
                 };
-                if (data["extension"] != null && data["extension"]["vote"] != null) //投票
+                if (data["display"] != null && data["display"]["add_on_card_info"] != null) //额外信息
                 {
-                    dynamic.Card.Type = DynamicCardType.Vote;
-                    dynamic.Card.Vote = Vote.Get((int)data["extension"]["vote_cfg"]["vote_id"]);
+                    dynamic.Card.Extend = DynamicDisplayExtendInfo.GetByJson(data["display"]["add_on_card_info"][0]);
+                }
+                if (data["extension"] != null)
+                {
+                    if (data["extension"]["vote"] != null) //投票
+                    {
+                        dynamic.Card.Type = DynamicCardType.Vote;
+                        try
+                        {
+                            dynamic.Card.Vote = Vote.Get((int)data["extension"]["vote_cfg"]["vote_id"]);
+                        }
+                        catch (NullReferenceException)
+                        {
+                            dynamic.Card.Vote = Vote.CreateNullVote((int)data["extension"]["vote_cfg"]["vote_id"]);
+                        }
+                    }
+                    if (data["extension"]["lott"] != null) //互动抽奖
+                    {
+                        dynamic.Card.Type = DynamicCardType.Lottery;
+                        dynamic.Card.Lottery = DynamicLottery.GetByDynamicId(dynamic.Id);
+                    }
                 }
             }
             catch (Exception ex)
@@ -260,11 +286,29 @@ namespace Ritsukage.Library.Bilibili.Model
                                 dynamic.OriginalCard.Audio = Audio.GetByJson(original);
                                 break;
                             }
+                        case 2048: //分享
+                            {
+                                dynamic.OriginalCard.OwnerName = (string)original["user"]["uname"];
+                                dynamic.OriginalCard.Type = DynamicCardType.Extra;
+                                dynamic.OriginalCard.Reply = 0;
+                                dynamic.OriginalCard.Content = new DynamicContent() { Text = (string)original["vest"]["content"] };
+                                dynamic.OriginalCard.Sketch = DynamicSketch.GetByJson(original["sketch"]);
+                                break;
+                            }
+                    }
+                    if (data["display"] != null && data["display"]["origin"] != null && data["display"]["origin"]["add_on_card_info"] != null) //额外信息
+                    {
+                        dynamic.OriginalCard.Extend = DynamicDisplayExtendInfo.GetByJson(data["display"]["origin"]["add_on_card_info"][0]);
                     }
                     if (dynamic.Card.Type == DynamicCardType.Vote) //投票
                     {
                         dynamic.OriginalCard.Type = DynamicCardType.Vote;
                         dynamic.OriginalCard.Vote = dynamic.Card.Vote;
+                    }
+                    if (card["origin_extension"] != null && card["origin_extension"]["lott"] != null)
+                    {
+                        dynamic.OriginalCard.Type = DynamicCardType.Lottery;
+                        dynamic.OriginalCard.Lottery = DynamicLottery.GetByDynamicId(dynamic.OriginalCard.Id);
                     }
                 }
                 catch (Exception ex)
@@ -327,9 +371,21 @@ namespace Ritsukage.Library.Bilibili.Model
         /// </summary>
         public Vote Vote;
         /// <summary>
+        /// 互动抽奖
+        /// </summary>
+        public DynamicLottery Lottery;
+        /// <summary>
         /// 正文
         /// </summary>
         public DynamicContent Content;
+        /// <summary>
+        /// 分享
+        /// </summary>
+        public DynamicSketch Sketch;
+        /// <summary>
+        /// 额外信息
+        /// </summary>
+        public DynamicDisplayExtendInfo Extend;
 
         public bool IsForwarded = false;
 
@@ -354,6 +410,23 @@ namespace Ritsukage.Library.Bilibili.Model
                 sb.AppendLine();
                 sb.AppendLine("[]> 发布了音频：");
                 sb.Append(Audio.BaseToString());
+            }
+            if (Sketch != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 分享了：");
+                sb.Append(Sketch.BaseToString());
+            }
+            if (Lottery != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发起了互动抽奖：");
+                sb.Append(Lottery.ToString());
+            }
+            if (Extend != null)
+            {
+                sb.AppendLine();
+                sb.Append(Extend.ToString());
             }
             return sb.ToString();
         }
@@ -389,6 +462,23 @@ namespace Ritsukage.Library.Bilibili.Model
                 sb.AppendLine();
                 sb.AppendLine("[]> 发布了音频：");
                 sb.Append(Audio.ToString());
+            }
+            if (Sketch != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 分享了：");
+                sb.Append(Sketch.ToString());
+            }
+            if (Lottery != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[]> 发起了互动抽奖：");
+                sb.Append(Lottery.ToString());
+            }
+            if (Extend != null)
+            {
+                sb.AppendLine();
+                sb.Append(Extend.ToString());
             }
             return sb.ToString();
         }
@@ -433,6 +523,47 @@ namespace Ritsukage.Library.Bilibili.Model
         }
     }
 
+    public class DynamicSketch
+    {
+        public long Id;
+        public string Title;
+        public string Desc;
+        public string CoverUrl;
+        public string TargetUrl;
+
+        DynamicSketch() { }
+
+        public static DynamicSketch GetByJson(JToken data)
+        {
+            return new DynamicSketch()
+            {
+                Id = (long)data["sketch_id"],
+                Title = (string)data["title"],
+                Desc = (string)data["desc_text"],
+                CoverUrl = (string)data["cover_url"],
+                TargetUrl = (string)data["target_url"],
+            };
+        }
+
+        public string BaseToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append(Title);
+            if (!string.IsNullOrWhiteSpace(Desc))
+                sb.AppendLine().Append(Desc);
+            sb.AppendLine().Append(TargetUrl);
+            return sb.ToString();
+        }
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrWhiteSpace(CoverUrl))
+                sb.Append(CoverUrl).AppendLine();
+            sb.Append(BaseToString());
+            return sb.ToString();
+        }
+    }
+
     public enum DynamicCardType
     {
         /// <summary>
@@ -455,6 +586,214 @@ namespace Ritsukage.Library.Bilibili.Model
         /// 投票
         /// </summary>
         Vote,
+        /// <summary>
+        /// 互动抽奖
+        /// </summary>
+        Lottery,
+        /// <summary>
+        /// 其他
+        /// </summary>
+        Extra,
+    }
+
+    public class DynamicDisplayExtendInfo
+    {
+        public DynamicDisplayExtendInfoType Type;
+
+        public string Title;
+
+        public string DescFirst;
+
+        public string DescSecond;
+
+        public string JumpUrl;
+
+        public string HeadText;
+
+        public DateTime LivePlanStartTime;
+
+        DynamicDisplayExtendInfo() { }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder("[]> ");
+            if (!string.IsNullOrWhiteSpace(HeadText))
+                sb.Append(HeadText).Append("  ");
+            sb.Append(Title);
+            switch (Type)
+            {
+                case DynamicDisplayExtendInfoType.Reserve:
+                    {
+                        bool f1 = !string.IsNullOrWhiteSpace(DescFirst);
+                        bool f2 = !string.IsNullOrWhiteSpace(DescSecond);
+                        if (f1 || f2)
+                            sb.AppendLine();
+                        if (f1 && f2)
+                            sb.Append(DescFirst).Append("  ").Append(DescSecond);
+                        else if (f1)
+                            sb.Append(DescFirst);
+                        else if (f2)
+                            sb.Append(DescSecond);
+                        break;
+                    }
+                case DynamicDisplayExtendInfoType.Game:
+                    {
+                        if (!string.IsNullOrWhiteSpace(DescFirst))
+                            sb.AppendLine().Append(DescFirst);
+                        if (!string.IsNullOrWhiteSpace(DescSecond))
+                            sb.AppendLine().Append(DescSecond);
+                        break;
+                    }
+            }
+            sb.AppendLine().Append(JumpUrl);
+            return sb.ToString();
+        }
+
+        public static DynamicDisplayExtendInfo GetByJson(JToken data)
+        {
+            DynamicDisplayExtendInfo info = null;
+            switch ((int)data["add_on_card_show_type"])
+            {
+                case 2:
+                    {
+                        data = data["attach_card"];
+                        info = new DynamicDisplayExtendInfo()
+                        {
+                            Type = DynamicDisplayExtendInfoType.Game,
+                            HeadText = (string)data["head_text"],
+                            Title = (string)data["title"],
+                            DescFirst = (string)data["desc_first"],
+                            DescSecond = (string)data["desc_second"],
+                            JumpUrl = (string)data["jump_url"],
+                        };
+                        break;
+                    }
+                case 6:
+                    {
+                        data = data["reserve_attach_card"];
+                        info = new DynamicDisplayExtendInfo()
+                        {
+                            Type = DynamicDisplayExtendInfoType.Reserve,
+                            Title = (string)data["title"],
+                            DescFirst = (string)data["desc_first"]["text"],
+                            DescSecond = (string)data["desc_second"],
+                            JumpUrl = (string)data["jump_url"],
+                            LivePlanStartTime = Utils.GetDateTime((long)data["livePlanStartTime"]),
+                        };
+                        break;
+                    }
+            }
+            return info;
+        }
+    }
+
+    public enum DynamicDisplayExtendInfoType
+    {
+        Game = 2,
+        Reserve = 6,
+    }
+
+    public class DynamicLottery
+    {
+        /// <summary>
+        /// 抽奖时间
+        /// </summary>
+        public DateTime LotteryTime;
+
+        /// <summary>
+        /// 发布时间
+        /// </summary>
+        public DateTime PublishTime;
+
+        /// <summary>
+        /// 一等奖内容
+        /// </summary>
+        public string FirstPrize;
+
+        /// <summary>
+        /// 一等奖个数
+        /// </summary>
+        public int FirstPrizeNum;
+
+        /// <summary>
+        /// 一等奖图像
+        /// </summary>
+        public string FirstPrizePic;
+
+        /// <summary>
+        /// 二等奖内容
+        /// </summary>
+        public string SecondPrize;
+
+        /// <summary>
+        /// 二等奖个数
+        /// </summary>
+        public int SecondPrizeNum;
+
+        /// <summary>
+        /// 二等奖图像
+        /// </summary>
+        public string SecondPrizePic;
+
+        /// <summary>
+        /// 三等奖内容
+        /// </summary>
+        public string ThirdPrize;
+
+        /// <summary>
+        /// 三等奖个数
+        /// </summary>
+        public int ThirdPrizeNum;
+
+        /// <summary>
+        /// 三等奖图像
+        /// </summary>
+        public string ThirdPrizePic;
+
+        DynamicLottery() { }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"一等奖: ({FirstPrizeNum}人)").Append("  >").Append(FirstPrize);
+            if (SecondPrizeNum > 0)
+            {
+                sb.AppendLine().AppendLine($"二等奖: ({SecondPrizeNum}人)").Append("  >").Append(SecondPrize);
+                if (ThirdPrizeNum > 0)
+                    sb.AppendLine().AppendLine($"三等奖: ({ThirdPrizeNum}人)").Append("  >").Append(ThirdPrize);
+            }
+            sb.AppendLine().Append("开奖时间: ").Append(LotteryTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            if (DateTime.Now > LotteryTime)
+                sb.Append(" (已开奖)");
+            return sb.ToString();
+        }
+
+        public static DynamicLottery GetByDynamicId(ulong id)
+        {
+            var info = JObject.Parse(Utils.HttpGET("https://api.vc.bilibili.com/lottery_svr/v1/lottery_svr/lottery_notice?dynamic_id=" + id));
+            if ((int)info["code"] != 0)
+                throw new Exception((string)info["message"]);
+            return GetByJson(info["data"]);
+        }
+
+        public static DynamicLottery GetByJson(JToken data)
+        {
+            var lottery = new DynamicLottery()
+            {
+                LotteryTime = Utils.GetDateTime((long)data["lottery_time"]),
+                PublishTime = Utils.GetDateTime((long)data["ts"]),
+                FirstPrize = (string)data["first_prize_cmt"],
+                FirstPrizeNum = (int)data["first_prize"],
+                FirstPrizePic = (string)data["first_prize_pic"],
+                SecondPrize = (string)data["second_prize_cmt"],
+                SecondPrizeNum = (int)data["second_prize"],
+                SecondPrizePic = (string)data["second_prize_pic"],
+                ThirdPrize = (string)data["third_prize_cmt"],
+                ThirdPrizeNum = (int)data["third_prize"],
+                ThirdPrizePic = (string)data["third_prize_pic"],
+            };
+            return lottery;
+        }
     }
 
     public static class DynamicExtensions
