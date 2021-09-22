@@ -16,5 +16,8 @@ namespace Ritsukage.Library.Data
 
         [Column("SmartMinecraftLink")]
         public bool SmartMinecraftLink { get; set; }
+
+        [Column("SmartPixivLink")]
+        public bool SmartPixivLink { get; set; }
     }
 }

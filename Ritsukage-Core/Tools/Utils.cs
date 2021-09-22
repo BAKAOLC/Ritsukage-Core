@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Downloader;
+using Newtonsoft.Json.Linq;
 using Ritsukage.Tools.Console;
 using System;
 using System.Collections;
@@ -16,6 +17,8 @@ namespace Ritsukage.Tools
     public static class Utils
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
+        public static string[] MatchUrls(string text)
+            => UrlRegex.Matches(text).Where(x => x.Success).Select(x => x.Value).ToArray();
 
         public static string ToSignNumberString(int num)
             => num < 0 ? num.ToString() : ("+" + num);
@@ -121,6 +124,26 @@ namespace Ritsukage.Tools
                 nativeUrl = shortUrl;
             }
             return nativeUrl;
+        }
+
+        public static async Task<Stream> GetFileStream(string url, string referer = null)
+        {
+            var config = new DownloadConfiguration()
+            {
+                BufferBlockSize = 4096,
+                ChunkCount = 5,
+                OnTheFlyDownload = false,
+                ParallelDownload = true
+            };
+            if (!string.IsNullOrWhiteSpace(referer))
+            {
+                config.RequestConfiguration = new RequestConfiguration()
+                {
+                    Referer = referer
+                };
+            }
+            var downloader = new DownloadService(config);
+            return await downloader.DownloadFileTaskAsync(url);
         }
 
         public static async Task<Stream> GetFileAsync(string url)

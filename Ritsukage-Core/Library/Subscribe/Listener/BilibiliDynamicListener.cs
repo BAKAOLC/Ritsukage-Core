@@ -5,10 +5,12 @@ using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
+using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -141,7 +143,17 @@ namespace Ritsukage.Library.Subscribe.Listener
                 }
                 msg.Add(dynamic.BaseToString());
                 records.Add(msg.ToArray());
-                await Task.Delay(3000);
+                var np = await dynamic.GetNinePicture();
+                if (np != null)
+                {
+                    var name = Path.GetTempFileName();
+                    var output = File.OpenWrite(name);
+                    var encoder = new PngEncoder();
+                    encoder.Encode(np, output);
+                    output.Dispose();
+                    records.Add(new object[] { CQCode.CQImage(name) });
+                }
+                await Task.Yield();
             }
             return records.ToArray();
         }
@@ -152,7 +164,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             foreach (var dynamic in result.Dynamics)
             {
                 records.Add(dynamic.ToString());
-                await Task.Delay(3000);
+                await Task.Yield();
             }
             return records.ToArray();
         }

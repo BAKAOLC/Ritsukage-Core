@@ -1,8 +1,12 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -53,6 +57,58 @@ namespace Ritsukage.Library.Bilibili.Model
         public User GetUserInfo() => User.Get(UserId);
 
         public Dynamic GetOriginal() => OriginalCard == null ? null : Get(OriginalCard.Id);
+
+        public async Task<Image<Rgba32>> GetNinePicture()
+        {
+            return await Task.Run(() =>
+            {
+                if (Pictures.Length < 9) return null;
+                var imgs = new List<Image<Rgba32>>();
+                foreach (var url in Pictures)
+                {
+                    var img = new NetworkImage(url);
+                    if (img == null) return null;
+                    switch (img.ImageFormatString)
+                    {
+                        case ".png":
+                            imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Png.PngDecoder()));
+                            break;
+                        case ".jpg":
+                            imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Jpeg.JpegDecoder()));
+                            break;
+                        case ".bmp":
+                            imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Bmp.BmpDecoder()));
+                            break;
+                        default:
+                            return null;
+                    }
+                }
+                var first = imgs.First();
+                if (imgs.All(x => x.Width == first.Width && x.Height == first.Height))
+                {
+                    var result = new Image<Rgba32>(first.Width * 3, first.Height * 3);
+                    for (int y = 0; y < 3; y++)
+                    {
+                        for (int x = 0; x < 3; x++)
+                        {
+                            int id = y * 3 + x;
+                            int px = first.Width * x;
+                            int py = first.Height * y;
+                            DrawImage(ref result, px, py, imgs[id]);
+                        }
+                    }
+                    return result;
+                }
+                return null;
+            });
+        }
+
+        static void DrawImage(ref Image<Rgba32> image, int dx, int dy, Image<Rgba32> draw)
+        {
+            for (int x = 0; x < draw.Width; x++)
+                for (int y = 0; y < draw.Height; y++)
+                    image[x + dx, y + dy] = draw[x, y];
+        }
 
         public string GetInfo()
             => new StringBuilder()

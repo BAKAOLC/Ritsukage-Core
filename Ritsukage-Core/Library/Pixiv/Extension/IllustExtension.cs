@@ -1,6 +1,7 @@
 ﻿using Downloader;
 using Ritsukage.Library.Pixiv.Model;
 using Ritsukage.Tools.Console;
+using Ritsukage.Tools.Download;
 using Ritsukage.Tools.Zip;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
@@ -28,50 +29,8 @@ namespace Ritsukage.Library.Pixiv.Extension
                 return null;
             }
             ConsoleLog.Debug(head, $"Succeed.");
-            var downloader = new DownloadService(new DownloadConfiguration()
-            {
-                BufferBlockSize = 4096,
-                ChunkCount = 5,
-                OnTheFlyDownload = false,
-                ParallelDownload = true,
-                RequestConfiguration = new RequestConfiguration()
-                {
-                    Referer = illust.Url
-                }
-            });
-            downloader.DownloadStarted += (s, e) =>
-            {
-                ConsoleLog.Debug(head, "Start downloading illust ugoira data pack...");
-                ConsoleLog.Debug(head, $"Start to download ({e.TotalBytesToReceive} bytes)");
-            };
-            DateTime _lastUpdate = DateTime.Now;
-            downloader.DownloadProgressChanged += (s, e) =>
-            {
-                var now = DateTime.Now;
-                if ((now - _lastUpdate).TotalSeconds > 3)
-                {
-                    ConsoleLog.Debug(head, $"Downloading... {e.ReceivedBytesSize}/{e.TotalBytesToReceive} ({e.ProgressPercentage:F2}%)");
-                    _lastUpdate = now;
-                }
-            };
-            downloader.DownloadFileCompleted += (s, e) =>
-            {
-                if (e.Error != null)
-                {
-                    ConsoleLog.Error(head, "Download failed.");
-                    ConsoleLog.Error(head, e.Error.GetFormatString(true));
-                }
-                else
-                {
-                    ConsoleLog.Debug(head, "Downloaded.");
-                }
-            };
-            using var stream = await downloader.DownloadFileTaskAsync(meta.ZipUrl);
-            if (stream == null)
-            {
-                return null;
-            }
-            stream.Seek(0, SeekOrigin.Begin);
+            var downloadFile = await DownloadManager.Download(meta.ZipUrl, illust.Url);
+            var stream = File.OpenRead(downloadFile);
             ConsoleLog.Debug(head, "Start to decompression ugoira data pack...");
             using var zip = ZipPackage.OpenStream(stream);
             List<Image<Rgba32>> imgs = new List<Image<Rgba32>>();

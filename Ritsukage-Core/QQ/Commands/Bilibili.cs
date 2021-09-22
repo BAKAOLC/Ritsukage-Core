@@ -4,10 +4,12 @@ using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -313,6 +315,16 @@ namespace Ritsukage.QQ.Commands
                     await e.Reply("该动态含有超过4张图像存在，任务时长可能较长，请耐心等候");
                 msg.Add(dynamic.BaseToString());
                 await e.Reply(msg.ToArray());
+                var np = await dynamic.GetNinePicture();
+                if (np != null)
+                {
+                    var name = Path.GetTempFileName();
+                    var output = File.OpenWrite(name);
+                    var encoder = new PngEncoder();
+                    encoder.Encode(np, output);
+                    output.Dispose();
+                    await e.Reply(CQCode.CQImage(name));
+                }
             }
             else
                 await e.Reply($"[Bilibili] 动态{id}信息获取失败");

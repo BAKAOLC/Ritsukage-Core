@@ -123,6 +123,39 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("获取mc修复列表")]
+        [CommandDescription("获取指定日期修复的问题内容")]
+        [ParameterDescription(1, "日期")]
+        public static async void GetMojiraList(SoraMessage e, DateTime date)
+        {
+            Issue[] issues = null;
+            try
+            {
+                issues = JiraExtension.GetMCFixedIssues(date);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Minecraft Jira Checker", ConsoleLog.ErrorLogBuilder(ex));
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("获取信息时发生错误：")
+                    .Append(ex.GetFormatString())
+                    .ToString());
+            }
+            if (issues.Length > 0)
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Minecraft Jira]")
+                    .AppendLine("哇哦，Bugjang杀死了这些虫子:")
+                    .AppendLine(string.Join(Environment.NewLine, issues.Select(x => x.Title)))
+                    .Append($"统计时间: {date.Date:yyyy-MM-dd HH:mm} ~ {date.Date.AddDays(1):yyyy-MM-dd HH:mm}")
+                    .ToString());
+            else
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Minecraft Jira]")
+                    .AppendLine("可恶，这段时间Bugjang一个虫子也没有杀")
+                    .Append($"统计时间: {date.Date:yyyy-MM-dd HH:mm} ~ {date.Date.AddDays(1):yyyy-MM-dd HH:mm}")
+                    .ToString());
+        }
+
+        [Command("获取mc修复列表")]
         [CommandDescription("获取指定时间区间内修复的问题内容")]
         [ParameterDescription(1, "起始时间")]
         [ParameterDescription(2, "结束时间")]
@@ -131,7 +164,7 @@ namespace Ritsukage.QQ.Commands
             Issue[] issues = null;
             try
             {
-                issues = Issue.GetIssues($"project = MC AND resolution = Fixed AND resolved > \"{from:yyyy-MM-dd HH:mm}\" AND resolved < \"{to:yyyy-MM-dd HH:mm}\" ORDER BY resolved ASC, updated DESC, created DESC");
+                issues = JiraExtension.GetMCFixedIssues(from, to);
             }
             catch (Exception ex)
             {

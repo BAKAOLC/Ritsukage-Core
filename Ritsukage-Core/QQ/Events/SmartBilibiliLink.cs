@@ -3,11 +3,13 @@ using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -361,6 +363,16 @@ namespace Ritsukage.QQ.Events
             }
             msg.Add(dynamic.BaseToString());
             await e.Reply(msg.ToArray());
+            var np = await dynamic.GetNinePicture();
+            if (np != null)
+            {
+                var name = Path.GetTempFileName();
+                var output = File.OpenWrite(name);
+                var encoder = new PngEncoder();
+                encoder.Encode(np, output);
+                output.Dispose();
+                await e.Reply(CQCode.CQImage(name));
+            }
         }
     }
 }

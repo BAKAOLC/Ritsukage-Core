@@ -353,7 +353,7 @@ namespace Ritsukage.QQ.Commands
                                         command.Method.Invoke(null, ps.ToArray());
                                         return;
                                     }
-                                    catch (FormatException ex)
+                                    catch (FormatException)
                                     {
                                     }
                                     catch (Exception ex)
