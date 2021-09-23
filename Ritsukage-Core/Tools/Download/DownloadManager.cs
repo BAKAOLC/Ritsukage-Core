@@ -37,6 +37,12 @@ namespace Ritsukage.Tools.Download
                 Path = path;
                 CacheTime = cacheTime;
             }
+
+            public void Delete()
+            {
+                if (Exists)
+                    File.Delete(Path);
+            }
         }
 
         /// <summary>
@@ -122,8 +128,12 @@ namespace Ritsukage.Tools.Download
                 };
             };
             var downloader = new DownloadService(config);
-            downloader.DownloadStarted += (s, e)
-                => DebugLog($"Start to download file from {url} ({e.TotalBytesToReceive} bytes)");
+            long fileSize = -1;
+            downloader.DownloadStarted += (s, e) =>
+            {
+                fileSize = e.TotalBytesToReceive;
+                DebugLog($"Start to download file from {url} ({e.TotalBytesToReceive} bytes)");
+            };
             DateTime _lastUpdate = DateTime.Now;
             downloader.DownloadProgressChanged += (s, e) =>
             {
@@ -142,7 +152,7 @@ namespace Ritsukage.Tools.Download
                     DebugLog($"Download {url} completed.");
             };
             using var stream = await downloader.DownloadFileTaskAsync(url);
-            if (stream == null)
+            if (stream == null || fileSize < 0)
                 return null;
             stream.Seek(0, SeekOrigin.Begin);
             #endregion
@@ -166,8 +176,8 @@ namespace Ritsukage.Tools.Download
                 Directory.CreateDirectory(folder);
 
             var buffer = new byte[SaveBufferSize];
-            var osize = 0;
             using var fileStream = File.OpenWrite(path);
+            int osize;
             while ((osize = stream.Read(buffer, 0, SaveBufferSize)) > 0)
                 fileStream.Write(buffer, 0, osize);
             fileStream.Close();
@@ -183,9 +193,14 @@ namespace Ritsukage.Tools.Download
                 {
                     var now = DateTime.Now;
                     var date = now.Date.AddHours(now.Hour - 1);
-                    var list = CacheDataList.Where(x => x.Value.CacheTime < date).Select(x => x.Key).ToArray();
+                    var list = CacheDataList.Where(x => x.Value.CacheTime < date).ToArray();
                     foreach (var data in list)
-                        CacheDataList.TryRemove(data, out _);
+                    {
+                        if (data.Value.Exists)
+                            data.Value.Delete();
+                        CacheDataList.TryRemove(data.Key, out _);
+                    }
+                    Save();
                     Thread.Sleep(ClearCacheDelay);
                 }
             })

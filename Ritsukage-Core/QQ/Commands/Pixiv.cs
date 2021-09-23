@@ -68,6 +68,8 @@ namespace Ritsukage.QQ.Commands
                             var url = ImageUrls.ToPixivCat(img.Medium);
                             var cache = await DownloadManager.Download(url);
                             if (string.IsNullOrEmpty(cache))
+                                cache = await DownloadManager.Download(img.Medium, detail.Url);
+                            if (string.IsNullOrEmpty(cache))
                                 msg.Add("[图像缓存失败]");
                             else
                             {

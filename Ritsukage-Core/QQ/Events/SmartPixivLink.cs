@@ -70,7 +70,7 @@ namespace Ritsukage.QQ.Events
                         Commands.Pixiv.GetIllustDetail(illust,
                             async (msg) => await args.SourceGroup.SendGroupMessage(
                                 (new object[] { CQCode.CQReply(args.Message.MessageId) }).Concat(msg).ToArray()),
-                            async (msg) => await args.SourceGroup.SendGroupMessage(msg), true);
+                            async (msg) => await args.SourceGroup.SendGroupMessage(msg));
                     }
                     catch
                     {
