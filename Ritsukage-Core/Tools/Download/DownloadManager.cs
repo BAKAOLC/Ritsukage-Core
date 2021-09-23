@@ -88,16 +88,18 @@ namespace Ritsukage.Tools.Download
         }
 
         static void Save()
-            => File.WriteAllText(CacheRecordFile, JsonConvert.SerializeObject(CacheDataList.Values));
+        {
+            lock (CacheDataList)
+            {
+                File.WriteAllText(CacheRecordFile, JsonConvert.SerializeObject(CacheDataList.Values));
+            }
+        }
 
         static void DebugLog(string text)
             => ConsoleLog.Debug("Downloader", text);
 
-        public static async Task<string> Download(string url, string referer = null)
+        public static async Task<string> GetCache(string url)
         {
-            Init();
-
-            #region 检查缓存
             while (DownloadingList.Contains(url))
                 await Task.Delay(100);
 
@@ -106,8 +108,23 @@ namespace Ritsukage.Tools.Download
                 if (cache.Exists)
                     return cache.Path;
                 else
+                {
                     CacheDataList.TryRemove(url, out _);
+                    Save();
+                }
             }
+
+            return null;
+        }
+
+        public static async Task<string> Download(string url, string referer = null)
+        {
+            Init();
+
+            #region 检查缓存
+            var _cache = await GetCache(url);
+            if (!string.IsNullOrEmpty(_cache))
+                return _cache;
             #endregion
 
             DownloadingList.Add(url);

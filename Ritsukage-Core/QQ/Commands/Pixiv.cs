@@ -30,14 +30,14 @@ namespace Ritsukage.QQ.Commands
                 {
                     if (!slient)
                     {
-                        Reply?.Invoke(new object[] { "数据获取失败，请稍后再试" });
+                        Reply?.Invoke(new object[] { $"数据(pid:{id})获取失败，请稍后再试" });
                     }
                 }
                 else
                 {
                     if (!slient)
                     {
-                        Reply?.Invoke(new object[] { "数据获取中，请稍后" });
+                        Reply?.Invoke(new object[] { $"数据(pid:{id})获取中，请稍后" });
                     }
                     ArrayList msg = new();
                     if (detail.IsUgoira)
@@ -47,14 +47,14 @@ namespace Ritsukage.QQ.Commands
                         {
                             if (!slient)
                             {
-                                Reply?.Invoke(new object[] { "动图数据获取失败" });
+                                Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取失败" });
                             }
                         }
                         else
                         {
                             if (!slient)
                             {
-                                Reply?.Invoke(new object[] { "动图数据获取成功，正在进行压缩..." });
+                                Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取成功，正在进行压缩..." });
                             }
                             var img = await ugoira.LimitGifScale(500, 500);
                             var file = await img.SaveGifToTempFile();
@@ -65,17 +65,27 @@ namespace Ritsukage.QQ.Commands
                     {
                         foreach (var img in detail.Images)
                         {
-                            var url = ImageUrls.ToPixivCat(img.Medium);
-                            var cache = await DownloadManager.Download(url);
+                            var cache = await DownloadManager.GetCache(img.Medium);
                             if (string.IsNullOrEmpty(cache))
-                                cache = await DownloadManager.Download(img.Medium, detail.Url);
-                            if (string.IsNullOrEmpty(cache))
-                                msg.Add("[图像缓存失败]");
-                            else
                             {
-                                ImageUtils.LimitImageScale(cache, 1500, 1500);
-                                msg.Add(CQCode.CQImage(cache));
+                                var url = ImageUrls.ToPixivCat(img.Medium);
+                                cache = await DownloadManager.GetCache(url);
+                                if (string.IsNullOrEmpty(cache))
+                                {
+                                    cache = await DownloadManager.Download(url);
+                                    if (string.IsNullOrEmpty(cache))
+                                    {
+                                        cache = await DownloadManager.Download(img.Medium, detail.Url);
+                                        if (string.IsNullOrEmpty(cache))
+                                        {
+                                            msg.Add("[图像缓存失败]");
+                                            continue;
+                                        }
+                                    }
+                                }
                             }
+                            ImageUtils.LimitImageScale(cache, 1500, 1500);
+                            msg.Add(CQCode.CQImage(cache));
                         }
                     }
                     msg.Add(detail.ToString());
@@ -87,7 +97,7 @@ namespace Ritsukage.QQ.Commands
                 ConsoleLog.Debug("QQ Command - Pixiv", ex.GetFormatString(true));
                 if (!slient)
                 {
-                    Reply?.Invoke(new object[] { "发生异常错误，任务已终止" });
+                    Reply?.Invoke(new object[] { $"处理作品(pid:{id})时发生异常错误，任务已终止" });
                 }
             }
         }
