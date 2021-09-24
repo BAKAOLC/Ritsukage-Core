@@ -18,10 +18,10 @@ namespace Ritsukage.QQ.Commands
         [Command("pixiv")]
         [CommandDescription("获取指定Pixiv作品信息")]
         [ParameterDescription(1, "Issust ID", "接口来自 https://github.com/mixmoe/HibiAPI")]
-        public static void GetIllustDetail(SoraMessage e, int id)
-            => GetIllustDetail(id, async (msg) => await e.ReplyToOriginal(msg), async (msg) => await e.Reply(msg));
+        public static void GetIllustDetail(SoraMessage e, params int[] ids)
+            => GetIllustDetail(ids, async (msg) => await e.ReplyToOriginal(msg), async (msg) => await e.Reply(msg));
 
-        public static async void GetIllustDetail(int id, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
+        static async void _GetIllustDetail(int id, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
         {
             try
             {
@@ -32,65 +32,59 @@ namespace Ritsukage.QQ.Commands
                     {
                         Reply?.Invoke(new object[] { $"数据(pid:{id})获取失败，请稍后再试" });
                     }
+                    return;
                 }
-                else
+                ArrayList msg = new();
+                if (detail.IsUgoira)
                 {
-                    if (!slient)
+                    var ugoira = await detail.GetUgoira();
+                    if (ugoira == null)
                     {
-                        Reply?.Invoke(new object[] { $"数据(pid:{id})获取中，请稍后" });
-                    }
-                    ArrayList msg = new();
-                    if (detail.IsUgoira)
-                    {
-                        var ugoira = await detail.GetUgoira();
-                        if (ugoira == null)
+                        if (!slient)
                         {
-                            if (!slient)
-                            {
-                                Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取失败" });
-                            }
-                        }
-                        else
-                        {
-                            if (!slient)
-                            {
-                                Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取成功，正在进行压缩..." });
-                            }
-                            var img = await ugoira.LimitGifScale(500, 500);
-                            var file = await img.SaveGifToTempFile();
-                            msg.Add(CQCode.CQImage(file));
+                            Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取失败" });
                         }
                     }
                     else
                     {
-                        foreach (var img in detail.Images)
+                        if (!slient)
                         {
-                            var cache = await DownloadManager.GetCache(img.Medium);
+                            Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取成功，正在进行压缩..." });
+                        }
+                        var img = await ugoira.LimitGifScale(500, 500);
+                        var file = await img.SaveGifToTempFile();
+                        msg.Add(CQCode.CQImage(file));
+                    }
+                }
+                else
+                {
+                    foreach (var img in detail.Images)
+                    {
+                        var cache = await DownloadManager.GetCache(img.Medium);
+                        if (string.IsNullOrEmpty(cache))
+                        {
+                            var url = ImageUrls.ToPixivCat(img.Medium);
+                            cache = await DownloadManager.GetCache(url);
                             if (string.IsNullOrEmpty(cache))
                             {
-                                var url = ImageUrls.ToPixivCat(img.Medium);
-                                cache = await DownloadManager.GetCache(url);
+                                cache = await DownloadManager.Download(url);
                                 if (string.IsNullOrEmpty(cache))
                                 {
-                                    cache = await DownloadManager.Download(url);
+                                    cache = await DownloadManager.Download(img.Medium, detail.Url);
                                     if (string.IsNullOrEmpty(cache))
                                     {
-                                        cache = await DownloadManager.Download(img.Medium, detail.Url);
-                                        if (string.IsNullOrEmpty(cache))
-                                        {
-                                            msg.Add("[图像缓存失败]");
-                                            continue;
-                                        }
+                                        msg.Add("[图像缓存失败]");
+                                        continue;
                                     }
                                 }
                             }
-                            ImageUtils.LimitImageScale(cache, 1500, 1500);
-                            msg.Add(CQCode.CQImage(cache));
                         }
+                        ImageUtils.LimitImageScale(cache, 1500, 1500);
+                        msg.Add(CQCode.CQImage(cache));
                     }
-                    msg.Add(detail.ToString());
-                    SendMessage?.Invoke(msg.ToArray());
                 }
+                msg.Add(detail.ToString());
+                SendMessage?.Invoke(msg.ToArray());
             }
             catch (Exception ex)
             {
@@ -100,6 +94,21 @@ namespace Ritsukage.QQ.Commands
                     Reply?.Invoke(new object[] { $"处理作品(pid:{id})时发生异常错误，任务已终止" });
                 }
             }
+        }
+
+        public static void GetIllustDetail(int id, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
+        {
+            if (!slient)
+                Reply?.Invoke(new object[] { $"数据(pid:{id})获取中，请稍后" });
+            _GetIllustDetail(id, Reply, SendMessage, slient);
+        }
+
+        public static void GetIllustDetail(int[] ids, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
+        {
+            if (!slient)
+                Reply?.Invoke(new object[] { $"数据(pid:{string.Join(", ", ids)})获取中，请稍后" });
+            foreach (var id in ids)
+                _GetIllustDetail(id, Reply, SendMessage, slient);
         }
 
         [Command("启用pixiv智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]

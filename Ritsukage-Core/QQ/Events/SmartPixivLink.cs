@@ -60,21 +60,24 @@ namespace Ritsukage.QQ.Events
                 }
             }
             var illusts = ids.Distinct().ToArray();
-            foreach (var illust in illusts)
+            if (illusts.Length > 0)
             {
-                if (!record.ContainsKey(illust) || (DateTime.Now - record[illust]).TotalSeconds >= DelayTime)
+                foreach (var illust in illusts)
                 {
-                    record[illust] = DateTime.Now;
-                    try
+                    if (!record.ContainsKey(illust) || (DateTime.Now - record[illust]).TotalSeconds >= DelayTime)
                     {
-                        Commands.Pixiv.GetIllustDetail(illust,
-                            async (msg) => await args.SourceGroup.SendGroupMessage(
-                                (new object[] { CQCode.CQReply(args.Message.MessageId) }).Concat(msg).ToArray()),
-                            async (msg) => await args.SourceGroup.SendGroupMessage(msg));
+                        record[illust] = DateTime.Now;
                     }
-                    catch
-                    {
-                    }
+                }
+                try
+                {
+                    Commands.Pixiv.GetIllustDetail(illusts,
+                        async (msg) => await args.SourceGroup.SendGroupMessage(
+                            (new object[] { CQCode.CQReply(args.Message.MessageId) }).Concat(msg).ToArray()),
+                        async (msg) => await args.SourceGroup.SendGroupMessage(msg));
+                }
+                catch
+                {
                 }
             }
         }
