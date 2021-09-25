@@ -1,5 +1,5 @@
 ﻿using Ritsukage.Library.Netease.CloudMusic;
-using Ritsukage.Tools.Download;
+using Ritsukage.Tools;
 using Sora.Entities.CQCodes;
 using System.Text;
 

@@ -4,7 +4,6 @@ using Ritsukage.Library.Data;
 using Ritsukage.Library.Graphic;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Ritsukage.Tools.Download;
 using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using Sora.EventArgs.SoraEvent;

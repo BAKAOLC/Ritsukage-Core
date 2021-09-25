@@ -2,8 +2,8 @@
 using Ritsukage.Library.Graphic;
 using Ritsukage.Library.Pixiv.Extension;
 using Ritsukage.Library.Pixiv.Model;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Ritsukage.Tools.Download;
 using Sora.Entities.CQCodes;
 using Sora.Enumeration.EventParamsType;
 using System;

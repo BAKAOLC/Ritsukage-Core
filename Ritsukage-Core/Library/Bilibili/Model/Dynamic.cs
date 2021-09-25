@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
-using Ritsukage.Tools.Download;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;

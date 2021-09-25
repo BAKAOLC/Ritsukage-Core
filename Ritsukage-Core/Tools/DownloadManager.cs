@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ritsukage.Tools.Console;
 
-namespace Ritsukage.Tools.Download
+namespace Ritsukage.Tools
 {
     public static class DownloadManager
     {
@@ -28,8 +28,8 @@ namespace Ritsukage.Tools.Download
             [JsonProperty("time")]
             public DateTime CacheTime { get; init; }
 
-            [JsonProperty("keep")]
-            public int KeepTime { get; init; }
+            [JsonProperty("to")]
+            public DateTime ClearTime { get; init; }
 
             [JsonIgnore]
             public bool Exists => File.Exists(Path);
@@ -39,7 +39,7 @@ namespace Ritsukage.Tools.Download
                 Url = url;
                 Path = path;
                 CacheTime = cacheTime;
-                KeepTime = keepTime;
+                ClearTime = cacheTime.AddSeconds(keepTime);
             }
 
             public void Delete()
@@ -228,7 +228,7 @@ namespace Ritsukage.Tools.Download
                 while (true)
                 {
                     var now = DateTime.Now;
-                    var list = CacheDataList.Where(x => x.Value.CacheTime.AddSeconds(x.Value.KeepTime) < now).ToArray();
+                    var list = CacheDataList.Where(x => x.Value.ClearTime < now).ToArray();
                     foreach (var data in list)
                     {
                         if (data.Value.Exists)

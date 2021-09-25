@@ -1,7 +1,6 @@
-﻿using Downloader;
-using Ritsukage.Library.Pixiv.Model;
+﻿using Ritsukage.Library.Pixiv.Model;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Ritsukage.Tools.Download;
 using Ritsukage.Tools.Zip;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
