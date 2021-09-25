@@ -28,14 +28,18 @@ namespace Ritsukage.Tools.Download
             [JsonProperty("time")]
             public DateTime CacheTime { get; init; }
 
+            [JsonProperty("keep")]
+            public int KeepTime { get; init; }
+
             [JsonIgnore]
             public bool Exists => File.Exists(Path);
 
-            public CacheData(string url, string path, DateTime cacheTime)
+            public CacheData(string url, string path, DateTime cacheTime, int keepTime)
             {
                 Url = url;
                 Path = path;
                 CacheTime = cacheTime;
+                KeepTime = keepTime;
             }
 
             public void Delete()
@@ -117,7 +121,7 @@ namespace Ritsukage.Tools.Download
             return null;
         }
 
-        public static async Task<string> Download(string url, string referer = null)
+        public static async Task<string> Download(string url, string referer = null, int keepTime = 3600)
         {
             Init();
 
@@ -180,12 +184,24 @@ namespace Ritsukage.Tools.Download
             #region 储存
             var file = CacheFileName;
             stream.SaveToFile(file);
-            CacheDataList.TryAdd(url, new CacheData(url, file, DateTime.Now));
+            CacheDataList.TryAdd(url, new CacheData(url, file, DateTime.Now, keepTime));
             Save();
             #endregion
 
             DownloadingList.Remove(url);
             return file;
+        }
+
+        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600)
+        {
+            var result = new string[urls.Length];
+            var tasks = new Task<string>[urls.Length];
+            for (int i = 0; i < urls.Length; i++)
+                tasks[i] = Download(urls[i], referer, keepTime);
+            Task.WaitAll(tasks);
+            for (int i = 0; i < urls.Length; i++)
+                result[i] = tasks[i].Result;
+            return Task.FromResult(result);
         }
 
         const int SaveBufferSize = 4096;
@@ -204,7 +220,7 @@ namespace Ritsukage.Tools.Download
             fileStream.Dispose();
         }
 
-        const int ClearCacheDelay = 1000 * 60 * 60;
+        const int ClearCacheDelay = 1000;
         static void StartCacheCleanupThread()
         {
             new Thread(() =>
@@ -212,8 +228,7 @@ namespace Ritsukage.Tools.Download
                 while (true)
                 {
                     var now = DateTime.Now;
-                    var date = now.Date.AddHours(now.Hour - 1);
-                    var list = CacheDataList.Where(x => x.Value.CacheTime < date).ToArray();
+                    var list = CacheDataList.Where(x => x.Value.CacheTime.AddSeconds(x.Value.KeepTime) < now).ToArray();
                     foreach (var data in list)
                     {
                         if (data.Value.Exists)

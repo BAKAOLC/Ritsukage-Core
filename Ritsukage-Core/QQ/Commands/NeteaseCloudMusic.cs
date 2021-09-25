@@ -1,4 +1,5 @@
 ﻿using Ritsukage.Library.Netease.CloudMusic;
+using Ritsukage.Tools.Download;
 using Sora.Entities.CQCodes;
 using System.Text;
 
@@ -32,7 +33,7 @@ namespace Ritsukage.QQ.Commands
                 var url = await CloudMusicApi.GetSongUrl(id, 128000);
                 if (url.Id == detail.Id && url.Id == id)
                 {
-                    await e.Reply(CQCode.CQImage(detail.Album.GetPicUrl(512, 512)),
+                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512))),
                         new StringBuilder().AppendLine()
                         .AppendLine("♬ " + detail.Name)
                         .AppendLine("✎ " + string.Join(" / ", detail.Artists))
@@ -43,7 +44,7 @@ namespace Ritsukage.QQ.Commands
                 }
                 else
                 {
-                    await e.Reply(CQCode.CQImage(detail.Album.GetPicUrl(512, 512)),
+                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512))),
                         new StringBuilder().AppendLine()
                         .AppendLine("♬ " + detail.Name)
                         .AppendLine("✎ " + string.Join(" / ", detail.Artists))

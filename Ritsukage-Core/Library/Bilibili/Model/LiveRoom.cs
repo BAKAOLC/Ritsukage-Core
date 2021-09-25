@@ -15,6 +15,10 @@ namespace Ritsukage.Library.Bilibili.Model
         /// </summary>
         public int UserId;
         /// <summary>
+        /// 用户名
+        /// </summary>
+        public string UserName;
+        /// <summary>
         /// 房间号
         /// </summary>
         public int Id;
@@ -80,6 +84,7 @@ namespace Ritsukage.Library.Bilibili.Model
         public string BaseToString()
             => new StringBuilder()
             .AppendLine("标题：" + Title)
+            .AppendLine("用户：" + UserName)
             .AppendLine("直播间ID：" + Id)
             .AppendLine("当前分区：" + ParentAreaName + "·" + AreaName)
             .AppendLine(LiveStatus switch
@@ -131,6 +136,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 {
                     FullDateTimePattern = "yyyy-MM-dd HH:mm:ss"
                 });
+            room.UserName = room.GetUserInfo().Name;
             return room;
         }
         #endregion

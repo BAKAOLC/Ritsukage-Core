@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
+using Ritsukage.Library.Graphic;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using Ritsukage.Tools.Download;
 using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using Sora.EventArgs.SoraEvent;
@@ -333,22 +335,24 @@ namespace Ritsukage.QQ.Events
         static async void SendUserInfo(GroupMessageEventArgs e, User user)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending user info: {user.Id}");
-            await e.Reply(CQCode.CQImage(user.FaceUrl), new StringBuilder()
+            var img = await DownloadManager.Download(user.FaceUrl);
+            await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
                 .AppendLine().Append(user.BaseToString()).ToString());
         }
 
         static async void SendVideoInfo(GroupMessageEventArgs e, Video video)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending video info: {video.AV}");
-            await e.Reply(CQCode.CQImage(video.PicUrl), new StringBuilder()
+            var img = await DownloadManager.Download(video.PicUrl);
+            await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
                     .AppendLine().Append(video.BaseToString()).ToString());
         }
 
         static async void SendLiveRoomInfo(GroupMessageEventArgs e, LiveRoom room)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending live room info: {room.Id}");
-            string cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl;
-            await e.Reply(CQCode.CQImage(cover), new StringBuilder()
+            string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl);
+            await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : CQCode.CQImage(cover), new StringBuilder()
                 .AppendLine().Append(room.BaseToString()).ToString());
         }
 
@@ -356,9 +360,16 @@ namespace Ritsukage.QQ.Events
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending dynamic info: {dynamic.Id}");
             ArrayList msg = new();
-            foreach (var pic in dynamic.Pictures)
+            var pics = await DownloadManager.Download(dynamic.Pictures);
+            foreach (var pic in pics)
             {
-                msg.Add(CQCode.CQImage(pic));
+                if (string.IsNullOrEmpty(pic))
+                    msg.Add("[图像下载失败]");
+                else
+                {
+                    ImageUtils.LimitImageScale(pic, 2048, 2048);
+                    msg.Add(CQCode.CQImage(pic));
+                }
                 msg.Add(Environment.NewLine);
             }
             msg.Add(dynamic.BaseToString());

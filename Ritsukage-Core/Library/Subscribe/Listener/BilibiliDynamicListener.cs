@@ -1,10 +1,12 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Ritsukage.Library.Data;
+using Ritsukage.Library.Graphic;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools.Console;
+using Ritsukage.Tools.Download;
 using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using System;
@@ -138,7 +140,14 @@ namespace Ritsukage.Library.Subscribe.Listener
                 ArrayList msg = new();
                 foreach (var pic in dynamic.Pictures)
                 {
-                    msg.Add(CQCode.CQImage(pic));
+                    var img = await DownloadManager.Download(pic);
+                    if (string.IsNullOrEmpty(img))
+                        msg.Add("[图像下载失败]");
+                    else
+                    {
+                        ImageUtils.LimitImageScale(img, 2048, 2048);
+                        msg.Add(CQCode.CQImage(img));
+                    }
                     msg.Add(Environment.NewLine);
                 }
                 msg.Add(dynamic.BaseToString());

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Download;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -60,14 +61,15 @@ namespace Ritsukage.Library.Bilibili.Model
 
         public async Task<Image<Rgba32>> GetNinePicture()
         {
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
-                if (Pictures.Length < 9) return null;
+                if (Pictures == null || Pictures.Length < 9) return null;
                 var imgs = new List<Image<Rgba32>>();
-                foreach (var url in Pictures)
+                var pics = await DownloadManager.Download(Pictures);
+                foreach (var file in pics)
                 {
-                    var img = new NetworkImage(url);
-                    if (img == null) return null;
+                    if (string.IsNullOrEmpty(file)) return null;
+                    var img = new FileImage(file);
                     switch (img.ImageFormatString)
                     {
                         case ".png":
