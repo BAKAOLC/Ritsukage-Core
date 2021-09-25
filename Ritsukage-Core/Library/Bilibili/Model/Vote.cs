@@ -64,7 +64,7 @@ namespace Ritsukage.Library.Bilibili.Model
             for (var i = 0; i < Options.Length; i++)
             {
                 sb.AppendLine();
-                sb.AppendLine("    * " + Options[i].BaseToString());
+                sb.Append("    * " + Options[i].BaseToString());
             }
             return sb.ToString();
         }
@@ -80,7 +80,7 @@ namespace Ritsukage.Library.Bilibili.Model
             for (var i = 0; i < Options.Length; i++)
             {
                 sb.AppendLine();
-                sb.AppendLine("    * " + Options[i].ToString());
+                sb.Append("    * " + Options[i].ToString());
             }
             return sb.ToString();
         }
@@ -147,11 +147,17 @@ namespace Ritsukage.Library.Bilibili.Model
         /// </summary>
         public string Desc;
         /// <summary>
+        /// 获得票数
+        /// </summary>
+        public int Count;
+        /// <summary>
         /// 图像链接
         /// </summary>
         public string ImageUrl;
 
         public string BaseToString() => Desc;
-        public override string ToString() => Desc + (string.IsNullOrWhiteSpace(ImageUrl) ? "" : ("    " + ImageUrl));
+        public string BaseToStringWithCount() => Desc + $"  ({Count}票)";
+        public override string ToString() => BaseToString() + (string.IsNullOrWhiteSpace(ImageUrl) ? "" : ("    " + ImageUrl));
+        public string ToStringWithCount() => BaseToStringWithCount() + (string.IsNullOrWhiteSpace(ImageUrl) ? "" : ("    " + ImageUrl));
     }
 }

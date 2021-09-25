@@ -170,7 +170,10 @@ namespace Ritsukage.Tools.Download
             };
             using var stream = await downloader.DownloadFileTaskAsync(url);
             if (stream == null || fileSize < 0)
+            {
+                DownloadingList.Remove(url);
                 return null;
+            }
             stream.Seek(0, SeekOrigin.Begin);
             #endregion
 
