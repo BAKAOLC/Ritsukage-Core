@@ -58,6 +58,21 @@ namespace Ritsukage.Library.Pixiv.Extension
             return gif;
         }
 
+        public static async Task<Stream> SaveGifToStream(this Image<Rgba32> image)
+        {
+            return await Task.Run(() =>
+            {
+                var stream = new MemoryStream();
+                var encoder = new GifEncoder
+                {
+                    ColorTableMode = GifColorTableMode.Local
+                };
+                encoder.Encode(image, stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                return stream;
+            });
+        }
+
         public static async Task<string> SaveGifToTempFile(this Image<Rgba32> image)
         {
             return await Task.Run(() =>
