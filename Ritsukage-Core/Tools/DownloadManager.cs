@@ -172,7 +172,19 @@ namespace Ritsukage.Tools
                 else
                     DebugLog($"Download {url} completed.");
             };
-            using var stream = await downloader.DownloadFileTaskAsync(url);
+            Stream stream = null;
+            try
+            {
+                stream = await downloader.DownloadFileTaskAsync(url);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Download Manager",
+                    "下载文件时发生错误："
+                    + url
+                    + Environment.NewLine
+                    + ex.GetFormatString(true));
+            }
             if (stream == null || fileSize < 0)
             {
                 DownloadingList.Remove(url);
@@ -184,6 +196,7 @@ namespace Ritsukage.Tools
             #region 储存
             var file = CacheFileName;
             stream.SaveToFile(file);
+            stream.Dispose();
             CacheDataList.TryAdd(url, new CacheData(url, file, DateTime.Now, keepTime));
             Save();
             #endregion
