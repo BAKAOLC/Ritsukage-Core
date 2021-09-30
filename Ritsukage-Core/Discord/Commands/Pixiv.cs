@@ -91,12 +91,17 @@ namespace Ritsukage.Discord.Commands
         {
             foreach (var id in ids)
             {
-                var message = await ReplyAsync($"``数据检索中…… Pixiv ID: {id}``");
+                var message = await ReplyAsync($"``Pixiv ID: {id} 数据检索中……``");
                 var detail = await Illust.Get(id);
                 if (detail == null)
                     await message.ModifyAsync(x => x.Content = $"数据(pid:{id})获取失败，请稍后再试");
                 else
                 {
+                    string content = $"``Pixiv ID: {id} 基础数据已获取，开始获取图像内容…… (total:{{0}} successed:{{1}} failed:{{2}})``";
+                    int total = detail.Images.Length;
+                    int successed = 0;
+                    int failed = 0;
+                    await message.ModifyAsync(x => x.Content = string.Format(content, total, successed, failed));
                     if (detail.IsUgoira)
                     {
                         var ugoira = await detail.GetUgoira();
@@ -129,6 +134,7 @@ namespace Ritsukage.Discord.Commands
                                         if (string.IsNullOrEmpty(cache))
                                         {
                                             i++;
+                                            await message.ModifyAsync(x => x.Content = string.Format(content, total, successed, ++failed));
                                             continue;
                                         }
                                     }
@@ -136,6 +142,7 @@ namespace Ritsukage.Discord.Commands
                             }
                             ImageUtils.LimitImageScale(cache, 1500, 1500);
                             streams[i++] = CopyFile(cache);
+                            await message.ModifyAsync(x => x.Content = string.Format(content, total, ++successed, failed));
                         }
                         for (i = 0; i < streams.Length; i++)
                         {

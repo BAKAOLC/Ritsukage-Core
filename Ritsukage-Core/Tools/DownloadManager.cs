@@ -205,15 +205,27 @@ namespace Ritsukage.Tools
             return file;
         }
 
-        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600)
+        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600, Action<int, string> UpdateAction = null)
         {
             var result = new string[urls.Length];
-            var tasks = new Task<string>[urls.Length];
+            var tasks1 = new Task<string>[urls.Length];
+            var tasks2 = new Task[urls.Length];
             for (int i = 0; i < urls.Length; i++)
-                tasks[i] = Download(urls[i], referer, keepTime);
-            Task.WaitAll(tasks);
+                tasks1[i] = Download(urls[i], referer, keepTime);
             for (int i = 0; i < urls.Length; i++)
-                result[i] = tasks[i].Result;
+            {
+                int id = i;
+                var task = tasks1[id];
+                tasks2[id] = Task.Run(() =>
+                {
+                    task.Wait();
+                    UpdateAction?.Invoke(id, task.Result);
+                });
+            }
+            Task.WaitAll(tasks1);
+            Task.WaitAll(tasks2);
+            for (int i = 0; i < urls.Length; i++)
+                result[i] = tasks1[i].Result;
             return Task.FromResult(result);
         }
 
