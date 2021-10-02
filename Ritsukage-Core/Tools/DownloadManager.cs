@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Ritsukage.Tools.Console;
+using System.ComponentModel;
 
 namespace Ritsukage.Tools
 {
@@ -121,7 +122,10 @@ namespace Ritsukage.Tools
             return null;
         }
 
-        public static async Task<string> Download(string url, string referer = null, int keepTime = 3600)
+        public static async Task<string> Download(string url, string referer = null, int keepTime = 3600,
+            Action<DownloadStartedEventArgs> DownloadStartedAction = null,
+            Action<DownloadProgressChangedEventArgs> DownloadProgressChangedAction = null,
+            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000)
         {
             Init();
 
@@ -134,63 +138,41 @@ namespace Ritsukage.Tools
             DownloadingList.Add(url);
 
             #region 下载
-            var config = new DownloadConfiguration()
+            Stream stream = null;
+            var task = new DownloadTask(url, referer);
+            task.UpdateInfoDelay = UpdateInfoDelay;
+            task.DownloadStarted += (s, e) =>
             {
-                BufferBlockSize = 4096,
-                ChunkCount = 5,
-                OnTheFlyDownload = false,
-                ParallelDownload = true
+                DebugLog($"Start to download file from {url} ({e.FileSize} bytes)");
+                DownloadStartedAction?.Invoke(e);
             };
-            if (!string.IsNullOrWhiteSpace(referer))
+            task.DownloadProgressChanged += (s, e) =>
             {
-                config.RequestConfiguration = new RequestConfiguration()
+                DebugLog($"Downloading {url}... {e.ReceivedBytes}/{e.TotalBytes} ({e.DownloadPercentage:F2}%)");
+                DownloadProgressChangedAction?.Invoke(e);
+            };
+            task.DownloadFileCompleted += (s, e) =>
+            {
+                if (e.Status == DownloadTaskStatus.Error)
                 {
-                    Referer = referer
-                };
-            };
-            var downloader = new DownloadService(config);
-            long fileSize = -1;
-            downloader.DownloadStarted += (s, e) =>
-            {
-                fileSize = e.TotalBytesToReceive;
-                DebugLog($"Start to download file from {url} ({e.TotalBytesToReceive} bytes)");
-            };
-            DateTime _lastUpdate = DateTime.Now;
-            downloader.DownloadProgressChanged += (s, e) =>
-            {
-                var now = DateTime.Now;
-                if ((now - _lastUpdate).TotalSeconds > 3)
-                {
-                    DebugLog($"Downloading {url}... {e.ReceivedBytesSize}/{e.TotalBytesToReceive} ({e.ProgressPercentage:F2}%)");
-                    _lastUpdate = now;
+                    if (e.Exception != null)
+                        DebugLog($"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
+                    else
+                        DebugLog($"Download {url} failed with unknown exception.");
                 }
-            };
-            downloader.DownloadFileCompleted += (s, e) =>
-            {
-                if (e.Error != null)
-                    DebugLog($"Download {url} failed." + Environment.NewLine + e.Error.GetFormatString(true));
+                else if (e.Status == DownloadTaskStatus.Cancelled)
+                    DebugLog($"Download {url} cancelled.");
                 else
                     DebugLog($"Download {url} completed.");
+                DownloadFileCompletedAction?.Invoke(e);
             };
-            Stream stream = null;
-            try
-            {
-                stream = await downloader.DownloadFileTaskAsync(url);
-            }
-            catch (Exception ex)
-            {
-                ConsoleLog.Error("Download Manager",
-                    "下载文件时发生错误："
-                    + url
-                    + Environment.NewLine
-                    + ex.GetFormatString(true));
-            }
-            if (stream == null || fileSize < 0)
+            await task.WaitForDownloadCompleted();
+            stream = task.FileStream;
+            if (task.FileSize == -1 || task.Status != DownloadTaskStatus.Completed)
             {
                 DownloadingList.Remove(url);
                 return null;
             }
-            stream.Seek(0, SeekOrigin.Begin);
             #endregion
 
             #region 储存
@@ -205,27 +187,15 @@ namespace Ritsukage.Tools
             return file;
         }
 
-        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600, Action<int, string> UpdateAction = null)
+        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600)
         {
             var result = new string[urls.Length];
-            var tasks1 = new Task<string>[urls.Length];
-            var tasks2 = new Task[urls.Length];
+            var tasks = new Task<string>[urls.Length];
             for (int i = 0; i < urls.Length; i++)
-                tasks1[i] = Download(urls[i], referer, keepTime);
+                tasks[i] = Download(urls[i], referer, keepTime);
+            Task.WaitAll(tasks);
             for (int i = 0; i < urls.Length; i++)
-            {
-                int id = i;
-                var task = tasks1[id];
-                tasks2[id] = Task.Run(() =>
-                {
-                    task.Wait();
-                    UpdateAction?.Invoke(id, task.Result);
-                });
-            }
-            Task.WaitAll(tasks1);
-            Task.WaitAll(tasks2);
-            for (int i = 0; i < urls.Length; i++)
-                result[i] = tasks1[i].Result;
+                result[i] = tasks[i].Result;
             return Task.FromResult(result);
         }
 
@@ -239,6 +209,7 @@ namespace Ritsukage.Tools
             var buffer = new byte[SaveBufferSize];
             using var fileStream = File.OpenWrite(path);
             int osize;
+            stream.Seek(0, SeekOrigin.Begin);
             while ((osize = stream.Read(buffer, 0, SaveBufferSize)) > 0)
                 fileStream.Write(buffer, 0, osize);
             fileStream.Close();
@@ -267,6 +238,226 @@ namespace Ritsukage.Tools
             {
                 IsBackground = true
             }.Start();
+        }
+    }
+
+    public class DownloadTask
+    {
+        public static readonly DownloadConfiguration DefaultConfig = new DownloadConfiguration()
+        {
+            BufferBlockSize = 4096,
+            ChunkCount = 5,
+            OnTheFlyDownload = false,
+            ParallelDownload = true
+        };
+
+        public static int DefaultUpdateInfoDelay = 1000;
+
+        public DownloadTaskStatus Status { get; private set; }
+        public Exception Exception { get; private set; }
+
+        public string Url { get; init; }
+        public DownloadService Service { get; init; }
+        public DownloadConfiguration DownloadConfig { get; init; }
+        public RequestConfiguration RequestConfig
+        {
+            get => DownloadConfig.RequestConfiguration;
+            set => DownloadConfig.RequestConfiguration = value;
+        }
+        public int UpdateInfoDelay = DefaultUpdateInfoDelay;
+
+        public DateTime BeginTime { get; private set; }
+        public DateTime DownloadStartedTime { get; private set; }
+        public DateTime DownloadCompletedTime { get; private set; }
+        public string FileName { get; private set; } = string.Empty;
+        public long FileSize { get; private set; } = -1;
+        public Stream FileStream { get; private set; }
+
+        public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
+        public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressChanged;
+        public event EventHandler<DownloadFileCompletedEventArgs> DownloadFileCompleted;
+
+        public DownloadTask(string url, string referer = null, DownloadConfiguration config = null)
+        {
+            Url = url;
+            DownloadConfig = config ?? DefaultConfig.Clone() as DownloadConfiguration;
+            if (!string.IsNullOrEmpty(referer))
+                RequestConfig.Referer = referer;
+            Service = new DownloadService(DownloadConfig);
+            Service.DownloadStarted += DownloadStartedEventHandler;
+            Service.DownloadProgressChanged += DownloadProgressChangedEventHandler;
+            Service.DownloadFileCompleted += DownloadFileCompletedEventHandler;
+        }
+
+        public void StartAsync()
+        {
+            switch (Status)
+            {
+                case DownloadTaskStatus.Connecting:
+                case DownloadTaskStatus.Downloading:
+                case DownloadTaskStatus.Completed:
+                    return;
+            }
+            Status = DownloadTaskStatus.Connecting;
+            StartDownload();
+        }
+
+        public void CancelAsync()
+        {
+            switch (Status)
+            {
+                case DownloadTaskStatus.Connecting:
+                case DownloadTaskStatus.Downloading:
+                    Service.CancelAsync();
+                    break;
+            }
+        }
+
+        Task _downloadTask;
+        void StartDownload()
+        {
+            FileStream = null;
+            Exception = null;
+            BeginTime = DateTime.Now;
+            DownloadStartedTime = default;
+            DownloadCompletedTime = default;
+            var task = Service.DownloadFileTaskAsync(Url);
+            _downloadTask = Task.Run(async () =>
+            {
+                Stream stream = null;
+                try
+                {
+                    FileStream = stream = await task;
+                }
+                catch (Exception ex)
+                {
+                    Status = DownloadTaskStatus.Error;
+                    Exception = ex;
+                    ConsoleLog.Error("Download Task",
+                        "下载文件时发生错误："
+                        + Url
+                        + Environment.NewLine
+                        + ex.GetFormatString(true));
+                }
+                TimeSpan duration = TimeSpan.Zero;
+                if (DownloadStartedTime != default)
+                    duration = DateTime.Now - DownloadStartedTime;
+                DownloadFileCompleted?.Invoke(Service, new DownloadFileCompletedEventArgs(Status, duration, stream, Exception));
+            });
+        }
+
+        public async Task WaitForDownloadCompleted()
+        {
+            switch (Status)
+            {
+                case DownloadTaskStatus.Completed:
+                    return;
+                case DownloadTaskStatus.WaitToStart:
+                case DownloadTaskStatus.Cancelled:
+                case DownloadTaskStatus.Error:
+                    StartDownload();
+                    break;
+            }
+            await _downloadTask;
+        }
+
+        DateTime _lastUpdateTime;
+
+        void DownloadStartedEventHandler(object sender, Downloader.DownloadStartedEventArgs eventArgs)
+        {
+            var now = DateTime.Now;
+            Status = DownloadTaskStatus.Downloading;
+            DownloadStartedTime = now;
+            _lastUpdateTime = now;
+            FileName = eventArgs.FileName;
+            FileSize = eventArgs.TotalBytesToReceive;
+            DownloadStarted?.Invoke(Service, new DownloadStartedEventArgs(eventArgs.FileName, eventArgs.TotalBytesToReceive));
+        }
+
+        void DownloadProgressChangedEventHandler(object sender, Downloader.DownloadProgressChangedEventArgs eventArgs)
+        {
+            var now = DateTime.Now;
+            var dt = (now - _lastUpdateTime).TotalMilliseconds;
+            if (dt >= UpdateInfoDelay)
+            {
+                _lastUpdateTime = now;
+                DownloadProgressChanged?.Invoke(Service, new DownloadProgressChangedEventArgs(eventArgs.TotalBytesToReceive, eventArgs.ReceivedBytesSize,
+                    eventArgs.BytesPerSecondSpeed, eventArgs.AverageBytesPerSecondSpeed, now - DownloadStartedTime));
+            }
+        }
+
+        void DownloadFileCompletedEventHandler(object sender, AsyncCompletedEventArgs eventArgs)
+        {
+            DownloadCompletedTime = DateTime.Now;
+            Status = DownloadTaskStatus.Completed;
+            if (eventArgs.Cancelled)
+                Status = DownloadTaskStatus.Cancelled;
+            if (eventArgs.Error != null)
+                Status = DownloadTaskStatus.Error;
+        }
+
+        public delegate void EventHandler<in TEventArgs>(DownloadService service, TEventArgs eventArgs)
+            where TEventArgs : EventArgs;
+    }
+
+    public enum DownloadTaskStatus
+    {
+        WaitToStart,
+        Connecting,
+        Downloading,
+        Completed,
+        Cancelled,
+        Error
+    }
+
+    public class DownloadStartedEventArgs : EventArgs
+    {
+        public string FileName { get; init; }
+        public long FileSize { get; init; }
+
+        public DownloadStartedEventArgs(string filename, long filesize)
+        {
+            FileName = filename;
+            FileSize = filesize;
+        }
+    }
+
+    public class DownloadProgressChangedEventArgs : EventArgs
+    {
+        public long TotalBytes { get; init; }
+        public long ReceivedBytes { get; init; }
+        public double BytesPerSecondSpeed { get; init; }
+        public double AverageBytesPerSecondSpeed { get; init; }
+        public double DownloadPercentage { get; init; }
+        public TimeSpan DownloadDuration { get; init; }
+
+        public DownloadProgressChangedEventArgs(long totalBytes, long receivedBytes, double bytesPerSecondSpeed, double averageBytesPerSecondSpeed, TimeSpan downloadDuration)
+        {
+            TotalBytes = totalBytes;
+            ReceivedBytes = receivedBytes;
+            BytesPerSecondSpeed = bytesPerSecondSpeed;
+            AverageBytesPerSecondSpeed = averageBytesPerSecondSpeed;
+            DownloadPercentage = (double)ReceivedBytes * 100 / TotalBytes;
+            DownloadDuration = downloadDuration;
+        }
+    }
+
+    public class DownloadFileCompletedEventArgs : EventArgs
+    {
+        public DownloadTaskStatus Status { get; init; }
+
+        public Exception Exception { get; init; }
+
+        public Stream FileStream { get; init; }
+
+        public TimeSpan DownloadDuration { get; init; }
+
+        public DownloadFileCompletedEventArgs(DownloadTaskStatus status, TimeSpan downloadDuration, Stream fileStream = null, Exception exception = null)
+        {
+            Status = status;
+            FileStream = fileStream;
+            Exception = exception;
+            DownloadDuration = downloadDuration;
         }
     }
 }

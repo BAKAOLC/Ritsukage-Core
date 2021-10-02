@@ -17,7 +17,11 @@ namespace Ritsukage.Library.Pixiv.Extension
 {
     public static class IllustExtension
     {
-        public static async Task<Image<Rgba32>> GetUgoira(this Illust illust)
+        public static async Task<Image<Rgba32>> GetUgoira(this Illust illust,
+            Action<DownloadStartedEventArgs> DownloadStartedAction = null,
+            Action<DownloadProgressChangedEventArgs> DownloadProgressChangedAction = null,
+            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null,
+            int UpdateInfoDelay = 1000)
         {
             string head = $"Pixiv Illust(id: {illust.Id})";
             ConsoleLog.Debug(head, $"Getting illust ugoira metadata...");
@@ -28,7 +32,11 @@ namespace Ritsukage.Library.Pixiv.Extension
                 return null;
             }
             ConsoleLog.Debug(head, $"Succeed.");
-            var downloadFile = await DownloadManager.Download(meta.ZipUrl, illust.Url);
+            var downloadFile = await DownloadManager.Download(meta.ZipUrl, illust.Url,
+                DownloadStartedAction: DownloadStartedAction,
+                DownloadProgressChangedAction: DownloadProgressChangedAction,
+                DownloadFileCompletedAction: DownloadFileCompletedAction,
+                UpdateInfoDelay: UpdateInfoDelay);
             var stream = File.OpenRead(downloadFile);
             ConsoleLog.Debug(head, "Start to decompression ugoira data pack...");
             using var zip = ZipPackage.OpenStream(stream);
