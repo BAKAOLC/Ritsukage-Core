@@ -1,14 +1,18 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Ritsukage.Library.Data;
+using Ritsukage.Library.Graphic;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using SixLabors.ImageSharp.Formats.Png;
 using Sora.Entities.CQCodes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -80,13 +84,16 @@ namespace Ritsukage.Library.Subscribe.Listener
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                     foreach (var bot in bots)
                                     {
-                                        if (GroupList.GetInfo(bot, group).GroupId == group)
+                                        _ = Task.Factory.StartNew(async () =>
                                         {
-                                            ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
                                             var api = Program.QQServer.GetSoraApi(bot);
-                                            foreach (var m in qqmsg)
-                                                await api.SendGroupMessage(group, m);
-                                        }
+                                            if (await api.CheckHasGroup(group))
+                                            {
+                                                ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
+                                                foreach (var m in qqmsg)
+                                                    await api.SendGroupMessage(group, m);
+                                            }
+                                        });
                                     }
                                 }
                             }
@@ -102,18 +109,21 @@ namespace Ritsukage.Library.Subscribe.Listener
                             {
                                 if (ulong.TryParse(id, out var cid))
                                 {
-                                    ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
-                                    try
-                                    {
-                                        var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
-                                        foreach (var m in dcmsg)
-                                        {
-                                            await channel?.SendMessageAsync(m);
-                                        }
-                                    }
-                                    catch
-                                    {
-                                    }
+                                    _ = Task.Factory.StartNew(async () =>
+                                      {
+                                          ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
+                                          try
+                                          {
+                                              var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                              foreach (var m in dcmsg)
+                                              {
+                                                  await channel?.SendMessageAsync(m);
+                                              }
+                                          }
+                                          catch
+                                          {
+                                          }
+                                      });
                                 }
                             }
                         }
@@ -130,23 +140,40 @@ namespace Ritsukage.Library.Subscribe.Listener
                 ArrayList msg = new();
                 foreach (var pic in dynamic.Pictures)
                 {
-                    msg.Add(CQCode.CQImage(pic));
+                    var img = await DownloadManager.Download(pic);
+                    if (string.IsNullOrEmpty(img))
+                        msg.Add("[图像下载失败]");
+                    else
+                    {
+                        ImageUtils.LimitImageScale(img, 2048, 2048);
+                        msg.Add(CQCode.CQImage(img));
+                    }
                     msg.Add(Environment.NewLine);
                 }
                 msg.Add(dynamic.BaseToString());
                 records.Add(msg.ToArray());
-                await Task.Delay(3000);
+                var np = await dynamic.GetNinePicture();
+                if (np != null)
+                {
+                    var name = Path.GetTempFileName();
+                    var output = File.OpenWrite(name);
+                    var encoder = new PngEncoder();
+                    encoder.Encode(np, output);
+                    output.Dispose();
+                    records.Add(new object[] { CQCode.CQImage(name) });
+                }
+                await Task.Yield();
             }
             return records.ToArray();
         }
-        
+
         static async Task<string[]> GetDiscordMessageChain(BilibiliDynamicCheckResult result)
         {
             List<string> records = new();
             foreach (var dynamic in result.Dynamics)
             {
                 records.Add(dynamic.ToString());
-                await Task.Delay(3000);
+                await Task.Yield();
             }
             return records.ToArray();
         }

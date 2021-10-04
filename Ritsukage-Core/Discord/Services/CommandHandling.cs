@@ -37,7 +37,10 @@ namespace Ritsukage.Discord.Services
             if (msg.Author.Id == _discord.CurrentUser.Id || msg.Author.IsBot || msg.Author.IsWebhook) return;
             int pos = 0;
             if (msg.HasCharPrefix('+', ref pos))
-                await _commands.ExecuteAsync(new SocketCommandContext(_discord, msg), pos, _services);
+            {
+                _ = _commands.ExecuteAsync(new SocketCommandContext(_discord, msg), pos, _services);
+            }
+            await Task.CompletedTask;
         }
 
 #pragma warning disable CA1822 // 将成员标记为 static

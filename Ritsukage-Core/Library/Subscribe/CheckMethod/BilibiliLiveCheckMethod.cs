@@ -4,7 +4,6 @@ using Ritsukage.Library.Data;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.Tools.Console;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Subscribe.CheckMethod
@@ -23,19 +22,9 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
         public override async Task<CheckResult.Base.SubscribeCheckResult> Check()
         {
             LiveRoom room = null;
-            User user = null;
             try
             {
                 room = LiveRoom.Get(RoomId);
-            }
-            catch (Exception e)
-            {
-                ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
-                return new BilibiliLiveCheckResult();
-            }
-            try
-            {
-                user = room?.GetUserInfo();
             }
             catch (Exception e)
             {
@@ -78,7 +67,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                             UpdateType = updated,
                             RoomId = room.Id,
                             Title = room.Title,
-                            User = user.Name,
+                            User = room.UserName,
                             Area = room.ParentAreaName + "·" + room.AreaName,
                             Online = room.Online,
                             Status = room.LiveStatus,
@@ -106,7 +95,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 UpdateType = BilibiliLiveUpdateType.Initialization,
                 RoomId = room.Id,
                 Title = room.Title,
-                User = user.Name,
+                User = room.UserName,
                 Area = room.ParentAreaName + "·" + room.AreaName,
                 Online = room.Online,
                 Status = room.LiveStatus,

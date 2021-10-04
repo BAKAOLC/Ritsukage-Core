@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Ritsukage.Library.ShouSi;
+using System;
+using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -8,6 +10,23 @@ namespace Ritsukage.QQ.Commands
         [Command]
         [CommandDescription("检查bot延迟", "返回消息从qq端接收到bot开始处理所花的时间")]
         public static async void Ping(SoraMessage e) => await e.ReplyToOriginal($"Pong! {(DateTime.Now - e.Time).TotalMilliseconds:F0} ms");
+
+        [Command]
+        [CommandDescription("检查bot延迟", "返回消息从qq端接收到bot开始处理所花的时间")]
+        public static async void DoublePing(SoraMessage e)
+        {
+            var receive = (DateTime.Now - e.Time).TotalMilliseconds;
+            var currentTime = DateTime.Now;
+            var (status, _) = await e.ReplyToOriginal("Pong!");
+            var send = (DateTime.Now - currentTime).TotalMilliseconds;
+            if (status == Sora.Enumeration.ApiType.APIStatusType.OK)
+            await e.ReplyToOriginal(new StringBuilder()
+                .AppendLine("[Double Ping Result]")
+                .AppendLine($"Receive: {receive:F0} ms")
+                .AppendLine($"Send: {send:F0} ms")
+                .Append($"Send Status: {status}")
+                .ToString());
+        }
 
         [Command("时间", "time")]
         [CommandDescription("获取bot服务器当前的时间")]
@@ -47,6 +66,14 @@ namespace Ritsukage.QQ.Commands
                 await e.Reply($"当前为新新新北欧历时间：\nxxxx年xx月xx-{day}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
             else
                 await e.Reply($"当前为新新新北欧历时间：\nxxxx年xx月xx日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+        }
+
+        [Command("寿司历")]
+        [CommandDescription("获取bot服务器当前的时间所对应的寿司历时间")]
+        public static async void ShouSi(SoraMessage e)
+        {
+            var date = ShouSiDate.Now;
+            await e.Reply($"当前为寿司历时间：\n{(date.Year == 1 ? "元" : date.Year.ToString("D2"))}年{date.Month:D2}月{date.Day:D2}日 {date.TimeOfDay.Hours:D2}时{date.TimeOfDay.Minutes:D2}分{date.TimeOfDay.Seconds:D2}秒");
         }
 
         [Command("高考倒计时")]

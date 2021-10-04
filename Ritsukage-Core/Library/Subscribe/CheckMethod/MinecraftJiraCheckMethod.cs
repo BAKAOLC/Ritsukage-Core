@@ -18,12 +18,12 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
         {
             bool update = false;
             var now = DateTime.Now;
-            var from = now.Date.AddHours(now.Hour - 1);
-            var to = from.AddHours(1);
+            var to = now.Date.AddHours(now.Hour);
+            var from = to.AddHours(-1);
             Issue[] issues = null;
             try
             {
-                issues = Issue.GetIssues($"project = MC AND resolution = Fixed AND resolved > \"{from:yyyy-MM-dd HH:mm}\" AND resolved < \"{to:yyyy-MM-dd HH:mm}\" ORDER BY resolved ASC, updated DESC, created DESC");
+                issues = JiraExtension.GetMCFixedIssues(from, to);
             }
             catch (Exception e)
             {

@@ -30,7 +30,7 @@ namespace Ritsukage.Tools
 
         public string DataUriScheme { get => MimeMapping.GetMimeMapping(ImageFormatString); }
 
-        public string ToBase64()
+        public byte[] GetBytes()
         {
             using MemoryStream ms = new MemoryStream();
             Source.Save(ms, ImageFormat);
@@ -38,7 +38,12 @@ namespace Ritsukage.Tools
             ms.Position = 0;
             ms.Read(arr, 0, (int)ms.Length);
             ms.Close();
-            return Convert.ToBase64String(arr);
+            return arr;
+        }
+
+        public string ToBase64()
+        {
+            return Convert.ToBase64String(GetBytes());
         }
 
         public string ToBase64File() => "base64://" + ToBase64();
@@ -297,7 +302,7 @@ namespace Ritsukage.Tools
     {
         public NetworkImage(string url)
         {
-            Source = (Bitmap)url.GetImageFromNet().Clone();
+            Source = (Bitmap)ImageExtensions.GetImageFromNet(url).Clone();
         }
     }
 
@@ -407,12 +412,12 @@ namespace Ritsukage.Tools
 
     public static class ImageExtensions
     {
-        public static Image GetImageFromNet(this string url, Action<WebRequest> requestAction = null, Func<WebResponse, Image> responseFunc = null)
+        public static Image GetImageFromNet(string url, Action<WebRequest> requestAction = null, Func<WebResponse, Image> responseFunc = null)
         {
-            return new Uri(url).GetImageFromNet(requestAction, responseFunc);
+            return GetImageFromNet(new Uri(url), requestAction, responseFunc);
         }
 
-        public static Image GetImageFromNet(this Uri url, Action<WebRequest> requestAction = null, Func<WebResponse, Image> responseFunc = null)
+        public static Image GetImageFromNet(Uri url, Action<WebRequest> requestAction = null, Func<WebResponse, Image> responseFunc = null)
         {
             Image img;
             try

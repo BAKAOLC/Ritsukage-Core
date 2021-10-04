@@ -5,6 +5,7 @@ using Ritsukage.Library.Data;
 using Ritsukage.Library.Subscribe.CheckMethod;
 using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using Sora.Entities.CQCodes;
 using System.Collections;
@@ -81,12 +82,15 @@ namespace Ritsukage.Library.Subscribe.Listener
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                     foreach (var bot in bots)
                                     {
-                                        if (GroupList.GetInfo(bot, group).GroupId == group)
+                                        _ = Task.Factory.StartNew(async () =>
                                         {
-                                            ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
                                             var api = Program.QQServer.GetSoraApi(bot);
-                                            await api.SendGroupMessage(group, qqmsg);
-                                        }
+                                            if (await api.CheckHasGroup(group))
+                                            {
+                                                ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
+                                                await api.SendGroupMessage(group, qqmsg);
+                                            }
+                                        });
                                     }
                                 }
                             }
@@ -102,15 +106,18 @@ namespace Ritsukage.Library.Subscribe.Listener
                             {
                                 if (ulong.TryParse(id, out var cid))
                                 {
-                                    ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
-                                    try
+                                    _ = Task.Factory.StartNew(async () =>
                                     {
-                                        var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
-                                        await channel?.SendMessageAsync(dcmsg);
-                                    }
-                                    catch
-                                    {
-                                    }
+                                        ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
+                                        try
+                                        {
+                                            var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                            await channel?.SendMessageAsync(dcmsg);
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    });
                                 }
                             }
                         }
@@ -132,11 +139,13 @@ namespace Ritsukage.Library.Subscribe.Listener
             ArrayList msgs = new();
             if (result.UpdateType == BilibiliLiveUpdateType.Initialization)
             {
-                msgs.Add(CQCode.CQImage(result.Cover));
+                var img = DownloadManager.Download(result.Cover).Result;
+                msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img));
                 msgs.Add(new StringBuilder()
                     .AppendLine()
                     .AppendLine($"{result.User} 直播状态初始化")
                     .AppendLine("标题：" + result.Title)
+                    .AppendLine("用户：" + result.User)
                     .AppendLine("直播间ID：" + result.RoomId)
                     .AppendLine("当前分区：" + result.Area)
                     .AppendLine("当前气人值：" + result.Online)
@@ -152,11 +161,13 @@ namespace Ritsukage.Library.Subscribe.Listener
                     msgs.Add($"{result.User} 下播莉(轮播中)……");
                 else
                 {
-                    msgs.Add(CQCode.CQImage(result.Cover));
+                    var img = DownloadManager.Download(result.Cover).Result;
+                    msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img));
                     msgs.Add(new StringBuilder()
                         .AppendLine()
                         .AppendLine($"{result.User} 直播开始啦")
                         .AppendLine("标题：" + result.Title)
+                        .AppendLine("用户：" + result.User)
                         .AppendLine("直播间ID：" + result.RoomId)
                         .AppendLine("当前分区：" + result.Area)
                         .AppendLine("当前气人值：" + result.Online)
@@ -170,6 +181,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 msgs.Add(new StringBuilder()
                     .AppendLine($"{result.User} 更换了直播标题")
                     .AppendLine("标题：" + result.Title)
+                    .AppendLine("用户：" + result.User)
                     .AppendLine("直播间ID：" + result.RoomId)
                     .AppendLine("当前分区：" + result.Area)
                     .AppendLine("当前气人值：" + result.Online)
@@ -179,7 +191,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             }
             return msgs.ToArray();
         }
-        
+
         static string GetDiscordMessageChain(BilibiliLiveCheckResult result)
         {
             if (result.UpdateType == BilibiliLiveUpdateType.Initialization)
@@ -187,6 +199,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                     .AppendLine(result.Cover)
                     .AppendLine($"{result.User} 直播状态初始化")
                     .AppendLine("标题：" + result.Title)
+                    .AppendLine("用户：" + result.User)
                     .AppendLine("直播间ID：" + result.RoomId)
                     .AppendLine("当前分区：" + result.Area)
                     .AppendLine("当前气人值：" + result.Online)
@@ -204,6 +217,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                         .AppendLine(result.Cover)
                         .AppendLine($"{result.User} 直播开始啦")
                         .AppendLine("标题：" + result.Title)
+                        .AppendLine("用户：" + result.User)
                         .AppendLine("直播间ID：" + result.RoomId)
                         .AppendLine("当前分区：" + result.Area)
                         .AppendLine("当前气人值：" + result.Online)
@@ -215,6 +229,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 return new StringBuilder()
                     .AppendLine($"{result.User} 更换了直播标题")
                     .AppendLine("标题：" + result.Title)
+                    .AppendLine("用户：" + result.User)
                     .AppendLine("直播间ID：" + result.RoomId)
                     .AppendLine("当前分区：" + result.Area)
                     .AppendLine("当前气人值：" + result.Online)

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Downloader;
+using Newtonsoft.Json.Linq;
 using Ritsukage.Tools.Console;
 using System;
 using System.Collections;
@@ -16,6 +17,11 @@ namespace Ritsukage.Tools
     public static class Utils
     {
         public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
+        public static string[] MatchUrls(string text)
+            => UrlRegex.Matches(text).Where(x => x.Success).Select(x => x.Value).ToArray();
+
+        public static string ToSignNumberString(int num)
+            => num < 0 ? num.ToString() : ("+" + num);
 
         public static string ToUrlParameter(Dictionary<string, object> param = null)
         {
@@ -118,6 +124,26 @@ namespace Ritsukage.Tools
                 nativeUrl = shortUrl;
             }
             return nativeUrl;
+        }
+
+        public static async Task<Stream> GetFileStream(string url, string referer = null)
+        {
+            var config = new DownloadConfiguration()
+            {
+                BufferBlockSize = 4096,
+                ChunkCount = 5,
+                OnTheFlyDownload = false,
+                ParallelDownload = true
+            };
+            if (!string.IsNullOrWhiteSpace(referer))
+            {
+                config.RequestConfiguration = new RequestConfiguration()
+                {
+                    Referer = referer
+                };
+            }
+            var downloader = new DownloadService(config);
+            return await downloader.DownloadFileTaskAsync(url);
         }
 
         public static async Task<Stream> GetFileAsync(string url)
@@ -232,18 +258,21 @@ namespace Ritsukage.Tools
             return length;
         }
 
+        public static string GetUserAgent(string os = "app")
+            => os switch
+            {
+                "app" => "Mozilla/5.0 BiliDroid/5.51.1 (bbcallen@gmail.com)",
+                "pc" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
+                _ => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
+            };
+
         public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")
         {
             request.Accept = "application/json, text/plain, */*";
             request.Headers.Add("Accept-Encoding", "gzip, deflate, br");
             request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.9");
             request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-            request.UserAgent = os switch
-            {
-                "app" => "Mozilla/5.0 BiliDroid/5.51.1 (bbcallen@gmail.com)",
-                "pc" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
-                _ => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
-            };
+            request.UserAgent = GetUserAgent(os);
             if (!string.IsNullOrEmpty(cookie))
                 request.Headers.Add("cookie", cookie);
         }

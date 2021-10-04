@@ -217,18 +217,18 @@ namespace Ritsukage.QQ
         public async ValueTask<(APIStatusType apiStatus, int messageId)> Repeat()
         {
             if (Event is GroupMessageEventArgs gm)
-                await gm.Repeat();
+                return await gm.Repeat();
             else if (Event is PrivateMessageEventArgs pm)
-                await pm.Repeat();
+                return await pm.Repeat();
             return (APIStatusType.Failed, -1);
         }
 
         public async ValueTask<(APIStatusType apiStatus, int messageId)> Reply(params object[] msg)
         {
             if (Event is GroupMessageEventArgs gm)
-                await gm.Reply(msg);
+                return await gm.Reply(msg);
             else if (Event is PrivateMessageEventArgs pm)
-                await pm.Reply(msg);
+                return await pm.Reply(msg);
             return (APIStatusType.Failed, -1);
         }
 
@@ -236,9 +236,9 @@ namespace Ritsukage.QQ
         {
             msg = (new object[] { CQCode.CQReply(Message.MessageId) }).Concat(msg).ToArray();
             if (Event is GroupMessageEventArgs gm)
-                await gm.Reply(msg);
+                return await gm.Reply(msg);
             else if (Event is PrivateMessageEventArgs pm)
-                await pm.Reply(msg);
+                return await pm.Reply(msg);
             return (APIStatusType.Failed, -1);
         }
 
@@ -254,7 +254,7 @@ namespace Ritsukage.QQ
             return (APIStatusType.Failed, -1);
         }
 
-        public async ValueTask SendPrivateMessage(params object[] msg)
+        public async ValueTask<(APIStatusType apiStatus, int messageId)> SendPrivateMessage(params object[] msg)
             => await Sender.SendPrivateMessage(msg);
 
         public async Task<UserCoins> GetCoins()

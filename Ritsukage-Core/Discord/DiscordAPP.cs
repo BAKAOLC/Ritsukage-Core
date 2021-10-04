@@ -29,7 +29,6 @@ namespace Ritsukage.Discord
             Client.Ready += ReadyAsync;
             Client.MessageReceived += MessageReceivedAsync;
             Command = Service.GetRequiredService<CommandService>();
-            _ = Service.GetRequiredService<FirstCommingRole>();
             _ = Service.GetRequiredService<CommandHandling>().InitializeAsync();
         }
 
@@ -91,7 +90,10 @@ namespace Ritsukage.Discord
             Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is ServiceAttribute).Any())?.ToArray() ?? Array.Empty<Type>();
             foreach (var service in cosType)
                 map.AddSingleton(service);
-            return map.BuildServiceProvider();
+            var provider = map.BuildServiceProvider();
+            foreach (var service in cosType)
+                provider.GetRequiredService(service);
+            return provider;
         }
 
         Task LogClientAsync(LogMessage msg)

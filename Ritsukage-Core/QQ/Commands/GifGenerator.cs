@@ -5,6 +5,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.CQCodes;
+using Sora.Enumeration.ApiType;
 using System;
 using System.IO;
 using System.Linq;
@@ -49,6 +50,9 @@ namespace Ritsukage.QQ.Commands
             await e.Reply(CQCode.CQImage(file));
             await e.RemoveCoins(5);
         }
+
+        static Func<Image<Rgba32>, Image<Rgba32>> Stack(Func<Image<Rgba32>, Image<Rgba32>> func1, Func<Image<Rgba32>, Image<Rgba32>> func2)
+            => (gif) => func2.Invoke(func1.Invoke(gif));
 
         static async Task Worker(SoraMessage e, Func<Image<Rgba32>, Image<Rgba32>> func)
         {
@@ -97,5 +101,30 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "图像")]
         public static async void MoveDown(SoraMessage e)
             => await Worker(e, CreateMoveDown);
+
+        //0b10000 倒流
+        //0b01000 左行
+        //0b00100 右行
+        //0b00010 上行
+        //0b00001 下行
+        [Command]
+        [CommandDescription("生成gif")]
+        [ParameterDescription(1, "行动模式", "0b11111 位数依次对应倒流、左、右、上、下操作")]
+        [ParameterDescription(2, "图像")]
+        public static async void Gif(SoraMessage e, int rot)
+        {
+            Func<Image<Rgba32>, Image<Rgba32>> func = null;
+            if ((rot & 0b10000) == 0b10000) //倒流
+                func = func == null ? CreateReverse : Stack(func, CreateReverse);
+            if ((rot & 0b1000) == 0b1000) //左行
+                func = func == null ? CreateMoveLeft : Stack(func, CreateMoveLeft);
+            if ((rot & 0b100) == 0b100) //右行
+                func = func == null ? CreateMoveRight : Stack(func, CreateMoveRight);
+            if ((rot & 0b10) == 0b10) //上行
+                func = func == null ? CreateMoveUp : Stack(func, CreateMoveUp);
+            if ((rot & 0b1) == 0b1) //下行
+                func = func == null ? CreateMoveDown : Stack(func, CreateMoveDown);
+            await Worker(e, func);
+        }
     }
 }
