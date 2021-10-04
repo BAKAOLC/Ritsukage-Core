@@ -156,7 +156,7 @@ namespace Ritsukage.Discord.Commands
                             }
                         }
                     }
-                    ImageUtils.LimitImageScale(cache, 1500, 1500);
+                    ImageUtils.LimitImageScale(cache, 2500, 2500);
                     streams[current] = CopyFile(cache);
                     successed++;
                     await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);

@@ -79,7 +79,7 @@ namespace Ritsukage.QQ.Commands
                                 }
                             }
                         }
-                        ImageUtils.LimitImageScale(cache, 1500, 1500);
+                        ImageUtils.LimitImageScale(cache, 2500, 2500);
                         msg.Add(CQCode.CQImage(cache));
                     }
                 }
