@@ -258,18 +258,21 @@ namespace Ritsukage.Tools
             return length;
         }
 
+        public static string GetUserAgent(string os = "app")
+            => os switch
+            {
+                "app" => "Mozilla/5.0 BiliDroid/5.51.1 (bbcallen@gmail.com)",
+                "pc" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
+                _ => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
+            };
+
         public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")
         {
             request.Accept = "application/json, text/plain, */*";
             request.Headers.Add("Accept-Encoding", "gzip, deflate, br");
             request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.9");
             request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-            request.UserAgent = os switch
-            {
-                "app" => "Mozilla/5.0 BiliDroid/5.51.1 (bbcallen@gmail.com)",
-                "pc" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
-                _ => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
-            };
+            request.UserAgent = GetUserAgent(os);
             if (!string.IsNullOrEmpty(cookie))
                 request.Headers.Add("cookie", cookie);
         }

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ritsukage.Tools.Console;
 using System.ComponentModel;
+using System.Net;
 
 namespace Ritsukage.Tools
 {
@@ -139,8 +140,10 @@ namespace Ritsukage.Tools
 
             #region 下载
             Stream stream = null;
-            var task = new DownloadTask(url, referer);
-            task.UpdateInfoDelay = UpdateInfoDelay;
+            var task = new DownloadTask(url, referer)
+            {
+                UpdateInfoDelay = UpdateInfoDelay
+            };
             task.DownloadStarted += (s, e) =>
             {
                 DebugLog($"Start to download file from {url} ({e.FileSize} bytes)");
@@ -243,7 +246,7 @@ namespace Ritsukage.Tools
 
     public class DownloadTask
     {
-        public static readonly DownloadConfiguration DefaultConfig = new DownloadConfiguration()
+        public static readonly DownloadConfiguration DefaultDownloadConfig = new DownloadConfiguration()
         {
             BufferBlockSize = 4096,
             ChunkCount = 5,
@@ -277,12 +280,17 @@ namespace Ritsukage.Tools
         public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressChanged;
         public event EventHandler<DownloadFileCompletedEventArgs> DownloadFileCompleted;
 
-        public DownloadTask(string url, string referer = null, DownloadConfiguration config = null)
+        public DownloadTask(string url, string referer = null, string cookie = null, DownloadConfiguration config = null)
         {
             Url = url;
-            DownloadConfig = config ?? DefaultConfig.Clone() as DownloadConfiguration;
+            DownloadConfig = config ?? DefaultDownloadConfig.Clone() as DownloadConfiguration;
+            RequestConfig.AutomaticDecompression = DecompressionMethods.All;
+            RequestConfig.AllowAutoRedirect = true;
+            RequestConfig.UserAgent = Utils.GetUserAgent("pc");
             if (!string.IsNullOrEmpty(referer))
                 RequestConfig.Referer = referer;
+            if (!string.IsNullOrEmpty(cookie))
+                RequestConfig.Headers["cookie"] = cookie;
             Service = new DownloadService(DownloadConfig);
             Service.DownloadStarted += DownloadStartedEventHandler;
             Service.DownloadProgressChanged += DownloadProgressChangedEventHandler;
