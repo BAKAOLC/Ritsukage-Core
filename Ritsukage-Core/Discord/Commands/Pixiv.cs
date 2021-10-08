@@ -90,10 +90,10 @@ namespace Ritsukage.Discord.Commands
                 foreach (var img in detail.Images)
                 {
                     current++;
-                    var cache = await DownloadManager.GetCache(img.Medium);
+                    var cache = await DownloadManager.GetCache(img.Large);
                     if (string.IsNullOrEmpty(cache))
                     {
-                        var url = ImageUrls.ToPixivCat(img.Medium);
+                        var url = ImageUrls.ToPixivCat(img.Large);
                         cache = await DownloadManager.GetCache(url);
                         if (string.IsNullOrEmpty(cache))
                         {
@@ -123,7 +123,7 @@ namespace Ritsukage.Discord.Commands
                                 }, UpdateInfoDelay: 2000);
                             if (string.IsNullOrEmpty(cache))
                             {
-                                cache = await DownloadManager.Download(img.Medium, detail.Url,
+                                cache = await DownloadManager.Download(img.Large, detail.Url,
                                     DownloadStartedAction: async (e) =>
                                     {
                                         receivedbyte = 0;
