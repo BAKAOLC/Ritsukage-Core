@@ -173,8 +173,19 @@ namespace Ritsukage.Tools
             stream = task.FileStream;
             if (task.FileSize == -1 || task.Status != DownloadTaskStatus.Completed)
             {
-                DownloadingList.Remove(url);
-                return null;
+                try
+                {
+                    stream = await Utils.GetFileAsync(url, referer);
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLog.Error("Download Manager", "简易下载再次失败" + Environment.NewLine + ex.GetFormatString());
+                }
+                if (stream == null)
+                {
+                    DownloadingList.Remove(url);
+                    return null;
+                }
             }
             #endregion
 

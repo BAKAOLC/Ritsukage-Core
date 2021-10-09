@@ -81,6 +81,7 @@ namespace Ritsukage.Discord.Commands
                 {
                     var img = await ugoira.LimitGifScale(350, 350);
                     var stream = await img.SaveGifToStream();
+                    stream = await GIFsicle.Compress(stream);
                     await Context.Channel.SendFileAsync(stream, $"pixiv-{id}.gif");
                 }
             }
@@ -157,7 +158,7 @@ namespace Ritsukage.Discord.Commands
                         }
                     }
                     ImageUtils.LimitImageScale(cache, 2500, 2500);
-                    streams[current] = await GIFsicle.Compress(CopyFile(cache));
+                    streams[current] = CopyFile(cache);
                     successed++;
                     await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
                 }

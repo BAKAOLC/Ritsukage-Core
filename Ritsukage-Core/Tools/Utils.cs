@@ -146,10 +146,12 @@ namespace Ritsukage.Tools
             return await downloader.DownloadFileTaskAsync(url);
         }
 
-        public static async Task<Stream> GetFileAsync(string url)
+        public static async Task<Stream> GetFileAsync(string url, string referer = null)
         {
             using HttpClient hc = new HttpClient();
             var resp = await hc.GetAsync(url);
+            if (!string.IsNullOrEmpty(referer))
+                resp.Headers.Add("referer", referer);
             var stream = await resp.Content.ReadAsStreamAsync();
             stream.Seek(0, SeekOrigin.Begin);
             return stream;
