@@ -8,6 +8,7 @@ using Sora.Entities.CQCodes;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Collections;
+using System.IO;
 using System.Text;
 
 namespace Ritsukage.QQ.Commands
@@ -52,8 +53,11 @@ namespace Ritsukage.QQ.Commands
                             Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取成功，正在进行压缩..." });
                         }
                         var img = await ugoira.LimitGifScale(500, 500);
-                        var file = await img.SaveGifToTempFile();
-                        msg.Add(CQCode.CQImage(file));
+                        var stream = await img.SaveGifToStream();
+                        stream = await GIFsicle.Compress(stream);
+                        var filename = Path.GetTempFileName();
+                        GIFsicle.SaveStreamToFile(stream, filename);
+                        msg.Add(CQCode.CQImage(filename));
                     }
                 }
                 else

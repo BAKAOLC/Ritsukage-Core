@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolUnitTestProject", "Tool
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandDocumentGenerator", "CommandDocumentGenerator\CommandDocumentGenerator.csproj", "{959BB2E4-61F6-4976-A3EE-E72DCC641BED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GifCompress", "GifCompress\GifCompress.csproj", "{3EE902D4-9310-4865-8F0D-76AAEEA809E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{959BB2E4-61F6-4976-A3EE-E72DCC641BED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{959BB2E4-61F6-4976-A3EE-E72DCC641BED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{959BB2E4-61F6-4976-A3EE-E72DCC641BED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EE902D4-9310-4865-8F0D-76AAEEA809E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EE902D4-9310-4865-8F0D-76AAEEA809E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EE902D4-9310-4865-8F0D-76AAEEA809E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EE902D4-9310-4865-8F0D-76AAEEA809E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

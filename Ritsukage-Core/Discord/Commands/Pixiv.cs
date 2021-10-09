@@ -157,7 +157,7 @@ namespace Ritsukage.Discord.Commands
                         }
                     }
                     ImageUtils.LimitImageScale(cache, 2500, 2500);
-                    streams[current] = CopyFile(cache);
+                    streams[current] = await GIFsicle.Compress(CopyFile(cache));
                     successed++;
                     await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
                 }
