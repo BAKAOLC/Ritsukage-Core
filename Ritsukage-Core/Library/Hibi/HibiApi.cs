@@ -6,17 +6,23 @@ namespace Ritsukage.Library.Hibi
 {
     public class HibiApi
     {
-        const string Host = "https://api.obfs.dev";
+        static readonly string[] Host =
+        {
+            "https://api.kyomotoi.moe",
+            "https://api.obfs.dev"
+        };
 
         public static JToken Get(string path, Dictionary<string, object> param = null)
         {
             if (param != null && param.Count > 0)
                 path += "?" + Utils.ToUrlParameter(param);
-            var result = Utils.HttpGET(Host + path);
-            if (string.IsNullOrWhiteSpace(result))
-                return null;
-            else
-                return JToken.Parse(result);
+            foreach (var host in Host)
+            {
+                var result = Utils.HttpGET(host + path);
+                if (!string.IsNullOrWhiteSpace(result))
+                    return JToken.Parse(result);
+            }
+            return null;
         }
     }
 }
