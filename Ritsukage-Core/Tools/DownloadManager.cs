@@ -264,8 +264,10 @@ namespace Ritsukage.Tools
         {
             BufferBlockSize = 4096,
             ChunkCount = 5,
+            MaxTryAgainOnFailover = 5,
             OnTheFlyDownload = false,
-            ParallelDownload = true
+            ParallelDownload = true,
+            Timeout = 20000
         };
 
         public static int DefaultUpdateInfoDelay = 1000;

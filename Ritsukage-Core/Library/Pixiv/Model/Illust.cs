@@ -164,7 +164,7 @@ namespace Ritsukage.Library.Pixiv.Model
             => Medium;
 
         public static string ToPixivCat(string url)
-            => url.Replace("https://i.pximg.net", "https://i.pixiv.cat");
+            => url.Replace("https://i.pximg.net", "https://i.pixiv.re");
     }
 
     public struct IllustAuthor
