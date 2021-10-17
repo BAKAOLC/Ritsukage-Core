@@ -103,7 +103,7 @@ namespace Ritsukage.QQ.Commands
             }
             if (user != null)
             {
-                await e.Reply(CQCode.CQImage(await DownloadManager.Download(user.FaceUrl)), new StringBuilder()
+                await e.Reply(CQCode.CQImage(await DownloadManager.Download(user.FaceUrl, enableSimpleDownload: true)), new StringBuilder()
                     .AppendLine()
                     .AppendLine(user.BaseToString())
                     .ToString());
@@ -127,7 +127,7 @@ namespace Ritsukage.QQ.Commands
             }
             if (room != null)
             {
-                string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl);
+                string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl, enableSimpleDownload: true);
                 await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : CQCode.CQImage(cover), new StringBuilder()
                     .AppendLine().Append(room.BaseToString()).ToString());
             }
@@ -188,7 +188,7 @@ namespace Ritsukage.QQ.Commands
             }
             if (video != null)
             {
-                var img = await DownloadManager.Download(video.PicUrl);
+                var img = await DownloadManager.Download(video.PicUrl, enableSimpleDownload: true);
                 await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
                     .AppendLine().Append(video.BaseToString()).ToString());
             }
@@ -265,7 +265,7 @@ namespace Ritsukage.QQ.Commands
             }
             if (audio != null)
             {
-                var img = await DownloadManager.Download(audio.CoverUrl);
+                var img = await DownloadManager.Download(audio.CoverUrl, enableSimpleDownload: true);
                 await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
                     .AppendLine().Append(audio.BaseToString()).ToString());
             }
@@ -311,7 +311,7 @@ namespace Ritsukage.QQ.Commands
                 ArrayList msg = new();
                 if (dynamic.Pictures.Length > 4)
                     await e.Reply("该动态含有超过4张图像存在，任务时长可能较长，请耐心等候");
-                var pics = await DownloadManager.Download(dynamic.Pictures);
+                var pics = await DownloadManager.Download(dynamic.Pictures, enableSimpleDownload: true);
                 foreach (var pic in pics)
                 {
                     if (string.IsNullOrEmpty(pic))

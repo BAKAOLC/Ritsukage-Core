@@ -126,7 +126,7 @@ namespace Ritsukage.Tools
         public static async Task<string> Download(string url, string referer = null, int keepTime = 3600,
             Action<DownloadStartedEventArgs> DownloadStartedAction = null,
             Action<DownloadProgressChangedEventArgs> DownloadProgressChangedAction = null,
-            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000)
+            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000, bool enableSimpleDownload = false)
         {
             Init();
 
@@ -173,13 +173,16 @@ namespace Ritsukage.Tools
             stream = task.FileStream;
             if (task.FileSize == -1 || task.Status != DownloadTaskStatus.Completed)
             {
-                try
+                if (enableSimpleDownload)
                 {
-                    stream = await Utils.GetFileAsync(url, referer);
-                }
-                catch (Exception ex)
-                {
-                    ConsoleLog.Error("Download Manager", "简易下载再次失败" + Environment.NewLine + ex.GetFormatString());
+                    try
+                    {
+                        stream = await Utils.GetFileAsync(url, referer);
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleLog.Error("Download Manager", "简易下载再次失败" + Environment.NewLine + ex.GetFormatString());
+                    }
                 }
                 if (stream == null)
                 {
@@ -201,12 +204,12 @@ namespace Ritsukage.Tools
             return file;
         }
 
-        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600)
+        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600, bool enableSimpleDownload = false)
         {
             var result = new string[urls.Length];
             var tasks = new Task<string>[urls.Length];
             for (int i = 0; i < urls.Length; i++)
-                tasks[i] = Download(urls[i], referer, keepTime);
+                tasks[i] = Download(urls[i], referer, keepTime, enableSimpleDownload: enableSimpleDownload);
             Task.WaitAll(tasks);
             for (int i = 0; i < urls.Length; i++)
                 result[i] = tasks[i].Result;

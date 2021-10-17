@@ -140,7 +140,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 ArrayList msg = new();
                 foreach (var pic in dynamic.Pictures)
                 {
-                    var img = await DownloadManager.Download(pic);
+                    var img = await DownloadManager.Download(pic, enableSimpleDownload: true);
                     if (string.IsNullOrEmpty(img))
                         msg.Add("[图像下载失败]");
                     else

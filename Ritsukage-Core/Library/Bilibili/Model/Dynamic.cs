@@ -64,7 +64,7 @@ namespace Ritsukage.Library.Bilibili.Model
             {
                 if (Pictures == null || Pictures.Length < 9) return null;
                 var imgs = new List<Image<Rgba32>>();
-                var pics = await DownloadManager.Download(Pictures);
+                var pics = await DownloadManager.Download(Pictures, enableSimpleDownload: true);
                 foreach (var file in pics)
                 {
                     if (string.IsNullOrEmpty(file)) return null;
