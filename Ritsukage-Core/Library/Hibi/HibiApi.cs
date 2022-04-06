@@ -8,7 +8,6 @@ namespace Ritsukage.Library.Hibi
     {
         static readonly string[] Host =
         {
-            "https://api.kyomotoi.moe",
             "https://api.obfs.dev"
         };
 

@@ -113,6 +113,7 @@ namespace Ritsukage.QQ.Commands
             {
                 await tip.DeleteAsync();
                 await e.ReplyToOriginal("操作成功");
+                return;
             }
             await e.ReplyToOriginal($"不存在ID为 {id} 的提示消息");
         }

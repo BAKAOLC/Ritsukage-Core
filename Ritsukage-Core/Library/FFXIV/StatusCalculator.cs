@@ -5,13 +5,13 @@ namespace Ritsukage.Library.FFXIV
 {
     public static class StatusCalculator
     {
-        const int nlv = 3300;
+        const int nlv = 1900;
 
-        static readonly string Title = $"版本 5.0  Lv80  等级基数: {nlv}";
+        static readonly string Title = $"版本 6.0  Lv90  等级基数: {nlv}";
 
         public struct CriticalHitResult
         {
-            const int bn = 380;
+            const int bn = 400;
 
             const int fn = 200;
 
@@ -49,7 +49,7 @@ namespace Ritsukage.Library.FFXIV
 
         public struct DirectHitResult
         {
-            const int bn = 380;
+            const int bn = 400;
 
             const int fn = 550;
 
@@ -79,9 +79,9 @@ namespace Ritsukage.Library.FFXIV
 
         public struct DeterminationResult
         {
-            const int bn = 340;
+            const int bn = 390;
 
-            const double fn = 130;
+            const double fn = 140;
 
             public int Value { get; set; }
 
@@ -108,7 +108,7 @@ namespace Ritsukage.Library.FFXIV
 
         public struct TenacityResult
         {
-            const int bn = 380;
+            const int bn = 400;
 
             const double fn = 100;
 
@@ -143,7 +143,7 @@ namespace Ritsukage.Library.FFXIV
 
         public struct SpeedResult
         {
-            const int bn = 380;
+            const int bn = 400;
 
             const double fn = 130;
 

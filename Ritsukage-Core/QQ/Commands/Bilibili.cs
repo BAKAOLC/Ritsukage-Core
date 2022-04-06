@@ -362,7 +362,8 @@ namespace Ritsukage.QQ.Commands
             try
             {
                 var result = JObject.Parse(BiliLive.StartLive(roomid, area, data.BilibiliCookie));
-                if (!string.IsNullOrEmpty((string)result["message"]))
+                var msg = (string)result["message"];
+                if (!(string.IsNullOrEmpty(msg) || msg == "0"))
                     await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
                 else
                 {

@@ -15,11 +15,7 @@ namespace Ritsukage.Discord.Commands
     public class Pixiv : ModuleBase<SocketCommandContext>
     {
         static readonly string TitleContent = "``Pixiv ID: {0} 基础数据已获取，开始获取图像内容……``";
-        static readonly string InfoContent = new StringBuilder()
-            .AppendLine("``Current: {0} / {1}``")
-            .AppendLine("``Progress: {2} / {3}  {4:F2}%``")
-            .Append("``Successed: {5}  Failed: {6}``")
-            .ToString();
+        static readonly string InfoContent = "``Current: {0} / {1} Successed: {2}  Failed: {3}``";
 
         static async Task UpdateMessage(IUserMessage message, string text)
         {
@@ -45,36 +41,12 @@ namespace Ritsukage.Discord.Commands
             int total = detail.Images.Length;
             int successed = 0, failed = 0;
             int current = -1;
-            long receivedbyte = 0, totalbyte = 0;
-            double percentage = 0;
-            await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
+            await UpdateInfo(info, current + 1, total, successed, failed);
             if (detail.IsUgoira)
             {
                 current++;
-                var ugoira = await detail.GetUgoira(
-                 DownloadStartedAction: async (e) =>
-                 {
-                     receivedbyte = 0;
-                     totalbyte = e.FileSize;
-                     percentage = 0;
-                     await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                 },
-                 DownloadProgressChangedAction: async (e) =>
-                 {
-                     receivedbyte = e.ReceivedBytes;
-                     totalbyte = e.TotalBytes;
-                     percentage = e.DownloadPercentage;
-                     await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                 },
-                 DownloadFileCompletedAction: async (e) =>
-                 {
-                     if (e.Status == DownloadTaskStatus.Completed)
-                     {
-                         receivedbyte = totalbyte;
-                         percentage = 100;
-                         await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                     }
-                 }, UpdateInfoDelay: 2000);
+                await UpdateInfo(info, current + 1, total, successed, failed);
+                var ugoira = await detail.GetUgoira();
                 if (ugoira == null)
                     await UpdateInfo(message, $"动图数据(pid: {id})获取失败");
                 else
@@ -82,93 +54,73 @@ namespace Ritsukage.Discord.Commands
                     var img = await ugoira.LimitGifScale(350, 350);
                     var stream = await img.SaveGifToStream();
                     stream = await GIFsicle.Compress(stream);
-                    await Context.Channel.SendFileAsync(stream, $"pixiv-{id}.gif");
+                    try
+                    {
+                        await Context.Channel.SendFileAsync(stream, $"pixiv-{id}.gif");
+                    }
+                    catch (Exception ex)
+                    {
+                        await Context.Channel.SendMessageAsync($"gif发送失败 pid:{id} \n {ex.Message}");
+                    }
                 }
             }
             else
             {
-                Stream[] streams = new Stream[total];
+                string[] streams = new string[total];
                 foreach (var img in detail.Images)
                 {
                     current++;
-                    var cache = await DownloadManager.GetCache(img.Large);
+                    var cache = await DownloadManager.GetCache(img.Original);
                     if (string.IsNullOrEmpty(cache))
                     {
-                        var url = ImageUrls.ToPixivCat(img.Large);
+                        var url = ImageUrls.ToPixivCat(img.Original);
                         cache = await DownloadManager.GetCache(url);
                         if (string.IsNullOrEmpty(cache))
                         {
-                            cache = await DownloadManager.Download(url,
-                                DownloadStartedAction: async (e) =>
-                                {
-                                    receivedbyte = 0;
-                                    totalbyte = e.FileSize;
-                                    percentage = 0;
-                                    await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                                },
-                                DownloadProgressChangedAction: async (e) =>
-                                {
-                                    receivedbyte = e.ReceivedBytes;
-                                    totalbyte = e.TotalBytes;
-                                    percentage = e.DownloadPercentage;
-                                    await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                                },
-                                DownloadFileCompletedAction: async (e) =>
-                                {
-                                    if (e.Status == DownloadTaskStatus.Completed)
-                                    {
-                                        receivedbyte = totalbyte;
-                                        percentage = 100;
-                                        await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                                    }
-                                }, UpdateInfoDelay: 2000);
+                            await UpdateInfo(info, current + 1, total, successed, failed);
+                            cache = await DownloadManager.Download(url);
                             if (string.IsNullOrEmpty(cache))
                             {
-                                cache = await DownloadManager.Download(img.Large, detail.Url,
-                                    DownloadStartedAction: async (e) =>
-                                    {
-                                        receivedbyte = 0;
-                                        totalbyte = e.FileSize;
-                                        percentage = 0;
-                                        await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                                    },
-                                    DownloadProgressChangedAction: async (e) =>
-                                    {
-                                        receivedbyte = e.ReceivedBytes;
-                                        totalbyte = e.TotalBytes;
-                                        percentage = e.DownloadPercentage;
-                                        await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                                    },
-                                    DownloadFileCompletedAction: async (e) =>
-                                    {
-                                        if (e.Status == DownloadTaskStatus.Completed)
-                                        {
-                                            receivedbyte = totalbyte;
-                                            percentage = 100;
-                                            await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
-                                        }
-                                    }, UpdateInfoDelay: 2000);
+                                cache = await DownloadManager.Download(img.Original, detail.Url);
                                 if (string.IsNullOrEmpty(cache))
                                 {
                                     failed++;
-                                    await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
+                                    await UpdateInfo(info, current + 1, total, successed, failed);
                                     continue;
                                 }
                             }
                         }
                     }
                     ImageUtils.LimitImageScale(cache, 2500, 2500);
-                    streams[current] = CopyFile(cache);
+                    streams[current] = cache;
                     successed++;
-                    await UpdateInfo(info, current + 1, total, receivedbyte, totalbyte, percentage, successed, failed);
+                    await UpdateInfo(info, current + 1, total, successed, failed);
                 }
                 for (int i = 0; i < total; i++)
                 {
-                    var stream = streams[i];
+                    Stream stream = null;
+                    try
+                    {
+                        stream = CopyFile(streams[i]);
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleLog.Error("Discord Pixiv", ex.GetFormatString());
+                    }
                     if (stream == null)
                         await ReplyAsync($"[图像 pixiv-{id}_p{i}.png 下载失败]");
                     else
-                        await Context.Channel.SendFileAsync(stream, $"pixiv-{id}_p{i}.png");
+                    {
+                        try
+                        {
+                            await Context.Channel.SendFileAsync(stream, $"pixiv-{id}_p{i}.png");
+                        }
+                        catch (Exception ex)
+                        {
+                            await Context.Channel.SendMessageAsync($"图像发送失败 pid:{id} p{i} \n {ex.Message}");
+                        }
+                    }
+                    await Task.Delay(1000);
                 }
             }
             try
