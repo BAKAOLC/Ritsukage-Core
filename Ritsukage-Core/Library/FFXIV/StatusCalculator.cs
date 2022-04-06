@@ -155,67 +155,56 @@ namespace Ritsukage.Library.FFXIV
 
             double GCD => (1000 - Speed) / 1000;
 
-            public double GCD15 => Math.Floor(Math.Floor(10000 * (Math.Floor(1500 * GCD) / 1000)) / 100) / 100;
+            public double GCD15 => GetGCDLength(1500, GCD);
 
-            public double GCD20 => Math.Floor(Math.Floor(10000 * (Math.Floor(2000 * GCD) / 1000)) / 100) / 100;
+            public double GCD20 => GetGCDLength(2000, GCD);
 
-            public double GCD25 => Math.Floor(Math.Floor(10000 * (Math.Floor(2500 * GCD) / 1000)) / 100) / 100;
+            public double GCD25 => GetGCDLength(2500, GCD);
 
-            public double GCD28 => Math.Floor(Math.Floor(10000 * (Math.Floor(2800 * GCD) / 1000)) / 100) / 100;
+            public double GCD28 => GetGCDLength(2800, GCD);
 
-            public double GCD30 => Math.Floor(Math.Floor(10000 * (Math.Floor(3000 * GCD) / 1000)) / 100) / 100;
+            public double GCD30 => GetGCDLength(3000, GCD);
 
-            public double GCD80 => Math.Floor(Math.Floor(10000 * (Math.Floor(8000 * GCD) / 1000)) / 100) / 100;
+            public double GCD80 => GetGCDLength(8000, GCD);
 
             public int NextValue => (int)Math.Ceiling(bn + nlv * (1 + Speed) / fn);
 
-            public int GCD25NextValue
-            {
-                get
-                {
-                    var gcd25 = GCD25;
-                    var x = new SpeedResult(NextValue);
-                    while (gcd25 == x.GCD25)
-                        x = new SpeedResult(x.NextValue);
-                    return x.Value;
-                }
-            }
+            public int GCD25NextValue => GetValueFromGCDLength(GCD25 - 0.01, 2500);
 
-            public int GCD28NextValue
-            {
-                get
-                {
-                    var gcd28 = GCD28;
-                    var x = new SpeedResult(NextValue);
-                    while (gcd28 == x.GCD28)
-                        x = new SpeedResult(x.NextValue);
-                    return x.Value;
-                }
-            }
+            public int GCD28NextValue => GetValueFromGCDLength(GCD28 - 0.01, 2800);
 
             public SpeedResult(int value = bn)
                 => Value = value;
 
+            public static double GetGCDLength(int length, double gcd)
+                => Math.Floor(length * gcd / 10) / 100;
+
+            public static int GetValueFromDOT(double length)
+                => (int)Math.Ceiling((length * 1000 - 1000) * nlv / fn + bn);
+
+            public static int GetValueFromGCDLength(double length, double original)
+                => (int)Math.Ceiling((1001 - (length + 0.01) * 1000 / original * 1000) * nlv / fn + bn);
+
             public static SpeedResult GetFromDOT(double value)
-                => new SpeedResult((int)Math.Ceiling((value * 1000 - 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromDOT(value));
 
             public static SpeedResult GetFromGCD15(double value)
-                => new SpeedResult((int)Math.Ceiling((1000 - value * 1000 / 1500 * 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromGCDLength(value, 1500));
 
             public static SpeedResult GetFromGCD20(double value)
-                => new SpeedResult((int)Math.Ceiling((1000 - value * 1000 / 2000 * 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromGCDLength(value, 2000));
 
             public static SpeedResult GetFromGCD25(double value)
-                => new SpeedResult((int)Math.Ceiling((1000 - value * 1000 / 2500 * 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromGCDLength(value, 2500));
 
             public static SpeedResult GetFromGCD28(double value)
-                => new SpeedResult((int)Math.Ceiling((1000 - value * 1000 / 2800 * 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromGCDLength(value, 2800));
 
             public static SpeedResult GetFromGCD30(double value)
-                => new SpeedResult((int)Math.Ceiling((1000 - value * 1000 / 3000 * 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromGCDLength(value, 3000));
 
             public static SpeedResult GetFromGCD80(double value)
-                => new SpeedResult((int)Math.Ceiling((1000 - value * 1000 / 8000 * 1000) * nlv / fn + bn));
+                => new SpeedResult(GetValueFromGCDLength(value, 8000));
 
             public override string ToString()
                 => new StringBuilder()
