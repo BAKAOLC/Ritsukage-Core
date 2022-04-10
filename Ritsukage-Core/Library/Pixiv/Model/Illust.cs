@@ -3,6 +3,7 @@ using Ritsukage.Tools;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -40,14 +41,31 @@ namespace Ritsukage.Library.Pixiv.Model
         public async Task<UgoiraMetadata> GetUgoiraMetadata()
             => await Task.Run(() =>
             {
+                if (Program.PixivApi != null)
+                {
+                    var data = Program.PixivApi.GetAnimatedPictureMetadataAsync(Program.PixivApiToken, Id).Result?.UgoiraMetadata;
+                    if (data == null)
+                        return new UgoiraMetadata();
+                    return new UgoiraMetadata()
+                    {
+                        ZipUrl = data.ZipUrls.Medium.ToString(),
+                        Frames = data.Frames.Select(x => new UgoiraMetadataGifFrame(x.File, x.Delay)).ToArray()
+                    };
+                }
+                return new UgoiraMetadata();
+                /*
                 var data = Hibi.HibiPixiv.GetIllustUgoiraMetadata(Id);
                 if (data != null)
                     return new UgoiraMetadata(data["ugoira_metadata"]);
                 else
                     return new UgoiraMetadata();
+                */
             });
 
         static readonly Regex HtmlTagParser = new Regex(@"<[^>]+>");
+
+        Illust() { }
+
         public Illust(JToken data)
         {
             IsUgoira = (string)data["type"] == "ugoira";
@@ -87,7 +105,6 @@ namespace Ritsukage.Library.Pixiv.Model
             TotalView = (int)data["total_view"];
             TotalBookmarks = (int)data["total_bookmarks"];
             TotalComments = (int)data["total_comments"];
-
         }
 
         public override string ToString()
@@ -104,11 +121,54 @@ namespace Ritsukage.Library.Pixiv.Model
         public static async Task<Illust> Get(int id)
             => await Task.Run(() =>
             {
+                if (Program.PixivApi != null)
+                {
+                    var data = Program.PixivApi.GetIllustDetailAsync(Program.PixivApiToken, id).Result?.Illust;
+                    if (data == null)
+                        return null;
+                    List<ImageUrls> images = new();
+                    if (data.PageCount > 1)
+                    {
+                        foreach (var image in data.MetaPages)
+                        {
+                            images.Add(new ImageUrls(image.ImageUrls.SquareMedium.ToString(),
+                                image.ImageUrls.Medium.ToString(),
+                                image.ImageUrls.Large.ToString(),
+                                image.ImageUrls.Original.ToString()));
+                        }
+                    }
+                    else
+                    {
+                        images.Add(new(data.ImageUrls.SquareMedium.ToString(),
+                            data.ImageUrls.Medium.ToString(),
+                            data.ImageUrls.Large.ToString(),
+                            data.MetaSinglePage.OriginalImageUrl.ToString()));
+                    }
+                    var result = new Illust()
+                    {
+                        IsUgoira = data.Type == "ugoira",
+                        Id = data.Id,
+                        Title = data.Title,
+                        Caption = data.Caption,
+                        Author = new(data.User.Id, data.User.Name, data.User.Account, data.User.ProfileImageUrls.Medium.ToString()),
+                        CreateDate = data.CreateDate.DateTime,
+                        PageCount = data.PageCount,
+                        Images = images.ToArray(),
+                        Tags = data.Tags.Select(x => new Tags(x.Name, x.TranslatedName)).ToArray(),
+                        TotalView = data.TotalView,
+                        TotalBookmarks = data.TotalBookmarks,
+                        TotalComments = data.TotalComments
+                    };
+                    return result;
+                }
+                return null;
+                /*
                 var data = Hibi.HibiPixiv.GetIllustDetail(id);
                 if (data == null || data["illust"] == null)
                     return null;
                 else
                     return new Illust(data["illust"]);
+                */
             });
 
         public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);

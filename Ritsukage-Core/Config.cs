@@ -18,6 +18,11 @@ namespace Ritsukage
         public string PoetryDatabasePath = "";
 
         /// <summary>
+        /// Http网络代理
+        /// </summary>
+        public string ProxyHttp = "";
+
+        /// <summary>
         /// 是否使用调试模式
         /// </summary>
         public bool IsDebug = false;
