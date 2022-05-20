@@ -45,7 +45,7 @@ namespace Ritsukage.Library.ShouSi
             int[] _days = IsLeap(year) ? LeapDays : Days;
             while (day > 0)
             {
-                int days = _days[n];
+                int days = _days[n - 1];
                 if (day > days)
                 {
                     month++;
