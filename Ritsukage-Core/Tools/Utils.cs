@@ -51,6 +51,9 @@ namespace Ritsukage.Tools
             return GetTimeStamp();
         }
 
+        public static int GetRandomSeed()
+            => BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0);
+
         public static string RemoveEmptyLine(string text)
         {
             char splitChar = '\n';

@@ -40,6 +40,7 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
+    <PackageReference Include="SteamAuth" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

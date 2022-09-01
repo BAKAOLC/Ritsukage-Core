@@ -1,6 +1,11 @@
 ﻿using Ritsukage.Library.FFXIV;
+using Ritsukage.Library.FFXIV.WanaHome;
+using Ritsukage.Library.FFXIV.WanaHome.Enum;
 using Ritsukage.Tools;
+using Sora.Entities.CQCodes;
 using System;
+using System.Linq;
+using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -77,5 +82,47 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "2.5sGCD长度")]
         public static async void CalcSpeedFromGCD(SoraMessage e, double value)
             => await e.Reply(StatusCalculator.SpeedResult.GetFromGCD25(value).ToString());
+
+        [Command("检查房区")]
+        [CommandDescription("获取指定房区的当前状态")]
+        [ParameterDescription(1, "服务器名称")]
+        public static async void CheckHouseList(SoraMessage e, string server_name)
+        {
+            Server server = Server.Unknown;
+            server = WanaHomeApi.MatchServer(server_name);
+            if (server == Server.Unknown)
+            {
+                await e.ReplyToOriginal("#未能识别服务器名称：" + server_name);
+                return;
+            }
+            var result = WanaHomeApi.GetTerritoryState(server);
+            var sb = new StringBuilder();
+            sb.AppendLine($"### {server} ###");
+            if (result.OnSale.Any())
+            {
+                sb.Append("> 空闲房屋：");
+                foreach (var house in result.OnSale)
+                {
+                    sb.AppendLine();
+                    sb.Append($"[{house.HouseName}] 房型：{house.Size} 价格：{house.Price}Gil 空闲时长：{house.SellTimeSpan}");
+                }
+            }
+            else
+            {
+                sb.Append("> 当前没有空闲房屋");
+            }
+            sb.AppendLine();
+            sb.Append("> 历史记录（仅显示最新的10条动态）");
+            foreach (var change in result.Changes.Take(10))
+            {
+                sb.AppendLine();
+                sb.Append(change.ToString());
+            }
+
+            sb.AppendLine();
+            sb.Append($"数据更新时间：{result.LastUpdate.ToLocalTime():yyyy年MM月dd日 HH:mm:ss}");
+
+            await e.ReplyToOriginal(sb.ToString());
+        }
     }
 }
