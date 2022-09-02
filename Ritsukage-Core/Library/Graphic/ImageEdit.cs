@@ -85,6 +85,10 @@ namespace Ritsukage.Library.Graphic
                 encoder = ImageFormatManager.FindEncoder(PngFormat.Instance);
             }
             await image.SaveAsync(path, encoder);
+            if (format == GifFormat.Instance)
+            {
+                await GIFsicle.Compress(path);
+            }
         }
 
         public static Image<Rgba32> MirrorLeft(Image<Rgba32> image)

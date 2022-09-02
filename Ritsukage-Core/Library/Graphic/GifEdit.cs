@@ -22,7 +22,7 @@ namespace Ritsukage.Library.Graphic
         public static Image<Rgba32> ReadGif(string path)
             => ReadGif(File.OpenRead(path));
 
-        public static void SaveGif(Image<Rgba32> gif, string path)
+        public static async void SaveGif(Image<Rgba32> gif, string path)
         {
             var stream = File.OpenWrite(path);
             var encoder = new GifEncoder
@@ -31,6 +31,7 @@ namespace Ritsukage.Library.Graphic
             };
             encoder.Encode(gif, stream);
             stream.Dispose();
+            await GIFsicle.Compress(path);
         }
 
         public static Image<Rgba32> CreateReverse(Image<Rgba32> original)
