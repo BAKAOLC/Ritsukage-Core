@@ -71,10 +71,10 @@ namespace Ritsukage.QQ.Commands
                             cache = await DownloadManager.GetCache(url);
                             if (string.IsNullOrEmpty(cache))
                             {
-                                cache = await DownloadManager.Download(url);
+                                cache = await DownloadManager.Download(url, enableAria2Download: true);
                                 if (string.IsNullOrEmpty(cache))
                                 {
-                                    cache = await DownloadManager.Download(img.Large, detail.Url);
+                                    cache = await DownloadManager.Download(img.Large, detail.Url, enableAria2Download: true);
                                     if (string.IsNullOrEmpty(cache))
                                     {
                                         msg.Add("[图像缓存失败]");

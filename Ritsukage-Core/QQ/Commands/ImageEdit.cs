@@ -1,4 +1,5 @@
 ﻿using Downloader;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -29,6 +30,7 @@ namespace Ritsukage.QQ.Commands
 
         static async Task<Stream> DownloadImage(string url)
         {
+            /*
             var downloader = new DownloadService(new DownloadConfiguration()
             {
                 BufferBlockSize = 4096,
@@ -39,6 +41,18 @@ namespace Ritsukage.QQ.Commands
             var stream = await downloader.DownloadFileTaskAsync(url);
             stream.Seek(0, SeekOrigin.Begin);
             return stream;
+            */
+            var path = await DownloadManager.Download(url, enableAria2Download: true);
+            var fs = File.OpenRead(path);
+            var ms = new MemoryStream();
+            var buffer = new byte[4096];
+            int osize;
+            while ((osize = fs.Read(buffer, 0, 4096)) > 0)
+                ms.Write(buffer, 0, osize);
+            fs.Close();
+            fs.Dispose();
+            ms.Seek(0, SeekOrigin.Begin);
+            return ms;
         }
 
         static async Task SendImage(SoraMessage e, Image<Rgba32> image, IImageFormat format)

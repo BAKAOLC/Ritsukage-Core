@@ -189,6 +189,8 @@ namespace Ritsukage.Library.Graphic
         static Image<Rgba32> _Mosaic(Image<Rgba32> image, int size = 2, int px = 0, int py = 0)
         {
             var img = image.Clone();
+            px = Mod(px, size);
+            py = Mod(py, size);
             for (int y = 0; y < image.Height; y++)
             {
                 for (int x = 0; x < image.Width; x++)
@@ -201,6 +203,12 @@ namespace Ritsukage.Library.Graphic
                 }
             }
             return img;
+        }
+
+        static int Mod(int x, int mod)
+        {
+            x %= mod;
+            return x < 0 ? x + mod : x;
         }
     }
 }

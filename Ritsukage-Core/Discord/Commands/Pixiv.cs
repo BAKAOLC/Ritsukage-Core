@@ -89,10 +89,10 @@ namespace Ritsukage.Discord.Commands
                             if (string.IsNullOrEmpty(cache))
                             {
                                 await UpdateInfo(info, current + 1, total, successed, failed);
-                                cache = await DownloadManager.Download(url);
+                                cache = await DownloadManager.Download(url, enableAria2Download: true);
                                 if (string.IsNullOrEmpty(cache))
                                 {
-                                    cache = await DownloadManager.Download(img.Original, detail.Url);
+                                    cache = await DownloadManager.Download(img.Original, detail.Url, enableAria2Download: true);
                                     if (string.IsNullOrEmpty(cache))
                                     {
                                         failed++;

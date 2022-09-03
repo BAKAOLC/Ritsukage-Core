@@ -33,7 +33,8 @@ namespace Ritsukage.QQ.Commands
                 var url = await CloudMusicApi.GetSongUrl(id, 128000);
                 if (url.Id == detail.Id && url.Id == id)
                 {
-                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512), enableSimpleDownload: true)),
+                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512),
+                        enableAria2Download: true, enableSimpleDownload: true)),
                         new StringBuilder().AppendLine()
                         .AppendLine("♬ " + detail.Name)
                         .AppendLine("✎ " + string.Join(" / ", detail.Artists))
@@ -44,7 +45,8 @@ namespace Ritsukage.QQ.Commands
                 }
                 else
                 {
-                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512), enableSimpleDownload: true)),
+                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512),
+                        enableAria2Download: true, enableSimpleDownload: true)),
                         new StringBuilder().AppendLine()
                         .AppendLine("♬ " + detail.Name)
                         .AppendLine("✎ " + string.Join(" / ", detail.Artists))

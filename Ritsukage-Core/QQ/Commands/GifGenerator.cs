@@ -31,6 +31,7 @@ namespace Ritsukage.QQ.Commands
 
         static async Task<Image<Rgba32>> DownloadImage(string url)
         {
+            /*
             var downloader = new DownloadService(new DownloadConfiguration()
             {
                 BufferBlockSize = 4096,
@@ -41,6 +42,18 @@ namespace Ritsukage.QQ.Commands
             var stream = await downloader.DownloadFileTaskAsync(url);
             stream.Seek(0, SeekOrigin.Begin);
             return ReadGif(stream);
+            */
+            var path = await DownloadManager.Download(url, enableAria2Download: true);
+            var fs = File.OpenRead(path);
+            var ms = new MemoryStream();
+            var buffer = new byte[4096];
+            int osize;
+            while ((osize = fs.Read(buffer, 0, 4096)) > 0)
+                ms.Write(buffer, 0, osize);
+            fs.Close();
+            fs.Dispose();
+            ms.Seek(0, SeekOrigin.Begin);
+            return ReadGif(ms);
         }
 
         static async Task SendGif(SoraMessage e, Image<Rgba32> gif)

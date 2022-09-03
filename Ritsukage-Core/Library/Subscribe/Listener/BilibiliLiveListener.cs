@@ -139,7 +139,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             ArrayList msgs = new();
             if (result.UpdateType == BilibiliLiveUpdateType.Initialization)
             {
-                var img = DownloadManager.Download(result.Cover, enableSimpleDownload: true).Result;
+                var img = DownloadManager.Download(result.Cover, enableAria2Download: true, enableSimpleDownload: true).Result;
                 msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img));
                 msgs.Add(new StringBuilder()
                     .AppendLine()
@@ -161,7 +161,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                     msgs.Add($"{result.User} 下播莉(轮播中)……");
                 else
                 {
-                    var img = DownloadManager.Download(result.Cover, enableSimpleDownload: true).Result;
+                    var img = DownloadManager.Download(result.Cover, enableAria2Download: true, enableSimpleDownload: true).Result;
                     msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img));
                     msgs.Add(new StringBuilder()
                         .AppendLine()

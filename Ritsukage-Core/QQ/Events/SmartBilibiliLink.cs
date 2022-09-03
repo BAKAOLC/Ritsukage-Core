@@ -334,7 +334,7 @@ namespace Ritsukage.QQ.Events
         static async void SendUserInfo(GroupMessageEventArgs e, User user)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending user info: {user.Id}");
-            var img = await DownloadManager.Download(user.FaceUrl, enableSimpleDownload: true);
+            var img = await DownloadManager.Download(user.FaceUrl, enableAria2Download: true, enableSimpleDownload: true);
             await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
                 .AppendLine().Append(user.BaseToString()).ToString());
         }
@@ -342,7 +342,7 @@ namespace Ritsukage.QQ.Events
         static async void SendVideoInfo(GroupMessageEventArgs e, Video video)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending video info: {video.AV}");
-            var img = await DownloadManager.Download(video.PicUrl, enableSimpleDownload: true);
+            var img = await DownloadManager.Download(video.PicUrl, enableAria2Download: true, enableSimpleDownload: true);
             await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
                     .AppendLine().Append(video.BaseToString()).ToString());
         }
@@ -350,7 +350,8 @@ namespace Ritsukage.QQ.Events
         static async void SendLiveRoomInfo(GroupMessageEventArgs e, LiveRoom room)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending live room info: {room.Id}");
-            string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl, enableSimpleDownload: true);
+            string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
+                enableAria2Download: true, enableSimpleDownload: true);
             await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : CQCode.CQImage(cover), new StringBuilder()
                 .AppendLine().Append(room.BaseToString()).ToString());
         }
@@ -359,7 +360,7 @@ namespace Ritsukage.QQ.Events
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending dynamic info: {dynamic.Id}");
             ArrayList msg = new();
-            var pics = await DownloadManager.Download(dynamic.Pictures, enableSimpleDownload: true);
+            var pics = await DownloadManager.Download(dynamic.Pictures, enableAria2Download: true, enableSimpleDownload: true);
             foreach (var pic in pics)
             {
                 if (string.IsNullOrEmpty(pic))
