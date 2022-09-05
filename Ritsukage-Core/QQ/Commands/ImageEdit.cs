@@ -3,6 +3,7 @@ using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.CQCodes;
 using System;
@@ -26,6 +27,18 @@ namespace Ritsukage.QQ.Commands
             }
             await e.ReplyToOriginal("请稍后");
             return (await e.SoraApi.GetImage(imglist.First().ImgFile)).url;
+        }
+
+        static async Task<string[]> GetImageUrls(SoraMessage e)
+        {
+            var imglist = e.Message.GetAllImage();
+            if (imglist.Count <= 0)
+            {
+                await e.ReplyToOriginal("未检测到任何图片");
+                return null;
+            }
+            await e.ReplyToOriginal("请稍后");
+            return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
         }
 
         static async Task<Stream> DownloadImage(string url)
@@ -111,6 +124,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "马赛克大小", "默认值:2")]
         [ParameterDescription(2, "像素取值偏移X", "默认值:0")]
         [ParameterDescription(3, "像素取值偏移Y", "默认值:0")]
+        [ParameterDescription(4, "图像")]
         public static async void WorkMosaic(SoraMessage e, int size = 2, int px = 0, int py = 0)
         {
             try
@@ -122,6 +136,42 @@ namespace Ritsukage.QQ.Commands
                 var image = LoadImage(stream, out IImageFormat format);
                 var product = Mosaic(image, size, px, py);
                 await SendImage(e, product, format);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Image Edit", ex.GetFormatString());
+                await e.ReplyToOriginal("因发生异常导致图像生成失败，", ex.Message);
+            }
+        }
+
+        [Command("合并九图")]
+        [CommandDescription("合并九图")]
+        [ParameterDescription(1, "图像")]
+        [ParameterDescription(2, "图像")]
+        [ParameterDescription(3, "图像")]
+        [ParameterDescription(4, "图像")]
+        [ParameterDescription(5, "图像")]
+        [ParameterDescription(6, "图像")]
+        [ParameterDescription(7, "图像")]
+        [ParameterDescription(8, "图像")]
+        [ParameterDescription(9, "图像")]
+        public static async void WorkMergeNinePicture(SoraMessage e)
+        {
+            try
+            {
+                var urls = await GetImageUrls(e);
+                if (urls == null || urls.Length == 0)
+                    return;
+                else if (urls.Length != 9)
+                    await e.ReplyToOriginal("需要九张图");
+                var imgs = new Image<Rgba32>[9];
+                for (int i = 0; i < 9; i++)
+                {
+                    var stream = await DownloadImage(urls[i]);
+                    imgs[i] = LoadImage(stream, out IImageFormat format);
+                }
+                var product = MergeNinePicture(imgs);
+                await SendImage(e, product, PngFormat.Instance);
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -62,43 +63,50 @@ namespace Ritsukage.Library.Bilibili.Model
         {
             return await Task.Run(async () =>
             {
-                if (Pictures == null || Pictures.Length < 9) return null;
-                var imgs = new List<Image<Rgba32>>();
-                var pics = await DownloadManager.Download(Pictures, enableAria2Download: true, enableSimpleDownload: true);
-                foreach (var file in pics)
+                try
                 {
-                    if (string.IsNullOrEmpty(file)) return null;
-                    var img = new FileImage(file);
-                    switch (img.ImageFormatString)
+                    if (Pictures == null || Pictures.Length < 9) return null;
+                    var imgs = new List<Image<Rgba32>>();
+                    var pics = await DownloadManager.Download(Pictures, enableAria2Download: true, enableSimpleDownload: true);
+                    foreach (var file in pics)
                     {
-                        case ".png":
-                            imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Png.PngDecoder()));
-                            break;
-                        case ".jpg":
-                            imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Jpeg.JpegDecoder()));
-                            break;
-                        case ".bmp":
-                            imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Bmp.BmpDecoder()));
-                            break;
-                        default:
-                            return null;
-                    }
-                }
-                var first = imgs.First();
-                if (imgs.All(x => x.Width == first.Width && x.Height == first.Height))
-                {
-                    var result = new Image<Rgba32>(first.Width * 3, first.Height * 3);
-                    for (int y = 0; y < 3; y++)
-                    {
-                        for (int x = 0; x < 3; x++)
+                        if (string.IsNullOrEmpty(file)) return null;
+                        var img = new FileImage(file);
+                        switch (img.ImageFormatString)
                         {
-                            int id = y * 3 + x;
-                            int px = first.Width * x;
-                            int py = first.Height * y;
-                            DrawImage(ref result, px, py, imgs[id]);
+                            case ".png":
+                                imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Png.PngDecoder()));
+                                break;
+                            case ".jpg":
+                                imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Jpeg.JpegDecoder()));
+                                break;
+                            case ".bmp":
+                                imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Bmp.BmpDecoder()));
+                                break;
+                            default:
+                                return null;
                         }
                     }
-                    return result;
+                    var first = imgs.First();
+                    if (imgs.All(x => x.Width == first.Width && x.Height == first.Height))
+                    {
+                        var result = new Image<Rgba32>(first.Width * 3, first.Height * 3);
+                        for (int y = 0; y < 3; y++)
+                        {
+                            for (int x = 0; x < 3; x++)
+                            {
+                                int id = y * 3 + x;
+                                int px = first.Width * x;
+                                int py = first.Height * y;
+                                DrawImage(ref result, px, py, imgs[id]);
+                            }
+                        }
+                        return result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLog.Error("Bilibili Dynamic", "生成9图时发生错误" + Environment.NewLine + ex.GetFormatString());
                 }
                 return null;
             });

@@ -6,8 +6,10 @@ using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Ritsukage.Library.Graphic
 {
@@ -92,55 +94,72 @@ namespace Ritsukage.Library.Graphic
         }
 
         public static Image<Rgba32> MirrorLeft(Image<Rgba32> image)
-        {
-            var img = image.Clone();
-            for (int i = 0; i < image.Frames.Count; i++)
-            {
-                img.Frames.InsertFrame(i, _MirrorLeft(image.Frames.CloneFrame(i)).Frames.RootFrame);
-                img.Frames.RemoveFrame(i + 1);
-            }
-            return img;
-        }
+            => Worker(image, _MirrorLeft);
 
         public static Image<Rgba32> MirrorRight(Image<Rgba32> image)
-        {
-            var img = image.Clone();
-            for (int i = 0; i < image.Frames.Count; i++)
-            {
-                img.Frames.InsertFrame(i, _MirrorRight(image.Frames.CloneFrame(i)).Frames.RootFrame);
-                img.Frames.RemoveFrame(i + 1);
-            }
-            return img;
-        }
+            => Worker(image, _MirrorRight);
 
         public static Image<Rgba32> MirrorTop(Image<Rgba32> image)
-        {
-            var img = image.Clone();
-            for (int i = 0; i < image.Frames.Count; i++)
-            {
-                img.Frames.InsertFrame(i, _MirrorTop(image.Frames.CloneFrame(i)).Frames.RootFrame);
-                img.Frames.RemoveFrame(i + 1);
-            }
-            return img;
-        }
+            => Worker(image, _MirrorTop);
 
         public static Image<Rgba32> MirrorBottom(Image<Rgba32> image)
-        {
-            var img = image.Clone();
-            for (int i = 0; i < image.Frames.Count; i++)
-            {
-                img.Frames.InsertFrame(i, _MirrorBottom(image.Frames.CloneFrame(i)).Frames.RootFrame);
-                img.Frames.RemoveFrame(i + 1);
-            }
-            return img;
-        }
+            => Worker(image, _MirrorBottom);
 
         public static Image<Rgba32> Mosaic(Image<Rgba32> image, int size = 2, int px = 0, int py = 0)
+            => Worker(image, x => _Mosaic(x, size, px, py));
+
+        public static Image<Rgba32> Rotate90(Image<Rgba32> image)
+            => Worker(image, _Rotate90);
+
+        public static Image<Rgba32> Rotate180(Image<Rgba32> image)
+            => Worker(image, _Rotate180);
+
+        public static Image<Rgba32> Rotate270(Image<Rgba32> image)
+            => Worker(image, _Rotate270);
+
+        public static Image<Rgba32> MergeNinePicture(Image<Rgba32>[] imgs)
+        {
+            if (imgs == null || imgs.Length != 9) return null;
+            var first = imgs.First();
+            if (imgs.All(x => x.Width == first.Width && x.Height == first.Height))
+            {
+                var result = new Image<Rgba32>(first.Width * 3, first.Height * 3);
+                for (int y = 0; y < 3; y++)
+                {
+                    for (int x = 0; x < 3; x++)
+                    {
+                        int id = y * 3 + x;
+                        int px = first.Width * x;
+                        int py = first.Height * y;
+                        ClonePixel(imgs[id], result, px, py);
+                    }
+                }
+                return result;
+            }
+            return null;
+        }
+
+        public static Image<Rgba32>[] SplitNinePicture(Image<Rgba32> img)
+        {
+            if (img.Width % 3 == 0 && img.Height % 3 == 0)
+            {
+                var width = img.Width / 3;
+                var height = img.Height / 3;
+                var imgs = new Image<Rgba32>[9];
+                for (int x = 0; x < 3; x++)
+                    for (int y = 0; y < 3; y++)
+                        imgs[y * 3 + x] = CropImage(img, x * width, y * height, width, height);
+                return imgs;
+            }
+            return null;
+        }
+
+        static Image<Rgba32> Worker(Image<Rgba32> image, Func<Image<Rgba32>, Image<Rgba32>> func)
         {
             var img = image.Clone();
             for (int i = 0; i < image.Frames.Count; i++)
             {
-                img.Frames.InsertFrame(i, _Mosaic(image.Frames.CloneFrame(i), size, px, py).Frames.RootFrame);
+                img.Frames.InsertFrame(i, func.Invoke(image.Frames.CloneFrame(i)).Frames.RootFrame);
                 img.Frames.RemoveFrame(i + 1);
             }
             return img;
@@ -205,10 +224,70 @@ namespace Ritsukage.Library.Graphic
             return img;
         }
 
+        static Image<Rgba32> _Rotate90(Image<Rgba32> image)
+        {
+            var img = image.Clone();
+            img.Mutate(x => x.Rotate(RotateMode.Rotate90));
+            return img;
+        }
+
+        static Image<Rgba32> _Rotate180(Image<Rgba32> image)
+        {
+            var img = image.Clone();
+            img.Mutate(x => x.Rotate(RotateMode.Rotate180));
+            return img;
+        }
+
+        static Image<Rgba32> _Rotate270(Image<Rgba32> image)
+        {
+            var img = image.Clone();
+            img.Mutate(x => x.Rotate(RotateMode.Rotate270));
+            return img;
+        }
+
+        static Image<Rgba32> _Rotate(Image<Rgba32> image, float degress)
+        {
+            var img = image.Clone();
+            img.Mutate(x => x.Rotate(degress));
+            return img;
+        }
+
         static int Mod(int x, int mod)
         {
             x %= mod;
             return x < 0 ? x + mod : x;
+        }
+
+        static void ClonePixel(Image<Rgba32> source, Image<Rgba32> to, int dx = 0, int dy = 0)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                for (int y = 0; y < source.Height; y++)
+                {
+                    int px = x + dx;
+                    int py = y + dy;
+                    if (px >= 0 && px < to.Width && py >= 0 && py < to.Height)
+                        to[px, py] = source[x, y];
+                }
+            }
+        }
+
+        static Image<Rgba32> CropImage(Image<Rgba32> source, int x, int y, int width, int height)
+        {
+            var img = new Image<Rgba32>(width, height);
+            for (int px = 0; px < width; px++)
+            {
+                for (int py = 0; py < height; py++)
+                {
+                    var sx = x + px;
+                    var sy = y + py;
+                    if (sx >= 0 && sx < img.Width && sy >= 0 && sy < img.Height)
+                    {
+                        img[px, py] = source[sx, sy];
+                    }
+                }
+            }
+            return img;
         }
     }
 }
