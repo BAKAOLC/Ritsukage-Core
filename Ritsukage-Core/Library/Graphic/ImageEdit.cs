@@ -15,6 +15,8 @@ namespace Ritsukage.Library.Graphic
 {
     public static class ImageEdit
     {
+        public static Rgba32 Transparent = new Rgba32(0, 0, 0, 0);
+
         static readonly ImageFormatManager ImageFormatManager;
 
         static ImageEdit()
@@ -79,17 +81,24 @@ namespace Ritsukage.Library.Graphic
 
         public static async void SaveImage(Image<Rgba32> image, IImageFormat format, string path)
         {
-            var encoder = ImageFormatManager.FindEncoder(format);
-            if (encoder == null)
+            try
             {
-                ConsoleLog.Error("Image Edit", "未能找到对应图像格式的编码器定义，将使用PNG格式编码\n"
-                    + new System.Diagnostics.StackFrame(true).ToString());
-                encoder = ImageFormatManager.FindEncoder(PngFormat.Instance);
+                var encoder = ImageFormatManager.FindEncoder(format);
+                if (encoder == null)
+                {
+                    ConsoleLog.Error("Image Edit", "未能找到对应图像格式的编码器定义，将使用PNG格式编码\n"
+                        + new System.Diagnostics.StackFrame(true).ToString());
+                    encoder = ImageFormatManager.FindEncoder(PngFormat.Instance);
+                }
+                await image.SaveAsync(path, encoder);
+                if (format == GifFormat.Instance)
+                {
+                    await GIFsicle.Compress(path);
+                }
             }
-            await image.SaveAsync(path, encoder);
-            if (format == GifFormat.Instance)
+            catch (Exception ex)
             {
-                await GIFsicle.Compress(path);
+                ConsoleLog.Error("Image Edit", "图像储存失败\n" + Environment.NewLine + ex.GetFormatString());
             }
         }
 
@@ -116,6 +125,36 @@ namespace Ritsukage.Library.Graphic
 
         public static Image<Rgba32> Rotate270(Image<Rgba32> image)
             => Worker(image, _Rotate270);
+
+        public static Image<Rgba32> Rotate(Image<Rgba32> image, float degress)
+            => Worker(image, x => _Rotate(x, degress));
+
+        public static Image<Rgba32> RotateWithOriginalSize(Image<Rgba32> image, float degress)
+            => Worker(image, x => _RotateWithOriginalSize(x, degress));
+
+        public static Image<Rgba32> GenerateRotateImage(Image<Rgba32> image, int repeat = 1, int frameDelay = 1)
+        {
+            var img = new Image<Rgba32>(image.Width, image.Height);
+            int total = image.Frames.Count * repeat;
+            for (int i = 0; i < total; i++)
+            {
+                var degress = 360f * i / total;
+                var fn = Mod(i, image.Frames.Count);
+                var f = image.Frames.CloneFrame(fn);
+                var rf = _RotateWithOriginalSize(f, degress);
+                img.Frames.AddFrame(rf.Frames.RootFrame);
+            }
+            img.Frames.RemoveFrame(0);
+            if (image.Frames.Count == 1)
+            {
+                for (int i = 0; i < total; i++)
+                {
+                    img.Frames[i].Metadata.GetGifMetadata().FrameDelay = frameDelay;
+                }
+            }
+            img.Metadata.GetGifMetadata().RepeatCount = 0;
+            return img;
+        }
 
         public static Image<Rgba32> MergeNinePicture(Image<Rgba32>[] imgs)
         {
@@ -156,13 +195,21 @@ namespace Ritsukage.Library.Graphic
 
         static Image<Rgba32> Worker(Image<Rgba32> image, Func<Image<Rgba32>, Image<Rgba32>> func)
         {
-            var img = image.Clone();
-            for (int i = 0; i < image.Frames.Count; i++)
+            if (image.Frames.Count != 1)
             {
-                img.Frames.InsertFrame(i, func.Invoke(image.Frames.CloneFrame(i)).Frames.RootFrame);
-                img.Frames.RemoveFrame(i + 1);
+                var img = image.Clone();
+                for (int i = 0; i < image.Frames.Count; i++)
+                {
+                    img.Frames.InsertFrame(i, func.Invoke(image.Frames.CloneFrame(i)).Frames.RootFrame);
+                    img.Frames.RemoveFrame(i + 1);
+                    img.Frames[i].Metadata.GetGifMetadata().FrameDelay = image.Frames[i].Metadata.GetGifMetadata().FrameDelay;
+                }
+                return img;
             }
-            return img;
+            else
+            {
+                return func.Invoke(image);
+            }
         }
 
         static Image<Rgba32> _MirrorLeft(Image<Rgba32> image)
@@ -249,6 +296,19 @@ namespace Ritsukage.Library.Graphic
         {
             var img = image.Clone();
             img.Mutate(x => x.Rotate(degress));
+            return img;
+        }
+
+        static Image<Rgba32> _RotateWithOriginalSize(Image<Rgba32> image, float degress)
+        {
+            int width = image.Width;
+            int height = image.Height;
+            var oimg = image.Clone();
+            oimg.Mutate(x => x.Rotate(degress));
+            var img = new Image<Rgba32>(width, height);
+            var dx = (width - oimg.Width) / 2;
+            var dy = (height - oimg.Height) / 2;
+            ClonePixel(oimg, img, dx, dy);
             return img;
         }
 

@@ -1,8 +1,8 @@
-﻿using Downloader;
-using Ritsukage.Tools;
+﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.CQCodes;
@@ -76,6 +76,19 @@ namespace Ritsukage.QQ.Commands
             await e.RemoveCoins(5);
         }
 
+        static async Task SendImages(SoraMessage e, Image<Rgba32>[] images, IImageFormat format)
+        {
+            string[] paths = new string[images.Length];
+            for (int i = 0; i < images.Length; i++)
+            {
+                var file = Path.GetTempFileName();
+                SaveImage(images[i], format, file);
+                paths[i] = file;
+            }
+            await e.Reply(paths.Select(x => CQCode.CQImage(x)).ToArray());
+            await e.RemoveCoins(5);
+        }
+
         static async Task Worker(SoraMessage e, Func<Image<Rgba32>, Image<Rgba32>> func)
         {
             try
@@ -144,6 +157,41 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
+        [Command("生成旋转图")]
+        [CommandDescription("生成旋转图")]
+        [ParameterDescription(1, "单次旋转周期内图像重复次数", "默认值:1")]
+        [ParameterDescription(2, "单帧时长（n*0.01s）（提供动图时此参数无效）", "默认值:1")]
+        [ParameterDescription(3, "图像")]
+        public static async void WorkGenerateRotateImage(SoraMessage e, int repeat = 1, int frameDelay = 1)
+        {
+            try
+            {
+                if (repeat < 1)
+                {
+                    await e.ReplyToOriginal("Repeat值不可小于1");
+                }
+                else if (frameDelay < 1)
+                {
+                    await e.ReplyToOriginal("Frame Delay值不可小于1");
+                }
+                else
+                {
+                    var url = await GetImageUrl(e);
+                    if (url == null)
+                        return;
+                    var stream = await DownloadImage(url);
+                    var image = LoadImage(stream);
+                    var product = GenerateRotateImage(image, repeat, frameDelay);
+                    await SendImage(e, product, GifFormat.Instance);
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Image Edit", ex.GetFormatString());
+                await e.ReplyToOriginal("因发生异常导致图像生成失败，", ex.Message);
+            }
+        }
+
         [Command("合并九图")]
         [CommandDescription("合并九图")]
         [ParameterDescription(1, "图像")]
@@ -171,7 +219,37 @@ namespace Ritsukage.QQ.Commands
                     imgs[i] = LoadImage(stream, out IImageFormat format);
                 }
                 var product = MergeNinePicture(imgs);
-                await SendImage(e, product, PngFormat.Instance);
+                if (product != null)
+                    await SendImage(e, product, PngFormat.Instance);
+                else
+                    await e.ReplyToOriginal("暂不支持合并图像大小不一致的九图图像");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Image Edit", ex.GetFormatString());
+                await e.ReplyToOriginal("因发生异常导致图像生成失败，", ex.Message);
+            }
+        }
+
+        [Command("拆分九图")]
+        [CommandDescription("拆分九图")]
+        [ParameterDescription(1, "图像")]
+        public static async void WorkCropNinePicture(SoraMessage e)
+        {
+            try
+            {
+                var url = await GetImageUrl(e);
+                if (url == null)
+                    return;
+                var stream = await DownloadImage(url);
+                var image = LoadImage(stream, out IImageFormat format);
+                if (image.Width % 3 == 0 || image.Height % 3 == 0)
+                {
+                    var imgs = SplitNinePicture(image);
+                    await SendImages(e, imgs, format);
+                }
+                else
+                    await e.ReplyToOriginal("暂不支持拆分非3的倍数宽高的图像");
             }
             catch (Exception ex)
             {
