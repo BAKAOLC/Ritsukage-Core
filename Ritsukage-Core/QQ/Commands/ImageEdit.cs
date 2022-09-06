@@ -134,9 +134,9 @@ namespace Ritsukage.QQ.Commands
 
         [Command("马赛克")]
         [CommandDescription("修改为马赛克处理后的图像")]
-        [ParameterDescription(1, "马赛克大小", "默认值:2")]
-        [ParameterDescription(2, "像素取值偏移X", "默认值:0")]
-        [ParameterDescription(3, "像素取值偏移Y", "默认值:0")]
+        [ParameterDescription(1, "马赛克大小")]
+        [ParameterDescription(2, "像素取值偏移X")]
+        [ParameterDescription(3, "像素取值偏移Y")]
         [ParameterDescription(4, "图像")]
         public static async void WorkMosaic(SoraMessage e, int size = 2, int px = 0, int py = 0)
         {
@@ -159,8 +159,8 @@ namespace Ritsukage.QQ.Commands
 
         [Command("生成旋转图")]
         [CommandDescription("生成旋转图")]
-        [ParameterDescription(1, "单次旋转周期内图像重复次数", "默认值:1")]
-        [ParameterDescription(2, "单帧时长（n*0.01s）（提供动图时此参数无效）", "默认值:1")]
+        [ParameterDescription(1, "单次旋转周期内图像重复次数")]
+        [ParameterDescription(2, "单帧时长（n*0.01s）（提供动图时此参数无效）")]
         [ParameterDescription(3, "图像")]
         public static async void WorkGenerateRotateImage(SoraMessage e, int repeat = 1, int frameDelay = 1)
         {
