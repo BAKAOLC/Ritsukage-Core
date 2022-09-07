@@ -1,7 +1,5 @@
 ﻿using Ritsukage.Tools.Console;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using System;
@@ -17,8 +15,7 @@ namespace Ritsukage.Library.Graphic
             {
                 try
                 {
-                    IImageFormat format = Image.DetectFormat(path);
-                    var image = Image.Load<Rgba32>(path);
+                    var image = ImageEdit.LoadImage(path, out IImageFormat format);
                     bool flag = false;
                     var width = image.Width;
                     var height = image.Height;
