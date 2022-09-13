@@ -62,8 +62,6 @@ namespace Ritsukage.Library.Pixiv.Model
                 */
             });
 
-        static readonly Regex HtmlTagParser = new Regex(@"<[^>]+>");
-
         Illust() { }
 
         public Illust(JToken data)
@@ -71,15 +69,8 @@ namespace Ritsukage.Library.Pixiv.Model
             IsUgoira = (string)data["type"] == "ugoira";
             Id = (int)data["id"];
             Title = (string)data["title"];
-            Caption = Escape(Utils.RemoveEmptyLine(HtmlTagParser.Replace((string)data["caption"], (s) =>
-            {
-                var text = s.Value;
-                if (text == "<br />")
-                    return Environment.NewLine;
-                else
-                    return "";
-            })));
             Author = new(data["user"]);
+            Caption = GetCaption((string)data["caption"]);
             CreateDate = Convert.ToDateTime((string)data["create_date"], new DateTimeFormatInfo()
             {
                 FullDateTimePattern = "yyyy-MM-ddTHH:mm:sszzz"
@@ -149,7 +140,7 @@ namespace Ritsukage.Library.Pixiv.Model
                         IsUgoira = data.Type == "ugoira",
                         Id = data.Id,
                         Title = data.Title,
-                        Caption = data.Caption,
+                        Caption = GetCaption(data.Caption),
                         Author = new(data.User.Id, data.User.Name, data.User.Account, data.User.ProfileImageUrls.Medium.ToString()),
                         CreateDate = data.CreateDate.DateTime,
                         PageCount = data.PageCount,
@@ -162,14 +153,24 @@ namespace Ritsukage.Library.Pixiv.Model
                     return result;
                 }
                 return null;
-                /*
-                var data = Hibi.HibiPixiv.GetIllustDetail(id);
-                if (data == null || data["illust"] == null)
-                    return null;
-                else
-                    return new Illust(data["illust"]);
-                */
             });
+
+        static string GetCaption(string original)
+        {
+            if (!string.IsNullOrWhiteSpace(original))
+            {
+                var regex = new Regex(@"<[^>]+>");
+                return Utils.RemoveEmptyLine(regex.Replace(Escape(original), x =>
+                {
+                    return x.Value switch
+                    {
+                        "<br />" => Environment.NewLine,
+                        _ => string.Empty,
+                    };
+                }));
+            }
+            return string.Empty;
+        }
 
         public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
     }

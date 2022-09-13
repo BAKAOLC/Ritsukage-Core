@@ -64,17 +64,17 @@ namespace Ritsukage.QQ.Commands
                 {
                     foreach (var img in detail.Images)
                     {
-                        var cache = await DownloadManager.GetCache(img.Large);
+                        var cache = await DownloadManager.GetCache(img.Medium);
                         if (string.IsNullOrEmpty(cache))
                         {
-                            var url = ImageUrls.ToPixivCat(img.Large);
+                            var url = ImageUrls.ToPixivCat(img.Medium);
                             cache = await DownloadManager.GetCache(url);
                             if (string.IsNullOrEmpty(cache))
                             {
                                 cache = await DownloadManager.Download(url, enableAria2Download: true);
                                 if (string.IsNullOrEmpty(cache))
                                 {
-                                    cache = await DownloadManager.Download(img.Large, detail.Url, enableAria2Download: true);
+                                    cache = await DownloadManager.Download(img.Medium, detail.Url, enableAria2Download: true);
                                     if (string.IsNullOrEmpty(cache))
                                     {
                                         msg.Add("[图像缓存失败]");

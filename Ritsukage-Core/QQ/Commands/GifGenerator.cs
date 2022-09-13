@@ -1,11 +1,8 @@
-﻿using Downloader;
-using Ritsukage.Tools;
+﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.CQCodes;
-using Sora.Enumeration.ApiType;
 using System;
 using System.IO;
 using System.Linq;
