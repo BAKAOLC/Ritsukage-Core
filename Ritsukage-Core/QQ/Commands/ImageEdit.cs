@@ -158,7 +158,42 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("生成旋转图")]
-        [CommandDescription("生成旋转图")]
+        [CommandDescription("生成原图像大小的旋转图")]
+        [ParameterDescription(1, "单次旋转周期内图像重复次数")]
+        [ParameterDescription(2, "单帧时长（n*0.01s）（提供动图时此参数无效）")]
+        [ParameterDescription(3, "图像")]
+        public static async void WorkGenerateRotateImageWithOriginalSize(SoraMessage e, int repeat = 1, int frameDelay = 1)
+        {
+            try
+            {
+                if (repeat < 1)
+                {
+                    await e.ReplyToOriginal("Repeat值不可小于1");
+                }
+                else if (frameDelay < 1)
+                {
+                    await e.ReplyToOriginal("Frame Delay值不可小于1");
+                }
+                else
+                {
+                    var url = await GetImageUrl(e);
+                    if (url == null)
+                        return;
+                    var stream = await DownloadImage(url);
+                    var image = LoadImage(stream);
+                    var product = GenerateRotateImageWithOriginalSize(image, repeat, frameDelay);
+                    await SendImage(e, product, GifFormat.Instance);
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error("Image Edit", ex.GetFormatString());
+                await e.ReplyToOriginal("因发生异常导致图像生成失败，", ex.Message);
+            }
+        }
+
+        [Command("生成完整旋转图")]
+        [CommandDescription("生成整个图像能完整显示的旋转图")]
         [ParameterDescription(1, "单次旋转周期内图像重复次数")]
         [ParameterDescription(2, "单帧时长（n*0.01s）（提供动图时此参数无效）")]
         [ParameterDescription(3, "图像")]

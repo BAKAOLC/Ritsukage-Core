@@ -118,31 +118,77 @@ namespace Ritsukage.Library.Graphic
             => Worker(image, x => _Mosaic(x, size, px, py));
 
         public static Image<Rgba32> Rotate90(Image<Rgba32> image)
-            => Worker(image, _Rotate90);
+            => _Rotate90(image);
 
         public static Image<Rgba32> Rotate180(Image<Rgba32> image)
-            => Worker(image, _Rotate180);
+            => _Rotate180(image);
 
         public static Image<Rgba32> Rotate270(Image<Rgba32> image)
-            => Worker(image, _Rotate270);
+            => _Rotate270(image);
 
         public static Image<Rgba32> Rotate(Image<Rgba32> image, float degress)
-            => Worker(image, x => _Rotate(x, degress));
+            => _Rotate(image, degress);
 
         public static Image<Rgba32> RotateWithOriginalSize(Image<Rgba32> image, float degress)
-            => Worker(image, x => _RotateWithOriginalSize(x, degress));
+            => _RotateWithOriginalSize(image, degress);
 
         public static Image<Rgba32> GenerateRotateImage(Image<Rgba32> image, int repeat = 1, int frameDelay = 1)
         {
-            var img = new Image<Rgba32>(image.Width, image.Height);
             int total = image.Frames.Count * repeat;
+            var size = new Size(GetRotateMaxBound(image.Size()));
+            var oimg = image.Clone();
+            oimg.Mutate(x => x.Resize(new ResizeOptions()
+            {
+                Mode = ResizeMode.BoxPad,
+                Position = AnchorPositionMode.Center,
+                Size = size,
+            })); ;
+            var img = new Image<Rgba32>(oimg.Width, oimg.Height);
             for (int i = 0; i < total; i++)
             {
                 var degress = 360f * i / total;
                 var fn = Mod(i, image.Frames.Count);
-                var f = image.Frames.CloneFrame(fn);
-                var rf = _RotateWithOriginalSize(f, degress);
-                img.Frames.AddFrame(rf.Frames.RootFrame);
+                var pimg = oimg.Frames.CloneFrame(fn);
+                pimg.Mutate(x => x.Rotate(degress));
+                var dx = (pimg.Width - oimg.Width) / 2;
+                var dy = (pimg.Height - oimg.Height) / 2;
+                pimg.Mutate(x => x.Crop(new(dx, dy, oimg.Width, oimg.Height)));
+                img.Frames.AddFrame(pimg.Frames.RootFrame);
+            }
+            img.Frames.RemoveFrame(0);
+            if (image.Frames.Count == 1)
+            {
+                for (int i = 0; i < total; i++)
+                {
+                    img.Frames[i].Metadata.GetGifMetadata().FrameDelay = frameDelay;
+                }
+            }
+            img.Metadata.GetGifMetadata().RepeatCount = 0;
+            return img;
+        }
+
+        public static Image<Rgba32> GenerateRotateImageWithOriginalSize(Image<Rgba32> image, int repeat = 1, int frameDelay = 1)
+        {
+            int total = image.Frames.Count * repeat;
+            var size = new Size(GetRotateMaxBound(image.Size()));
+            var oimg = image.Clone();
+            oimg.Mutate(x => x.Resize(new ResizeOptions()
+            {
+                Mode = ResizeMode.BoxPad,
+                Position = AnchorPositionMode.Center,
+                Size = size,
+            })); ;
+            var img = new Image<Rgba32>(image.Width, image.Height);
+            for (int i = 0; i < total; i++)
+            {
+                var degress = 360f * i / total;
+                var fn = Mod(i, image.Frames.Count);
+                var pimg = oimg.Frames.CloneFrame(fn);
+                pimg.Mutate(x => x.Rotate(degress));
+                var dx = (pimg.Width - image.Width) / 2;
+                var dy = (pimg.Height - image.Height) / 2;
+                pimg.Mutate(x => x.Crop(new(dx, dy, image.Width, image.Height)));
+                img.Frames.AddFrame(pimg.Frames.RootFrame);
             }
             img.Frames.RemoveFrame(0);
             if (image.Frames.Count == 1)
@@ -301,16 +347,16 @@ namespace Ritsukage.Library.Graphic
 
         static Image<Rgba32> _RotateWithOriginalSize(Image<Rgba32> image, float degress)
         {
-            int width = image.Width;
-            int height = image.Height;
-            var oimg = image.Clone();
-            oimg.Mutate(x => x.Rotate(degress));
-            var img = new Image<Rgba32>(width, height);
-            var dx = (width - oimg.Width) / 2;
-            var dy = (height - oimg.Height) / 2;
-            ClonePixel(oimg, img, dx, dy);
+            var img = image.Clone();
+            img.Mutate(x => x.Rotate(degress));
+            var dx = (img.Width - image.Width) / 2;
+            var dy = (img.Height - image.Height) / 2;
+            img.Mutate(x => x.Crop(new(dx, dy, image.Width, image.Height)));
             return img;
         }
+
+        static int GetRotateMaxBound(Size size)
+            => Convert.ToInt32(Math.Ceiling(Math.Sqrt(size.Width * size.Width + size.Height * size.Height)));
 
         static int Mod(int x, int mod)
         {
