@@ -80,11 +80,13 @@ namespace Ritsukage.QQ
                 ConsoleLog.Debug("Socket", $"Connection closed with {e.SelfId} {e.Role}");
                 await Task.CompletedTask;
             };
-            server.Event.OnClientConnect += async (s, e) =>
+            #endregion
+            #region Base Event
+            server.Event.OnClientConnect += (s, e) =>
             {
-                Connection[e.LoginUid] = e.ConnId;
                 ConsoleLog.Info("Socket", $"[{e.LoginUid}] Client type: {e.ClientType} {e.ClientVersionCode} connected.");
-                await Task.CompletedTask;
+                Connection[e.LoginUid] = e.ConnId;
+                return ValueTask.CompletedTask;
             };
             #endregion
             #region Message Event
@@ -105,27 +107,23 @@ namespace Ritsukage.QQ
                 if (!Connection.ContainsKey(e.SenderInfo.UserId))
                     await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
-            server.Event.OnSelfGroupMessage += async (s, e) =>
+            server.Event.OnSelfGroupMessage += (s, e) =>
             {
                 if (e.IsAnonymousMessage)
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Send({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 else
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Send({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
-                await ValueTask.CompletedTask;
+                return ValueTask.CompletedTask;
             };
-            server.Event.OnSelfPrivateMessage += async (s, e) =>
+            server.Event.OnSelfPrivateMessage += (s, e) =>
             {
                 ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}{e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
-                await ValueTask.CompletedTask;
+                return ValueTask.CompletedTask;
             };
             #endregion
             #region Event Manager
-            server.Event.OnClientConnect += (s, e) =>
-            {
-                ConsoleLog.Debug("Sora", $"Update api for bot {e.LoginUid}");
-                return ValueTask.CompletedTask;
-            };
             server.Event.OnClientConnect += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnClientStatusChangeEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnFileUpload += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnFriendAdd += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnFriendRecall += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
@@ -140,8 +138,12 @@ namespace Ritsukage.QQ
             server.Event.OnGroupRequest += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnHonorEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnLuckyKingEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnTitleUpdate += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnEssenceChange += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnOfflineFileEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnSelfGroupMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnSelfPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             #endregion
         }
     }

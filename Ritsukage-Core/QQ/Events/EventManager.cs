@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Events
 {
@@ -26,9 +26,9 @@ namespace Ritsukage.QQ.Events
             Type type = args.GetType();
             if (Events.TryGetValue(type, out var list))
             {
-                new Thread(() =>
+                foreach (var e in list)
                 {
-                    foreach (var e in list)
+                    Task.Run(() =>
                     {
                         try
                         {
@@ -42,11 +42,8 @@ namespace Ritsukage.QQ.Events
                                 .AppendLine($"Method\t\t: {e}")
                                 .Append($"Exception\t: {ex.GetFormatString(true)}"));
                         }
-                    }
-                })
-                {
-                    IsBackground = true
-                }.Start();
+                    });
+                }
             }
         }
 
