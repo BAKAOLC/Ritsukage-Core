@@ -1,11 +1,10 @@
 ﻿using Ritsukage.Library.Service;
 using Sora.Entities;
 using Sora.Entities.Base;
-using Sora.Entities.CQCodes;
-using Sora.Entities.CQCodes.CQCodeModel;
 using Sora.Entities.Info;
+using Sora.Entities.Segment;
+using Sora.Entities.Segment.DataModel;
 using Sora.Enumeration;
-using Sora.Enumeration.ApiType;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections.Generic;
@@ -21,17 +20,17 @@ namespace Ritsukage.QQ
     {
         public static class AdditionalMethod
         {
-            readonly static Regex _CQ_Regex = new Regex(@"^\[CQ:(?<type>[^,]+)(,(?<data>[^]]+))?\]$");
+            readonly static Regex _CQ_Regex = new(@"^\[CQ:(?<type>[^,]+)(,(?<data>[^]]+))?\]$");
 
-            public static CQCode[] ToCQCodes(string msg)
+            public static List<SoraSegment> ToSoraSegment(string msg)
             {
-                List<CQCode> codes = new();
+                List<SoraSegment> codes = new();
                 int n = 0;
                 int i = msg.IndexOf("[", n);
                 while (i < msg.Length && i >= n)
                 {
                     var e = msg.IndexOf("]", i);
-                    codes.Add(CQCode.CQText(Escape(msg[n..i])));
+                    codes.Add(SoraSegment.Text(Escape(msg[n..i])));
                     if (e >= i)
                     {
                         var m = _CQ_Regex.Match(msg[i..(e + 1)]);
@@ -50,69 +49,69 @@ namespace Ritsukage.QQ
                             switch (m.Groups["type"].Value)
                             {
                                 case "text":
-                                    codes.Add(CQCode.CQText(param["text"]));
+                                    codes.Add(SoraSegment.Text(param["text"]));
                                     break;
                                 case "face":
-                                    codes.Add(CQCode.CQFace(int.Parse(param["id"])));
+                                    codes.Add(SoraSegment.Face(int.Parse(param["id"])));
                                     break;
                                 case "image":
-                                    codes.Add(CQCode.CQImage(param["file"] ?? param["url"]));
+                                    codes.Add(SoraSegment.Image(param["file"] ?? param["url"]));
                                     break;
                                 case "record":
-                                    codes.Add(CQCode.CQRecord(param["file"] ?? param["url"]));
+                                    codes.Add(SoraSegment.Record(param["file"] ?? param["url"]));
                                     break;
                                 case "video":
-                                    codes.Add(CQCode.CQVideo(param["file"] ?? param["url"]));
+                                    codes.Add(SoraSegment.Video(param["file"] ?? param["url"]));
                                     break;
                                 case "at":
                                     if (param["qq"] == "all")
-                                        codes.Add(CQCode.CQAtAll());
+                                        codes.Add(SoraSegment.AtAll());
                                     else
-                                        codes.Add(CQCode.CQAt(long.Parse(param["qq"])));
+                                        codes.Add(SoraSegment.At(long.Parse(param["qq"])));
                                     break;
                                 case "share":
-                                    codes.Add(CQCode.CQShare(param["url"], param["title"], param["content"], param["image"]));
+                                    codes.Add(SoraSegment.Share(param["url"], param["title"], param["content"], param["image"]));
                                     break;
                             }
                         }
                         else
-                            codes.Add(CQCode.CQText(Escape(msg[i..(e + 1)])));
+                            codes.Add(SoraSegment.Text(Escape(msg[i..(e + 1)])));
                         i = msg.IndexOf("[", n = e + 1);
                     }
                     else
                     {
-                        codes.Add(CQCode.CQText("["));
+                        codes.Add(SoraSegment.Text("["));
                         i = msg.IndexOf("[", n = i + 1);
                     }
                 }
-                codes.Add(CQCode.CQText(Escape(msg[n..])));
-                return codes.ToArray();
+                codes.Add(SoraSegment.Text(Escape(msg[n..])));
+                return codes;
             }
 
-            public static string ToCQString(IEnumerable<CQCode> codes)
+            public static string ToCQString(IEnumerable<SoraSegment> codes)
             {
                 var sb = new StringBuilder();
                 foreach (var code in codes)
                 {
-                    switch (code.Function)
+                    switch (code.MessageType)
                     {
-                        case CQFunction.Text:
-                            sb.Append(Encode(((Text)code.CQData).Content));
+                        case SegmentType.Text:
+                            sb.Append(Encode(((TextSegment)code.Data).Content));
                             break;
-                        case CQFunction.Face:
-                            sb.Append($"[CQ:face,id={((Face)code.CQData).Id}]");
+                        case SegmentType.Face:
+                            sb.Append($"[CQ:face,id={((FaceSegment)code.Data).Id}]");
                             break;
-                        case CQFunction.Image:
-                            sb.Append($"[CQ:image,file={Encode(((Image)code.CQData).ImgFile)}]");
+                        case SegmentType.Image:
+                            sb.Append($"[CQ:image,file={Encode(((ImageSegment)code.Data).ImgFile)}]");
                             break;
-                        case CQFunction.Record:
-                            sb.Append($"[CQ:record,file={Encode(((Image)code.CQData).ImgFile)}]");
+                        case SegmentType.Record:
+                            sb.Append($"[CQ:record,file={Encode(((ImageSegment)code.Data).ImgFile)}]");
                             break;
-                        case CQFunction.At:
-                            sb.Append($"[CQ:at,qq={((At)code.CQData).Traget}]");
+                        case SegmentType.At:
+                            sb.Append($"[CQ:at,qq={((AtSegment)code.Data).Target}]");
                             break;
-                        case CQFunction.Share:
-                            Share s = (Share)code.CQData;
+                        case SegmentType.Share:
+                            ShareSegment s = (ShareSegment)code.Data;
                             sb.Append($"[CQ:share,url={Encode(s.Url)},title={Encode(s.Title)},content={Encode(s.Content)},image={Encode(s.ImageUrl)}]");
                             break;
                     }
@@ -149,7 +148,7 @@ namespace Ritsukage.QQ
         /// <summary>
         /// 消息内容
         /// </summary>
-        public Message Message { get; init; }
+        public MessageContext Message { get; init; }
 
         /// <summary>
         /// 是否为群聊消息
@@ -214,48 +213,47 @@ namespace Ritsukage.QQ
                 await gm.RecallSourceMessage();
         }
 
-        public async ValueTask<(APIStatusType apiStatus, int messageId)> Repeat()
+        public async ValueTask<(ApiStatus apiStatus, int messageId)> Repeat()
         {
             if (Event is GroupMessageEventArgs gm)
                 return await gm.Repeat();
             else if (Event is PrivateMessageEventArgs pm)
                 return await pm.Repeat();
-            return (APIStatusType.Failed, -1);
+            return (default(ApiStatus), -1);
         }
 
-        public async ValueTask<(APIStatusType apiStatus, int messageId)> Reply(params object[] msg)
+        public async ValueTask<(ApiStatus apiStatus, int messageId)> Reply(params object[] msg)
         {
             if (Event is GroupMessageEventArgs gm)
-                return await gm.Reply(msg);
+                return await gm.Reply(BuildMessageBody(msg));
             else if (Event is PrivateMessageEventArgs pm)
-                return await pm.Reply(msg);
-            return (APIStatusType.Failed, -1);
+                return await pm.Reply(BuildMessageBody(msg));
+            return (default(ApiStatus), -1);
         }
 
-        public async ValueTask<(APIStatusType apiStatus, int messageId)> ReplyToOriginal(params object[] msg)
+        public async ValueTask<(ApiStatus apiStatus, int messageId)> ReplyToOriginal(params object[] msg)
         {
-            msg = (new object[] { CQCode.CQReply(Message.MessageId) }).Concat(msg).ToArray();
+            msg = (new object[] { SoraSegment.Reply(Message.MessageId) }).Concat(msg).ToArray();
             if (Event is GroupMessageEventArgs gm)
-                return await gm.Reply(msg);
+                return await gm.Reply(BuildMessageBody(msg));
             else if (Event is PrivateMessageEventArgs pm)
-                return await pm.Reply(msg);
-            return (APIStatusType.Failed, -1);
+                return await pm.Reply(BuildMessageBody(msg));
+            return (default(ApiStatus), -1);
         }
 
-        public async ValueTask<(APIStatusType apiStatus, int messageId)> AutoAtReply(params object[] msg)
+        public async ValueTask<(ApiStatus apiStatus, int messageId)> AutoAtReply(params object[] msg)
         {
             if (Event is GroupMessageEventArgs gm)
             {
-                msg = (new object[] { gm.Sender.CQCodeAt() }).Concat(msg).ToArray();
-                await gm.Reply(msg);
+                await gm.Reply(BuildMessageBody(msg));
             }
             else if (Event is PrivateMessageEventArgs pm)
-                await pm.Reply(msg);
-            return (APIStatusType.Failed, -1);
+                await pm.Reply(BuildMessageBody(msg));
+            return (default(ApiStatus), -1);
         }
 
-        public async ValueTask<(APIStatusType apiStatus, int messageId)> SendPrivateMessage(params object[] msg)
-            => await Sender.SendPrivateMessage(msg);
+        public async ValueTask<(ApiStatus apiStatus, int messageId)> SendPrivateMessage(params object[] msg)
+            => await Sender.SendPrivateMessage(BuildMessageBody(msg));
 
         public async Task<UserCoins> GetCoins()
             => await CoinsService.GetUserCoins("qq", Sender.Id);
@@ -284,5 +282,24 @@ namespace Ritsukage.QQ
         public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
 
         public static string Encode(string s) => s.Replace("&", "&amp;").Replace("[", "&#91;").Replace("]", "&#93;").Replace(",", "&#44;");
+
+        public static MessageBody BuildMessageBody(List<SoraSegment> segments)
+            => segments.ToMessageBody();
+
+        public static MessageBody BuildMessageBody(params object[] msg)
+            => BuildMessageBody(BuildSoraSegment(msg));
+
+        public static List<SoraSegment> BuildSoraSegment(params object[] msg)
+        {
+            var result = new List<SoraSegment>();
+            foreach (var obj in msg)
+            {
+                if (obj is SoraSegment seg)
+                    result.Add(seg);
+                else
+                    result.Add(SoraSegment.Text(obj.ToString()));
+            }
+            return result;
+        }
     }
 }

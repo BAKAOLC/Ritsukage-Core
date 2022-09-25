@@ -4,7 +4,7 @@ using Ritsukage.Library.Minecraft.Jila;
 using Ritsukage.Library.Minecraft.Server;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Drawing;
@@ -90,7 +90,7 @@ namespace Ritsukage.QQ.Commands
                 if (info.IconData != null)
                 {
                     var icon = new MemoryImage(new Bitmap(new MemoryStream(info.IconData)));
-                    await e.Reply(CQCode.CQImage(icon.ToBase64File()), Environment.NewLine, sb.ToString());
+                    await e.Reply(SoraSegment.Image(icon.ToBase64File()), Environment.NewLine, sb.ToString());
                 }
                 else
                     await e.Reply(sb.ToString());

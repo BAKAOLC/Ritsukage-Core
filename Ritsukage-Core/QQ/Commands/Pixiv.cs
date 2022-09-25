@@ -4,7 +4,7 @@ using Ritsukage.Library.Pixiv.Extension;
 using Ritsukage.Library.Pixiv.Model;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Collections;
@@ -57,7 +57,7 @@ namespace Ritsukage.QQ.Commands
                         stream = await GIFsicle.Compress(stream);
                         var filename = Path.GetTempFileName();
                         GIFsicle.SaveStreamToFile(stream, filename);
-                        msg.Add(CQCode.CQImage(filename));
+                        msg.Add(SoraSegment.Image(filename));
                     }
                 }
                 else
@@ -84,7 +84,7 @@ namespace Ritsukage.QQ.Commands
                             }
                         }
                         ImageUtils.LimitImageScale(cache, 2500, 2500);
-                        msg.Add(CQCode.CQImage(cache));
+                        msg.Add(SoraSegment.Image(cache));
                     }
                 }
                 msg.Add(detail.ToString());

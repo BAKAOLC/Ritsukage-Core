@@ -1,6 +1,5 @@
 ﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
 using System;
 using System.Linq;
 using System.Text;
@@ -29,7 +28,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("参数不合法，请至少给出2项选择项");
                 return;
             }
-            await e.ReplyToOriginal("#抉择：", ToCQCodes(c[rnd.Int(0, c.Length - 1)]));
+            await e.ReplyToOriginal("#抉择：", ToSoraSegment(c[rnd.Int(0, c.Length - 1)]));
             await e.UpdateGroupCooldown("utils.choose");
         }
 
@@ -66,7 +65,7 @@ namespace Ritsukage.QQ.Commands
             sb.Append("#抉择：");
             foreach (var s in choose)
                 sb.AppendLine().Append("  ").Append(s);
-            await e.ReplyToOriginal(ToCQCodes(sb.ToString()));
+            await e.ReplyToOriginal(ToSoraSegment(sb.ToString()));
             await e.UpdateGroupCooldown("utils.choose");
         }
 

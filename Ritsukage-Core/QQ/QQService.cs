@@ -2,9 +2,10 @@
 using Ritsukage.QQ.Events;
 using Ritsukage.QQ.Service;
 using Ritsukage.Tools.Console;
+using Sora;
 using Sora.Entities.Base;
 using Sora.Net;
-using Sora.OnebotModel;
+using Sora.Net.Config;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -15,23 +16,23 @@ namespace Ritsukage.QQ
 {
     public class QQService
     {
-        public SoraWSServer Server { get; private set; }
+        public SoraWebsocketServer Server { get; private set; }
 
         public QQService(ServerConfig config)
         {
             CommandManager.Init();
             EventManager.Init();
             ServiceManager.Init();
-            Server = new(config);
+            Server = (SoraWebsocketServer)SoraServiceFactory.CreateService(config);
             CombineEvent(Server);
         }
 
-        readonly ConcurrentDictionary<long, SoraApi> Apis = new();
-        public long[] GetBotList() => Apis.Select(x => x.Key)?.ToArray();
+        readonly ConcurrentDictionary<long, Guid> Connection = new();
+        public long[] GetBotList() => Connection.Select(x => x.Key)?.ToArray();
         public SoraApi GetSoraApi(long bot)
         {
-            if (Apis.TryGetValue(bot, out var api))
-                return api;
+            if (Connection.TryGetValue(bot, out var guid))
+                return Server.GetApi(guid);
             return null;
         }
 
@@ -41,7 +42,7 @@ namespace Ritsukage.QQ
             {
                 try
                 {
-                    await Server.StartServer();
+                    await Server.StartService();
                 }
                 catch (Exception e)
                 {
@@ -64,26 +65,24 @@ namespace Ritsukage.QQ
             }
         }
 
-        void CombineEvent(SoraWSServer server)
+        void CombineEvent(SoraWebsocketServer server)
         {
             #region Server Connection Event
             server.ConnManager.OnOpenConnectionAsync += async (s, e) =>
             {
-                ConsoleLog.Debug("Socket", $"New connection created from {s.ClientIpAddress}:{s.ClientPort} with {e.SelfId} {e.Role}");
-                await Task.CompletedTask;
-            };
-            server.ConnManager.OnHeartBeatTimeOut += async (s, e) =>
-            {
-                ConsoleLog.Debug("Socket", $"Heartbeat timeout from {s.ClientIpAddress}:{s.ClientPort} with {e.SelfId} {e.Role}");
+                Connection[e.SelfId] = s;
+                ConsoleLog.Debug("Socket", $"New connection created with {e.SelfId} {e.Role}");
                 await Task.CompletedTask;
             };
             server.ConnManager.OnCloseConnectionAsync += async (s, e) =>
             {
-                ConsoleLog.Debug("Socket", $"Connection closed from {s.ClientIpAddress}:{s.ClientPort} with {e.SelfId} {e.Role}");
+                Connection.TryRemove(e.SelfId, out _);
+                ConsoleLog.Debug("Socket", $"Connection closed with {e.SelfId} {e.Role}");
                 await Task.CompletedTask;
             };
             server.Event.OnClientConnect += async (s, e) =>
             {
+                Connection[e.LoginUid] = e.ConnId;
                 ConsoleLog.Info("Socket", $"[{e.LoginUid}] Client type: {e.ClientType} {e.ClientVersionCode} connected.");
                 await Task.CompletedTask;
             };
@@ -96,17 +95,17 @@ namespace Ritsukage.QQ
                 else
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
 
-                if (!Apis.ContainsKey(e.SenderInfo.UserId))
+                if (!Connection.ContainsKey(e.SenderInfo.UserId))
                     await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
             server.Event.OnPrivateMessage += async (s, e) =>
             {
                 ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}{e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
 
-                if (!Apis.ContainsKey(e.SenderInfo.UserId))
+                if (!Connection.ContainsKey(e.SenderInfo.UserId))
                     await Task.Run(() => CommandManager.ReceiveMessage(e));
             };
-            server.Event.OnSelfMessage += async (s, e) =>
+            server.Event.OnSelfGroupMessage += async (s, e) =>
             {
                 if (e.IsAnonymousMessage)
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Send({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] <匿名>{e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
@@ -114,11 +113,15 @@ namespace Ritsukage.QQ
                     ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Send({e.Message.MessageId})]{Environment.NewLine}[Group:{e.SourceGroup.Id}] {e.SenderInfo.Card}({e.SenderInfo.UserId}): {e.Message}");
                 await ValueTask.CompletedTask;
             };
+            server.Event.OnSelfPrivateMessage += async (s, e) =>
+            {
+                ConsoleLog.Info(e.EventName, $"[{e.LoginUid}][Receive({e.Message.MessageId})]{Environment.NewLine}{e.SenderInfo.Nick}({e.SenderInfo.UserId}): {e.Message}");
+                await ValueTask.CompletedTask;
+            };
             #endregion
             #region Event Manager
             server.Event.OnClientConnect += (s, e) =>
             {
-                Apis[e.LoginUid] = e.SoraApi;
                 ConsoleLog.Debug("Sora", $"Update api for bot {e.LoginUid}");
                 return ValueTask.CompletedTask;
             };

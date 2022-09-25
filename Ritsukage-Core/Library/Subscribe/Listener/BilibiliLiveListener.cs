@@ -7,7 +7,7 @@ using Ritsukage.Library.Subscribe.CheckResult;
 using Ritsukage.QQ;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,7 +88,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                                             if (await api.CheckHasGroup(group))
                                             {
                                                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
-                                                await api.SendGroupMessage(group, qqmsg);
+                                                await api.SendGroupMessage(group, SoraMessage.BuildMessageBody(qqmsg));
                                             }
                                         });
                                     }
@@ -140,7 +140,7 @@ namespace Ritsukage.Library.Subscribe.Listener
             if (result.UpdateType == BilibiliLiveUpdateType.Initialization)
             {
                 var img = DownloadManager.Download(result.Cover, enableAria2Download: true, enableSimpleDownload: true).Result;
-                msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img));
+                msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img));
                 msgs.Add(new StringBuilder()
                     .AppendLine()
                     .AppendLine($"{result.User} 直播状态初始化")
@@ -162,7 +162,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 else
                 {
                     var img = DownloadManager.Download(result.Cover, enableAria2Download: true, enableSimpleDownload: true).Result;
-                    msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img));
+                    msgs.Add(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img));
                     msgs.Add(new StringBuilder()
                         .AppendLine()
                         .AppendLine($"{result.User} 直播开始啦")

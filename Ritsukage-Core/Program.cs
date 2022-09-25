@@ -254,10 +254,10 @@ namespace Ritsukage
                     {
                         QQServer = new(new()
                         {
-                            Location = cfg.Host,
+                            Host = cfg.Host,
                             Port = cfg.Port,
                             AccessToken = cfg.AccessToken,
-                            HeartBeatTimeOut = cfg.HeartBeatTimeOut,
+                            HeartBeatTimeOut = TimeSpan.FromMilliseconds(cfg.HeartBeatTimeOut),
                             EnableSoraCommandManager = false
                         });
                         QQServer.Start();
@@ -265,7 +265,7 @@ namespace Ritsukage
                     catch (Exception ex)
                     {
                         ConsoleLog.Fatal("Main", "QQ功能启动失败");
-                        ConsoleLog.Error("Main", ConsoleLog.ErrorLogBuilder(ex));
+                        ConsoleLog.Error("Main", ConsoleLog.ErrorLogBuilder(ex, true));
                         Working = false;
                     }
                 })

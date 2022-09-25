@@ -1,4 +1,6 @@
 ﻿using Ritsukage.Library.ShouSi;
+using Sora.Entities;
+using Sora.Enumeration.ApiType;
 using System;
 using System.Text;
 
@@ -19,13 +21,13 @@ namespace Ritsukage.QQ.Commands
             var currentTime = DateTime.Now;
             var (status, _) = await e.ReplyToOriginal("Pong!");
             var send = (DateTime.Now - currentTime).TotalMilliseconds;
-            if (status == Sora.Enumeration.ApiType.APIStatusType.OK)
-            await e.ReplyToOriginal(new StringBuilder()
-                .AppendLine("[Double Ping Result]")
-                .AppendLine($"Receive: {receive:F0} ms")
-                .AppendLine($"Send: {send:F0} ms")
-                .Append($"Send Status: {status}")
-                .ToString());
+            if (status.RetCode == ApiStatusType.Ok)
+                await e.ReplyToOriginal(new StringBuilder()
+                    .AppendLine("[Double Ping Result]")
+                    .AppendLine($"Receive: {receive:F0} ms")
+                    .AppendLine($"Send: {send:F0} ms")
+                    .Append($"Send Status: {status}")
+                    .ToString());
         }
 
         [Command("时间", "time")]

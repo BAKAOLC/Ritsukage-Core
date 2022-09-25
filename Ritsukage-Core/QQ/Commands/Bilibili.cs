@@ -6,7 +6,7 @@ using Ritsukage.Library.Graphic;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp.Formats.Png;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Collections;
@@ -33,7 +33,7 @@ namespace Ritsukage.QQ.Commands
                         await e.ReplyToOriginal("登录任务已建立，请等待登录二维码的发送");
                     var qr = new MemoryImage(bitmap);
                     var path = qr.ToBase64File();
-                    await e.SendPrivateMessage(CQCode.CQImage(path), "\n请使用Bilibili客户端扫码登录");
+                    await e.SendPrivateMessage(SoraSegment.Image(path), "\n请使用Bilibili客户端扫码登录");
                 },
                 async () => await e.SendPrivateMessage("检测到扫描事件，请在客户端中确认登录"),
                 async (cookie) =>
@@ -103,7 +103,7 @@ namespace Ritsukage.QQ.Commands
             }
             if (user != null)
             {
-                await e.Reply(CQCode.CQImage(await DownloadManager.Download(user.FaceUrl,
+                await e.Reply(SoraSegment.Image(await DownloadManager.Download(user.FaceUrl,
                     enableAria2Download: true, enableSimpleDownload: true)), new StringBuilder()
                     .AppendLine()
                     .AppendLine(user.BaseToString())
@@ -130,7 +130,7 @@ namespace Ritsukage.QQ.Commands
             {
                 string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
                     enableAria2Download: true, enableSimpleDownload: true);
-                await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : CQCode.CQImage(cover), new StringBuilder()
+                await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : SoraSegment.Image(cover), new StringBuilder()
                     .AppendLine().Append(room.BaseToString()).ToString());
             }
             else
@@ -191,7 +191,7 @@ namespace Ritsukage.QQ.Commands
             if (video != null)
             {
                 var img = await DownloadManager.Download(video.PicUrl, enableAria2Download: true, enableSimpleDownload: true);
-                await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
+                await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img), new StringBuilder()
                     .AppendLine().Append(video.BaseToString()).ToString());
             }
             else
@@ -268,7 +268,7 @@ namespace Ritsukage.QQ.Commands
             if (audio != null)
             {
                 var img = await DownloadManager.Download(audio.CoverUrl, enableAria2Download: true, enableSimpleDownload: true);
-                await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
+                await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img), new StringBuilder()
                     .AppendLine().Append(audio.BaseToString()).ToString());
             }
             else
@@ -321,7 +321,7 @@ namespace Ritsukage.QQ.Commands
                     else
                     {
                         ImageUtils.LimitImageScale(pic, 2048, 2048);
-                        msg.Add(CQCode.CQImage(pic));
+                        msg.Add(SoraSegment.Image(pic));
                     }
                     msg.Add(Environment.NewLine);
                 }
@@ -335,7 +335,7 @@ namespace Ritsukage.QQ.Commands
                     var encoder = new PngEncoder();
                     encoder.Encode(np, output);
                     output.Dispose();
-                    await e.Reply(CQCode.CQImage(name));
+                    await e.Reply(SoraSegment.Image(name));
                 }
             }
             else

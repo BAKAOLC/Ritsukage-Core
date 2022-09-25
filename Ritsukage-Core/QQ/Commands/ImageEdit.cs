@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using System;
 using System.IO;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace Ritsukage.QQ.Commands
         static async Task<string> GetImageUrl(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
-            if (imglist.Count <= 0)
+            if (imglist.Count() <= 0)
             {
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;
@@ -32,7 +32,7 @@ namespace Ritsukage.QQ.Commands
         static async Task<string[]> GetImageUrls(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
-            if (imglist.Count <= 0)
+            if (imglist.Count() <= 0)
             {
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;
@@ -72,7 +72,7 @@ namespace Ritsukage.QQ.Commands
         {
             var file = Path.GetTempFileName();
             SaveImage(image, format, file);
-            await e.Reply(CQCode.CQImage(file));
+            await e.Reply(SoraSegment.Image(file));
             await e.RemoveCoins(5);
         }
 
@@ -85,7 +85,7 @@ namespace Ritsukage.QQ.Commands
                 SaveImage(images[i], format, file);
                 paths[i] = file;
             }
-            await e.Reply(paths.Select(x => CQCode.CQImage(x)).ToArray());
+            await e.Reply(paths.Select(x => SoraSegment.Image(x)).ToArray());
             await e.RemoveCoins(5);
         }
 

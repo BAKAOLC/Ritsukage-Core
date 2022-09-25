@@ -2,7 +2,6 @@
 using Ritsukage.Library.FFXIV.WanaHome;
 using Ritsukage.Library.FFXIV.WanaHome.Enum;
 using Ritsukage.Tools;
-using Sora.Entities.CQCodes;
 using System;
 using System.Linq;
 using System.Text;

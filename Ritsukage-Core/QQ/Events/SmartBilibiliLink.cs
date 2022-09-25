@@ -5,7 +5,8 @@ using Ritsukage.Library.Graphic;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp.Formats.Png;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
+using Sora.Entities.Segment.DataModel;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections;
@@ -25,7 +26,20 @@ namespace Ritsukage.QQ.Events
         {
             var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == args.SourceGroup.Id);
             if (data != null && data.SmartBilibiliLink)
-                Trigger(args);
+            {
+                try
+                {
+                    Trigger(args);
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLog.Error("Event Manager", new StringBuilder()
+                        .AppendLine("触发Event时发生错误")
+                        .AppendLine($"Event Type\t: {typeof(GroupMessageEventArgs)}")
+                        .AppendLine($"Method\t\t: {Receiver}")
+                        .Append($"Exception\t: {ex.GetFormatString(true)}"));
+                }
+            }
         }
 
         const int DelayTime = 10;
@@ -63,10 +77,10 @@ namespace Ritsukage.QQ.Events
             Match m;
             string baseStr = args.Message.RawText;
             #region 小程序
-            var cqJson = args.Message.MessageList.Where(x => x.Function == Sora.Enumeration.CQFunction.Json).FirstOrDefault();
-            if (cqJson != null)
+            var cqJson = args.Message.MessageBody.Where(x => x.MessageType == Sora.Enumeration.SegmentType.Json);
+            if (cqJson.Any())
             {
-                var data = JObject.Parse(((Sora.Entities.CQCodes.CQCodeModel.Code)cqJson.CQData).Content);
+                var data = JObject.Parse(((CodeSegment)cqJson.First().Data).Content);
                 if ((string)data["desc"] == "哔哩哔哩")
                     baseStr = (string)data["meta"]["detail_1"]["qqdocurl"];
             }
@@ -335,16 +349,16 @@ namespace Ritsukage.QQ.Events
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending user info: {user.Id}");
             var img = await DownloadManager.Download(user.FaceUrl, enableAria2Download: true, enableSimpleDownload: true);
-            await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
-                .AppendLine().Append(user.BaseToString()).ToString());
+            await e.Reply(SoraMessage.BuildMessageBody(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img),
+                new StringBuilder().AppendLine().Append(user.BaseToString()).ToString()));
         }
 
         static async void SendVideoInfo(GroupMessageEventArgs e, Video video)
         {
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending video info: {video.AV}");
             var img = await DownloadManager.Download(video.PicUrl, enableAria2Download: true, enableSimpleDownload: true);
-            await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : CQCode.CQImage(img), new StringBuilder()
-                    .AppendLine().Append(video.BaseToString()).ToString());
+            await e.Reply(SoraMessage.BuildMessageBody(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img),
+                new StringBuilder().AppendLine().Append(video.BaseToString()).ToString()));
         }
 
         static async void SendLiveRoomInfo(GroupMessageEventArgs e, LiveRoom room)
@@ -352,8 +366,8 @@ namespace Ritsukage.QQ.Events
             ConsoleLog.Debug("Smart Bilibili Link", $"Sending live room info: {room.Id}");
             string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
                 enableAria2Download: true, enableSimpleDownload: true);
-            await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : CQCode.CQImage(cover), new StringBuilder()
-                .AppendLine().Append(room.BaseToString()).ToString());
+            await e.Reply(SoraMessage.BuildMessageBody(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : SoraSegment.Image(cover),
+                new StringBuilder().AppendLine().Append(room.BaseToString()).ToString()));
         }
 
         static async void SendDynamicInfo(GroupMessageEventArgs e, Dynamic dynamic)
@@ -368,12 +382,12 @@ namespace Ritsukage.QQ.Events
                 else
                 {
                     ImageUtils.LimitImageScale(pic, 2048, 2048);
-                    msg.Add(CQCode.CQImage(pic));
+                    msg.Add(SoraSegment.Image(pic));
                 }
                 msg.Add(Environment.NewLine);
             }
             msg.Add(dynamic.BaseToString());
-            await e.Reply(msg.ToArray());
+            await e.Reply(SoraMessage.BuildMessageBody(msg.ToArray()));
             var np = await dynamic.GetNinePicture();
             if (np != null)
             {
@@ -382,7 +396,7 @@ namespace Ritsukage.QQ.Events
                 var encoder = new PngEncoder();
                 encoder.Encode(np, output);
                 output.Dispose();
-                await e.Reply(CQCode.CQImage(name));
+                await e.Reply(SoraSegment.Image(name));
             }
         }
     }

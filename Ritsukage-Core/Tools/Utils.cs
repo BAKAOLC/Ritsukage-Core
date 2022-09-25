@@ -116,7 +116,9 @@ namespace Ritsukage.Tools
             string nativeUrl = shortUrl;
             try
             {
+#pragma warning disable SYSLIB0014 // 类型或成员已过时
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(shortUrl);
+#pragma warning restore SYSLIB0014 // 类型或成员已过时
                 req.AllowAutoRedirect = false;  // 禁止自动跳转
                 HttpWebResponse response = (HttpWebResponse)req.GetResponse();
                 if (response.StatusCode == HttpStatusCode.Found)
@@ -248,7 +250,9 @@ namespace Ritsukage.Tools
         {
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+#pragma warning disable SYSLIB0014 // 类型或成员已过时
             var request = (HttpWebRequest)WebRequest.Create(url);
+#pragma warning restore SYSLIB0014 // 类型或成员已过时
             request.ServerCertificateValidationCallback = delegate { return true; };
             return request;
         }

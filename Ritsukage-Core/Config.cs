@@ -79,7 +79,7 @@ namespace Ritsukage
         /// <summary>
         /// 要监听的目标端口
         /// </summary>
-        public uint Port = 23150;
+        public ushort Port = 23150;
 
         /// <summary>
         /// token
@@ -89,7 +89,7 @@ namespace Ritsukage
         /// <summary>
         /// 心跳超时间隔
         /// </summary>
-        public uint HeartBeatTimeOut = 30000;
+        public int HeartBeatTimeOut = 30000;
 
         /// <summary>
         /// QQ相关功能超级权限者
