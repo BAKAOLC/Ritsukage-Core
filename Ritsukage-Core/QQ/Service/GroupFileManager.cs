@@ -284,14 +284,14 @@ namespace Ritsukage.QQ.Service
                     }
                     else
                     {
-                        ConsoleLog.Error(nameof(LuaSTGGroupEvent), "文件列表更新失败");
+                        ConsoleLog.Error(nameof(GroupFileManager), "文件列表更新失败");
                         return false;
                     }
                 }
             }
             else
             {
-                ConsoleLog.Error(nameof(LuaSTGGroupEvent), "文件列表更新失败");
+                ConsoleLog.Error(nameof(GroupFileManager), "文件列表更新失败");
                 return false;
             }
             return true;
