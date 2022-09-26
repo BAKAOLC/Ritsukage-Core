@@ -18,35 +18,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="QQ\Console\**" />
-    <EmbeddedResource Remove="QQ\Console\**" />
-    <None Remove="QQ\Console\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.3.1" />
-    <PackageReference Include="DnsClient" Version="1.5.0" />
-    <PackageReference Include="Downloader" Version="2.2.8" />
+    <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4" />
+    <PackageReference Include="Discord.Net" Version="3.8.1" />
+    <PackageReference Include="DnsClient" Version="1.6.1" />
+    <PackageReference Include="Downloader" Version="2.4.1" />
     <PackageReference Include="Meowtrix.PixivApi" Version="0.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Toolkit.Parsers" Version="6.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0-rc.1.22426.10" />
     <PackageReference Include="NetCoreHTMLToImage" Version="1.1.1.7" />
     <PackageReference Include="NeteaseCloudMusicApi" Version="3.25.3.10000" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Octokit" Version="0.50.0" />
-    <PackageReference Include="QRCoder" Version="1.4.1" />
-    <PackageReference Include="ReverseMarkdown" Version="3.19.0" />
-    <PackageReference Include="SharpZipLib" Version="1.3.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
-    <PackageReference Include="SteamAuth" Version="3.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+    <PackageReference Include="Octokit" Version="3.0.0" />
+    <PackageReference Include="QRCoder" Version="1.4.3" />
+    <PackageReference Include="ReverseMarkdown" Version="3.24.0" />
+    <PackageReference Include="SharpZipLib" Version="1.4.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta15" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0-rc.1.22426.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Acquisition\Acquisition.csproj" />
     <ProjectReference Include="..\GifCompress\GifCompress.csproj" />
     <ProjectReference Include="..\Sora\Sora\Sora.csproj" />
+    <ProjectReference Include="..\SteamAuth\SteamAuth\SteamAuth.csproj" />
   </ItemGroup>
 
   <ItemGroup>

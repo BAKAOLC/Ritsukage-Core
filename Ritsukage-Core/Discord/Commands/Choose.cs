@@ -1,7 +1,6 @@
 ﻿using Discord.Commands;
 using Ritsukage.Tools;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Discord.Commands

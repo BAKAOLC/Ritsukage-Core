@@ -2,7 +2,6 @@
 using Ritsukage.Library.Data;
 using Ritsukage.Tools.Console;
 using System;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 

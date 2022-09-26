@@ -1,9 +1,10 @@
-﻿using Microsoft.Toolkit.Parsers.Rss;
-using Ritsukage.Tools;
+﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FeedData = CodeHollow.FeedReader.Feed;
+using Reader = CodeHollow.FeedReader.FeedReader;
 
 namespace Ritsukage.Library.Feed
 {
@@ -16,20 +17,19 @@ namespace Ritsukage.Library.Feed
             Source = source;
         }
 
-        public virtual async Task<IEnumerable<RssSchema>> Read()
+        public virtual async Task<FeedData> Read()
         {
             return await Task.Run(() =>
             {
-                IEnumerable<RssSchema> rss = null;
+                FeedData rss = null;
                 for (var i = 0; i < Source.Length; i++)
                 {
                     try
                     {
                         var data = Utils.HttpGET(Source[i]);
-                        if (!string.IsNullOrEmpty(data))
+                        if (!string.IsNullOrWhiteSpace(data))
                         {
-                            var parser = new RssParser();
-                            rss = parser.Parse(data);
+                            rss = Reader.ReadFromString(data);
                             break;
                         }
                     }
