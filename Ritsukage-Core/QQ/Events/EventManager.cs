@@ -11,6 +11,22 @@ namespace Ritsukage.QQ.Events
 {
     public static class EventManager
     {
+        struct EventMethod
+        {
+            public MethodInfo Method { get; init; }
+
+            public bool HandleOthers { get; init; }
+
+            public bool HandleSelf { get; init; }
+
+            public EventMethod(MethodInfo method, bool handleSelf = false, bool handleOthers = true)
+            {
+                Method = method;
+                HandleSelf = handleSelf;
+                HandleOthers = handleOthers;
+            }
+        }
+
         static bool _init = false;
         public static void Init()
         {
@@ -19,20 +35,20 @@ namespace Ritsukage.QQ.Events
             RegisterAllEvents();
         }
 
-        private static readonly Dictionary<Type, List<MethodInfo>> Events = new();
+        private static readonly Dictionary<Type, List<EventMethod>> Events = new();
 
-        public static void Trigger(object sender, BaseSoraEventArgs args)
+        public static void Trigger(object sender, BaseSoraEventArgs args, bool fromSelf = false)
         {
             Type type = args.GetType();
             if (Events.TryGetValue(type, out var list))
             {
-                foreach (var e in list)
+                foreach (var e in list.Where(x => fromSelf ? x.HandleSelf : x.HandleOthers).ToArray())
                 {
                     Task.Run(() =>
                     {
                         try
                         {
-                            e.Invoke(null, new object[] { sender, args });
+                            e.Method?.Invoke(null, new object[] { sender, args });
                         }
                         catch (Exception ex)
                         {
@@ -55,13 +71,17 @@ namespace Ritsukage.QQ.Events
                 if (attrs != null)
                 {
                     if (Events.TryGetValue(attrs.Handled, out var list))
-                        list.Add(method);
+                        list.Add(new(method, attrs.HandleSelf, attrs.HandleOthers));
                     else
                         Events.Add(attrs.Handled, new()
                         {
-                            { method }
+                            { new(method, attrs.HandleSelf, attrs.HandleOthers) }
                         });
-                    ConsoleLog.Debug("Events", $"Register event: {attrs.Handled} for {method}");
+                    ConsoleLog.Debug("Events", new StringBuilder().AppendLine("Register Event")
+                        .AppendLine($"Event\t\t: {attrs.Handled}")
+                        .AppendLine($"Method\t\t: {method}")
+                        .AppendLine($"Handle Others\t: {attrs.HandleOthers}")
+                        .Append($"Handle Self\t: {attrs.HandleSelf}"));
                 }
             }
         }

@@ -7,9 +7,15 @@ namespace Ritsukage.QQ.Events
     {
         public Type Handled { get; init; }
 
-        public EventAttribute(Type events)
+        public bool HandleOthers { get; init; }
+
+        public bool HandleSelf { get; init; }
+
+        public EventAttribute(Type events, bool handleSelf = false, bool handleOthers = true)
         {
             Handled = events;
+            HandleSelf = handleSelf;
+            HandleOthers = handleOthers;
         }
     }
 }
