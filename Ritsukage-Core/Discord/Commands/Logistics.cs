@@ -15,7 +15,7 @@ namespace Ritsukage.Discord.Commands
                 try
                 {
                     var h = Library.Roll.Model.Logistics.Get(id);
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     await dm.SendMessageAsync(h.GetFullString());
                     await msg.ModifyAsync(x => x.Content = "数据获取成功，请前往私聊查看");
                     await Context.User.RemoveCoins(15);

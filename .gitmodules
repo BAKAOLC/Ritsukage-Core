@@ -7,3 +7,6 @@
 [submodule "GifCompress"]
 	path = GifCompress
 	url = https://github.com/BAKAOLC/GifCompress.git
+[submodule "SteamAuth"]
+	path = SteamAuth
+	url = https://github.com/BAKAOLC/SteamAuth

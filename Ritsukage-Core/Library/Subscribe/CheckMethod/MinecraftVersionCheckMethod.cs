@@ -1,4 +1,4 @@
-﻿using Microsoft.Toolkit.Parsers.Rss;
+﻿using CodeHollow.FeedReader;
 using Ritsukage.Library.Data;
 using Ritsukage.Library.Feed;
 using Ritsukage.Library.Subscribe.CheckResult;
@@ -17,11 +17,11 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
 
         public override async Task<CheckResult.Base.SubscribeCheckResult> Check()
         {
-            RssSchema version;
+            FeedItem version;
             try
             {
                 var feed = await Feed.Read();
-                version = feed.FirstOrDefault();
+                version = feed.Items.FirstOrDefault();
             }
             catch (Exception e)
             {
@@ -41,7 +41,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                     {
                         Updated = true,
                         Title = version.Content,
-                        Time = version.PublishDate
+                        Time = (DateTime)version.PublishingDate
                     };
                 }
                 else
@@ -57,7 +57,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
             {
                 Updated = true,
                 Title = version.Content,
-                Time = version.PublishDate
+                Time = (DateTime)version.PublishingDate
             };
         }
     }

@@ -1,6 +1,5 @@
 ﻿using Discord.Commands;
 using Ritsukage.Library.Netease.CloudMusic;
-using Ritsukage.Tools;
 using System.Text;
 using System.Threading.Tasks;
 

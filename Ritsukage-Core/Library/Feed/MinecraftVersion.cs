@@ -1,12 +1,11 @@
-﻿using Microsoft.Toolkit.Parsers.Rss;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
+using FeedData = CodeHollow.FeedReader.Feed;
+using Reader = CodeHollow.FeedReader.FeedReader;
 
 namespace Ritsukage.Library.Feed
 {
@@ -19,9 +18,9 @@ namespace Ritsukage.Library.Feed
 
         const string MojangMeta = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
-        public override Task<IEnumerable<RssSchema>> Read()
+        public override Task<FeedData> Read()
         {
-            IEnumerable<RssSchema> rss = null;
+            FeedData rss = null;
             try
             {
                 var jdata = JObject.Parse(Utils.HttpGET(MojangMeta));
@@ -64,8 +63,7 @@ namespace Ritsukage.Library.Feed
                 }
                 sb.AppendLine("</channel>");
                 sb.Append("</rss>");
-                var parser = new RssParser();
-                rss = parser.Parse(sb.ToString());
+                rss = Reader.ReadFromString(sb.ToString());
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Ritsukage.Discord.Services;
@@ -67,15 +68,25 @@ namespace Ritsukage.Discord
 
         static IServiceProvider ConfigureServices()
         {
-            var map = new ServiceCollection()
-                .AddSingleton(new DiscordSocketClient(new()
-                {
+            var discordSocketClient = new DiscordSocketClient(new DiscordSocketConfig()
+            {
+                GatewayIntents = GatewayIntents.All,
 #if DEBUG
                     LogLevel = LogSeverity.Debug
 #else
-                    LogLevel = LogSeverity.Info
+                LogLevel = LogSeverity.Info
 #endif
-                }))
+            });
+            var interactionService = new InteractionService(discordSocketClient, new()
+            {
+#if DEBUG
+                    LogLevel = LogSeverity.Debug
+#else
+                LogLevel = LogSeverity.Info
+#endif
+            });
+            var map = new ServiceCollection()
+                .AddSingleton(discordSocketClient)
                 .AddSingleton(new CommandService(new()
                 {
 #if DEBUG
@@ -85,6 +96,7 @@ namespace Ritsukage.Discord
 #endif
                     CaseSensitiveCommands = false,
                 }))
+                .AddSingleton(interactionService)
                 .AddSingleton<Tools.Rand>();
             Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
             Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is ServiceAttribute).Any())?.ToArray() ?? Array.Empty<Type>();
@@ -134,7 +146,7 @@ namespace Ritsukage.Discord
             {
                 var mc = new SocketCommandContext(Client, sum);
                 if (msg.Author.Id != Client.CurrentUser.Id)
-                    ConsoleLog.Info("Discord", $"{mc.Guild} > {mc.Channel} > {msg.Author}: " + msg.Content.ToString());
+                    ConsoleLog.Info("Discord", $"{mc.Guild} > {mc.Channel} > {sum.Author}: " + sum.ToString());
             }
             else if (msg is SocketSystemMessage ssm)
             {

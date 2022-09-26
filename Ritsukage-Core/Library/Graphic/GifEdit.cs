@@ -15,7 +15,7 @@ namespace Ritsukage.Library.Graphic
             {
                 DecodingMode = FrameDecodingMode.All
             };
-            var gif = decoder.Decode<Rgba32>(new Configuration(), stream);
+            var gif = decoder.Decode<Rgba32>(new(), stream, new());
             stream.Dispose();
             return gif;
         }
