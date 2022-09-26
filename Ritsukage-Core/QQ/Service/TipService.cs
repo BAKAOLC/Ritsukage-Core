@@ -1,7 +1,7 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Library.Service;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using System;
 using System.Collections;
 using System.Linq;
@@ -52,11 +52,11 @@ namespace Ritsukage.QQ.Service
                                     while (i < msg.Message.Length && i >= n)
                                     {
                                         m.Add(msg.Message[n..i]);
-                                        m.Add(CQCode.CQAtAll());
+                                        m.Add(SoraSegment.AtAll());
                                         i = msg.Message.IndexOf("[@all]", n = i + 6);
                                     }
                                     m.Add(msg.Message[n..]);
-                                    await api.SendGroupMessage(msg.TargetID, m.ToArray());
+                                    await api.SendGroupMessage(msg.TargetID, SoraMessage.BuildMessageBody(m.ToArray()));
                                 }
                             }
                         await TipMessageService.RefreshTipMessages(now);

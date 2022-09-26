@@ -4,10 +4,11 @@ using Ritsukage.Library.Pixiv.Extension;
 using Ritsukage.Library.Pixiv.Model;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using Sora.Enumeration.EventParamsType;
 using System;
 using System.Collections;
+using System.IO;
 using System.Text;
 
 namespace Ritsukage.QQ.Commands
@@ -52,8 +53,11 @@ namespace Ritsukage.QQ.Commands
                             Reply?.Invoke(new object[] { $"动图数据(pid:{id})获取成功，正在进行压缩..." });
                         }
                         var img = await ugoira.LimitGifScale(500, 500);
-                        var file = await img.SaveGifToTempFile();
-                        msg.Add(CQCode.CQImage(file));
+                        var stream = await img.SaveGifToStream();
+                        stream = await GIFsicle.Compress(stream);
+                        var filename = Path.GetTempFileName();
+                        GIFsicle.SaveStreamToFile(stream, filename);
+                        msg.Add(SoraSegment.Image(filename));
                     }
                 }
                 else
@@ -67,10 +71,10 @@ namespace Ritsukage.QQ.Commands
                             cache = await DownloadManager.GetCache(url);
                             if (string.IsNullOrEmpty(cache))
                             {
-                                cache = await DownloadManager.Download(url);
+                                cache = await DownloadManager.Download(url, enableAria2Download: true);
                                 if (string.IsNullOrEmpty(cache))
                                 {
-                                    cache = await DownloadManager.Download(img.Medium, detail.Url);
+                                    cache = await DownloadManager.Download(img.Medium, detail.Url, enableAria2Download: true);
                                     if (string.IsNullOrEmpty(cache))
                                     {
                                         msg.Add("[图像缓存失败]");
@@ -79,8 +83,8 @@ namespace Ritsukage.QQ.Commands
                                 }
                             }
                         }
-                        ImageUtils.LimitImageScale(cache, 1500, 1500);
-                        msg.Add(CQCode.CQImage(cache));
+                        ImageUtils.LimitImageScale(cache, 2500, 2500);
+                        msg.Add(SoraSegment.Image(cache));
                     }
                 }
                 msg.Add(detail.ToString());

@@ -4,3 +4,6 @@
 [submodule "PoetryDatabase"]
 	path = PoetryDatabase
 	url = https://github.com/BAKAOLC/PoetryDatabase.git
+[submodule "GifCompress"]
+	path = GifCompress
+	url = https://github.com/BAKAOLC/GifCompress.git

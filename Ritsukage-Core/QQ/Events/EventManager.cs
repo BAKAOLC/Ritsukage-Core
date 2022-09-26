@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Events
 {
@@ -25,14 +26,24 @@ namespace Ritsukage.QQ.Events
             Type type = args.GetType();
             if (Events.TryGetValue(type, out var list))
             {
-                new Thread(() =>
+                foreach (var e in list)
                 {
-                    foreach (var e in list)
-                        e.Invoke(null, new object[] { sender, args });
-                })
-                {
-                    IsBackground = true
-                }.Start();
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            e.Invoke(null, new object[] { sender, args });
+                        }
+                        catch (Exception ex)
+                        {
+                            ConsoleLog.Error("Event Manager", new StringBuilder()
+                                .AppendLine("触发Event时发生错误")
+                                .AppendLine($"Event Type\t: {type}")
+                                .AppendLine($"Method\t\t: {e}")
+                                .Append($"Exception\t: {ex.GetFormatString(true)}"));
+                        }
+                    });
+                }
             }
         }
 

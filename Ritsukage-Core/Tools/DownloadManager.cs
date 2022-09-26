@@ -1,16 +1,18 @@
-﻿using Downloader;
+﻿using Acquisition;
+using Acquisition.Aria;
+using Downloader;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Ritsukage.Tools.Console;
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Ritsukage.Tools.Console;
-using System.ComponentModel;
-using System.Net;
 
 namespace Ritsukage.Tools
 {
@@ -63,7 +65,7 @@ namespace Ritsukage.Tools
 
         static bool _init = false;
 
-        static void Init()
+        static async void Init()
         {
             if (_init) return;
             _init = true;
@@ -91,6 +93,8 @@ namespace Ritsukage.Tools
             Save();
 
             StartCacheCleanupThread();
+
+            await AriaHttpAcquisition.InitializeAsync();
         }
 
         static void Save()
@@ -100,6 +104,9 @@ namespace Ritsukage.Tools
                 File.WriteAllText(CacheRecordFile, JsonConvert.SerializeObject(CacheDataList.Values));
             }
         }
+
+        static void Aria2DebugLog(string text)
+            => ConsoleLog.Debug("Aria2", text);
 
         static void DebugLog(string text)
             => ConsoleLog.Debug("Downloader", text);
@@ -126,7 +133,7 @@ namespace Ritsukage.Tools
         public static async Task<string> Download(string url, string referer = null, int keepTime = 3600,
             Action<DownloadStartedEventArgs> DownloadStartedAction = null,
             Action<DownloadProgressChangedEventArgs> DownloadProgressChangedAction = null,
-            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000)
+            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000, bool enableSimpleDownload = false, bool enableAria2Download = false)
         {
             Init();
 
@@ -140,41 +147,132 @@ namespace Ritsukage.Tools
 
             #region 下载
             Stream stream = null;
-            var task = new DownloadTask(url, referer)
+            bool flag = false;
+            if (enableAria2Download)
             {
-                UpdateInfoDelay = UpdateInfoDelay
-            };
-            task.DownloadStarted += (s, e) =>
-            {
-                DebugLog($"Start to download file from {url} ({e.FileSize} bytes)");
-                DownloadStartedAction?.Invoke(e);
-            };
-            task.DownloadProgressChanged += (s, e) =>
-            {
-                DebugLog($"Downloading {url}... {e.ReceivedBytes}/{e.TotalBytes} ({e.DownloadPercentage:F2}%)");
-                DownloadProgressChangedAction?.Invoke(e);
-            };
-            task.DownloadFileCompleted += (s, e) =>
-            {
-                if (e.Status == DownloadTaskStatus.Error)
+                try
                 {
-                    if (e.Exception != null)
-                        DebugLog($"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
-                    else
-                        DebugLog($"Download {url} failed with unknown exception.");
+                    var filename = Guid.NewGuid().ToString().Replace("-", string.Empty) + ".temp";
+                    var directory = Path.GetTempPath();
+                    var ac = new AriaHttpAcquisition(url, referer, filename, directory);
+                    ac.DownloadStarted += (s, e) =>
+                    {
+                        Aria2DebugLog($"Start to download file from {url} ({e.FileSize} bytes)");
+                        DownloadStartedAction?.Invoke(new DownloadStartedEventArgs(e.FileName, e.FileSize));
+                    };
+                    ac.DownloadProgressChanged += (s, e) =>
+                    {
+                        Aria2DebugLog($"Downloading {url}... {e.ReceivedBytes}/{e.TotalBytes} ({e.DownloadPercentage:F2}%)");
+                        DownloadProgressChangedAction?.Invoke(new DownloadProgressChangedEventArgs(e.TotalBytes, e.ReceivedBytes, e.BytesPerSecondSpeed, e.DownloadDuration));
+                    };
+                    ac.DownloadFileCompleted += (s, e) =>
+                    {
+                        if (e.Status == AcquisitionResult.Error)
+                        {
+                            if (e.Exception != null)
+                                Aria2DebugLog($"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
+                            else
+                                Aria2DebugLog($"Download {url} failed with unknown exception.");
+                            DownloadFileCompletedAction?.Invoke(new DownloadFileCompletedEventArgs(DownloadTaskStatus.Error, e.DownloadDuration, null, e.Exception));
+                        }
+                        else if (e.Status == AcquisitionResult.Cancelled)
+                        {
+                            Aria2DebugLog($"Download {url} cancelled.");
+                            DownloadFileCompletedAction?.Invoke(new DownloadFileCompletedEventArgs(DownloadTaskStatus.Cancelled, e.DownloadDuration));
+                        }
+                        else
+                        {
+                            Aria2DebugLog($"Download {url} completed.");
+                            DownloadFileCompletedAction?.Invoke(new DownloadFileCompletedEventArgs(DownloadTaskStatus.Completed, e.DownloadDuration, e.FileStream));
+                            stream = e.FileStream;
+                        }
+                    };
+                    await ac.StartDownloadAsync();
+                    await ac.WaitForDownloadCompleted();
+                    flag = stream != null;
+                    if (flag)
+                    {
+                        var tempfile = Path.Combine(directory, filename);
+                        try
+                        {
+                            File.Delete(tempfile);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            FileAttributes attributes = File.GetAttributes(tempfile);
+                            if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                            {
+                                attributes &= ~FileAttributes.ReadOnly;
+                                File.SetAttributes(tempfile, attributes);
+                                File.Delete(tempfile);
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
                 }
-                else if (e.Status == DownloadTaskStatus.Cancelled)
-                    DebugLog($"Download {url} cancelled.");
-                else
-                    DebugLog($"Download {url} completed.");
-                DownloadFileCompletedAction?.Invoke(e);
-            };
-            await task.WaitForDownloadCompleted();
-            stream = task.FileStream;
-            if (task.FileSize == -1 || task.Status != DownloadTaskStatus.Completed)
+                catch (Exception ex)
+                {
+                    ConsoleLog.Error("Download Manager", "Aria2方法下载失败，将使用dotnet方法下载" + Environment.NewLine + ex.GetFormatString());
+                }
+            }
+            if (!flag)
             {
-                DownloadingList.Remove(url);
-                return null;
+                var task = new DownloadTask(url, referer)
+                {
+                    UpdateInfoDelay = UpdateInfoDelay
+                };
+                task.DownloadStarted += (s, e) =>
+                {
+                    DebugLog($"Start to download file from {url} ({e.FileSize} bytes)");
+                    DownloadStartedAction?.Invoke(e);
+                };
+                task.DownloadProgressChanged += (s, e) =>
+                {
+                    DebugLog($"Downloading {url}... {e.ReceivedBytes}/{e.TotalBytes} ({e.DownloadPercentage:F2}%)");
+                    DownloadProgressChangedAction?.Invoke(e);
+                };
+                task.DownloadFileCompleted += (s, e) =>
+                {
+                    if (e.Status == DownloadTaskStatus.Error)
+                    {
+                        if (e.Exception != null)
+                            DebugLog($"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
+                        else
+                            DebugLog($"Download {url} failed with unknown exception.");
+                    }
+                    else if (e.Status == DownloadTaskStatus.Cancelled)
+                        DebugLog($"Download {url} cancelled.");
+                    else
+                        DebugLog($"Download {url} completed.");
+                    DownloadFileCompletedAction?.Invoke(e);
+                };
+                await task.WaitForDownloadCompleted();
+                stream = task.FileStream;
+                if (task.FileSize == -1 || task.Status != DownloadTaskStatus.Completed)
+                {
+                    if (enableSimpleDownload)
+                    {
+                        try
+                        {
+                            stream = await Utils.GetFileAsync(url, referer);
+                        }
+                        catch (Exception ex)
+                        {
+                            ConsoleLog.Error("Download Manager", "简易下载再次失败" + Environment.NewLine + ex.GetFormatString());
+                        }
+                    }
+                    if (stream == null)
+                    {
+                        DownloadingList.Remove(url);
+                        return null;
+                    }
+                }
             }
             #endregion
 
@@ -190,12 +288,14 @@ namespace Ritsukage.Tools
             return file;
         }
 
-        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600)
+        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600, bool enableSimpleDownload = false, bool enableAria2Download = false)
         {
             var result = new string[urls.Length];
             var tasks = new Task<string>[urls.Length];
             for (int i = 0; i < urls.Length; i++)
-                tasks[i] = Download(urls[i], referer, keepTime);
+                tasks[i] = Download(urls[i], referer, keepTime,
+                    enableAria2Download: enableAria2Download,
+                    enableSimpleDownload: enableSimpleDownload);
             Task.WaitAll(tasks);
             for (int i = 0; i < urls.Length; i++)
                 result[i] = tasks[i].Result;
@@ -250,8 +350,10 @@ namespace Ritsukage.Tools
         {
             BufferBlockSize = 4096,
             ChunkCount = 5,
+            MaxTryAgainOnFailover = 5,
             OnTheFlyDownload = false,
-            ParallelDownload = true
+            ParallelDownload = true,
+            Timeout = 20000
         };
 
         public static int DefaultUpdateInfoDelay = 1000;
@@ -389,8 +491,7 @@ namespace Ritsukage.Tools
             if (dt >= UpdateInfoDelay)
             {
                 _lastUpdateTime = now;
-                DownloadProgressChanged?.Invoke(Service, new DownloadProgressChangedEventArgs(eventArgs.TotalBytesToReceive, eventArgs.ReceivedBytesSize,
-                    eventArgs.BytesPerSecondSpeed, eventArgs.AverageBytesPerSecondSpeed, now - DownloadStartedTime));
+                DownloadProgressChanged?.Invoke(Service, new DownloadProgressChangedEventArgs(eventArgs.TotalBytesToReceive, eventArgs.ReceivedBytesSize, eventArgs.BytesPerSecondSpeed, now - DownloadStartedTime));
             }
         }
 
@@ -439,14 +540,14 @@ namespace Ritsukage.Tools
         public double DownloadPercentage { get; init; }
         public TimeSpan DownloadDuration { get; init; }
 
-        public DownloadProgressChangedEventArgs(long totalBytes, long receivedBytes, double bytesPerSecondSpeed, double averageBytesPerSecondSpeed, TimeSpan downloadDuration)
+        public DownloadProgressChangedEventArgs(long totalBytes, long receivedBytes, double bytesPerSecondSpeed, TimeSpan downloadDuration)
         {
             TotalBytes = totalBytes;
             ReceivedBytes = receivedBytes;
             BytesPerSecondSpeed = bytesPerSecondSpeed;
-            AverageBytesPerSecondSpeed = averageBytesPerSecondSpeed;
-            DownloadPercentage = (double)ReceivedBytes * 100 / TotalBytes;
             DownloadDuration = downloadDuration;
+            AverageBytesPerSecondSpeed = ReceivedBytes / downloadDuration.TotalSeconds;
+            DownloadPercentage = (double)ReceivedBytes * 100 / TotalBytes;
         }
     }
 

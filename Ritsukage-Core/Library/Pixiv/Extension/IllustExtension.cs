@@ -36,7 +36,8 @@ namespace Ritsukage.Library.Pixiv.Extension
                 DownloadStartedAction: DownloadStartedAction,
                 DownloadProgressChangedAction: DownloadProgressChangedAction,
                 DownloadFileCompletedAction: DownloadFileCompletedAction,
-                UpdateInfoDelay: UpdateInfoDelay);
+                UpdateInfoDelay: UpdateInfoDelay,
+                enableAria2Download: true);
             var stream = File.OpenRead(downloadFile);
             ConsoleLog.Debug(head, "Start to decompression ugoira data pack...");
             using var zip = ZipPackage.OpenStream(stream);

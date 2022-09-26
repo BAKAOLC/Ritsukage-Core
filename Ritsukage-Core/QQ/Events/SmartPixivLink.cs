@@ -1,7 +1,7 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections.Generic;
@@ -73,8 +73,8 @@ namespace Ritsukage.QQ.Events
                 {
                     Commands.Pixiv.GetIllustDetail(illusts,
                         async (msg) => await args.SourceGroup.SendGroupMessage(
-                            (new object[] { CQCode.CQReply(args.Message.MessageId) }).Concat(msg).ToArray()),
-                        async (msg) => await args.SourceGroup.SendGroupMessage(msg));
+                            SoraMessage.BuildMessageBody((new object[] { SoraSegment.Reply(args.Message.MessageId) }).Concat(msg).ToArray())),
+                        async (msg) => await args.SourceGroup.SendGroupMessage(SoraMessage.BuildMessageBody(msg)));
                 }
                 catch
                 {

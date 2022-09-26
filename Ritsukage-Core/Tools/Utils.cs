@@ -51,6 +51,9 @@ namespace Ritsukage.Tools
             return GetTimeStamp();
         }
 
+        public static int GetRandomSeed()
+            => BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0);
+
         public static string RemoveEmptyLine(string text)
         {
             char splitChar = '\n';
@@ -113,7 +116,9 @@ namespace Ritsukage.Tools
             string nativeUrl = shortUrl;
             try
             {
+#pragma warning disable SYSLIB0014 // 类型或成员已过时
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(shortUrl);
+#pragma warning restore SYSLIB0014 // 类型或成员已过时
                 req.AllowAutoRedirect = false;  // 禁止自动跳转
                 HttpWebResponse response = (HttpWebResponse)req.GetResponse();
                 if (response.StatusCode == HttpStatusCode.Found)
@@ -146,10 +151,12 @@ namespace Ritsukage.Tools
             return await downloader.DownloadFileTaskAsync(url);
         }
 
-        public static async Task<Stream> GetFileAsync(string url)
+        public static async Task<Stream> GetFileAsync(string url, string referer = null)
         {
             using HttpClient hc = new HttpClient();
             var resp = await hc.GetAsync(url);
+            if (!string.IsNullOrEmpty(referer))
+                resp.Headers.Add("referer", referer);
             var stream = await resp.Content.ReadAsStreamAsync();
             stream.Seek(0, SeekOrigin.Begin);
             return stream;
@@ -243,7 +250,9 @@ namespace Ritsukage.Tools
         {
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+#pragma warning disable SYSLIB0014 // 类型或成员已过时
             var request = (HttpWebRequest)WebRequest.Create(url);
+#pragma warning restore SYSLIB0014 // 类型或成员已过时
             request.ServerCertificateValidationCallback = delegate { return true; };
             return request;
         }

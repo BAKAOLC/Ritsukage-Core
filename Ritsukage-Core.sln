@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30621.155
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ritsukage-Core", "Ritsukage-Core\Ritsukage-Core.csproj", "{D469B96F-864C-4D4A-A109-5840840B83FB}"
 EndProject
@@ -10,6 +10,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolUnitTestProject", "ToolUnitTestProject\ToolUnitTestProject.csproj", "{8E175DA2-D5DF-4DDA-9B7B-C9BA0F172A28}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandDocumentGenerator", "CommandDocumentGenerator\CommandDocumentGenerator.csproj", "{959BB2E4-61F6-4976-A3EE-E72DCC641BED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GifCompress", "GifCompress\GifCompress.csproj", "{0DA141EB-920E-448F-BF1E-F59D104D2077}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Acquisition", "Acquisition\Acquisition.csproj", "{998A5D83-C3F0-4C61-A788-BD65AAF83DEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,14 @@ Global
 		{959BB2E4-61F6-4976-A3EE-E72DCC641BED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{959BB2E4-61F6-4976-A3EE-E72DCC641BED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{959BB2E4-61F6-4976-A3EE-E72DCC641BED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DA141EB-920E-448F-BF1E-F59D104D2077}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DA141EB-920E-448F-BF1E-F59D104D2077}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DA141EB-920E-448F-BF1E-F59D104D2077}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DA141EB-920E-448F-BF1E-F59D104D2077}.Release|Any CPU.Build.0 = Release|Any CPU
+		{998A5D83-C3F0-4C61-A788-BD65AAF83DEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{998A5D83-C3F0-4C61-A788-BD65AAF83DEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{998A5D83-C3F0-4C61-A788-BD65AAF83DEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{998A5D83-C3F0-4C61-A788-BD65AAF83DEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

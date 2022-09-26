@@ -1,11 +1,8 @@
-﻿using Downloader;
-using Ritsukage.Tools;
+﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.PixelFormats;
-using Sora.Entities.CQCodes;
-using Sora.Enumeration.ApiType;
+using Sora.Entities.Segment;
 using System;
 using System.IO;
 using System.Linq;
@@ -20,7 +17,7 @@ namespace Ritsukage.QQ.Commands
         static async Task<string> GetImageUrl(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
-            if (imglist.Count <= 0)
+            if (imglist.Count() <= 0)
             {
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;
@@ -31,6 +28,7 @@ namespace Ritsukage.QQ.Commands
 
         static async Task<Image<Rgba32>> DownloadImage(string url)
         {
+            /*
             var downloader = new DownloadService(new DownloadConfiguration()
             {
                 BufferBlockSize = 4096,
@@ -41,13 +39,25 @@ namespace Ritsukage.QQ.Commands
             var stream = await downloader.DownloadFileTaskAsync(url);
             stream.Seek(0, SeekOrigin.Begin);
             return ReadGif(stream);
+            */
+            var path = await DownloadManager.Download(url, enableAria2Download: true);
+            var fs = File.OpenRead(path);
+            var ms = new MemoryStream();
+            var buffer = new byte[4096];
+            int osize;
+            while ((osize = fs.Read(buffer, 0, 4096)) > 0)
+                ms.Write(buffer, 0, osize);
+            fs.Close();
+            fs.Dispose();
+            ms.Seek(0, SeekOrigin.Begin);
+            return ReadGif(ms);
         }
 
         static async Task SendGif(SoraMessage e, Image<Rgba32> gif)
         {
             var file = Path.GetTempFileName();
             SaveGif(gif, file);
-            await e.Reply(CQCode.CQImage(file));
+            await e.Reply(SoraSegment.Image(file));
             await e.RemoveCoins(5);
         }
 

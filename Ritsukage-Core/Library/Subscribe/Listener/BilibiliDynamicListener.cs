@@ -8,7 +8,7 @@ using Ritsukage.QQ;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp.Formats.Png;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -91,7 +91,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                                             {
                                                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
                                                 foreach (var m in qqmsg)
-                                                    await api.SendGroupMessage(group, m);
+                                                    await api.SendGroupMessage(group, SoraMessage.BuildMessageBody(m));
                                             }
                                         });
                                     }
@@ -140,13 +140,13 @@ namespace Ritsukage.Library.Subscribe.Listener
                 ArrayList msg = new();
                 foreach (var pic in dynamic.Pictures)
                 {
-                    var img = await DownloadManager.Download(pic);
+                    var img = await DownloadManager.Download(pic, enableAria2Download: true, enableSimpleDownload: true);
                     if (string.IsNullOrEmpty(img))
                         msg.Add("[图像下载失败]");
                     else
                     {
                         ImageUtils.LimitImageScale(img, 2048, 2048);
-                        msg.Add(CQCode.CQImage(img));
+                        msg.Add(SoraSegment.Image(img));
                     }
                     msg.Add(Environment.NewLine);
                 }
@@ -160,7 +160,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                     var encoder = new PngEncoder();
                     encoder.Encode(np, output);
                     output.Dispose();
-                    records.Add(new object[] { CQCode.CQImage(name) });
+                    records.Add(new object[] { SoraSegment.Image(name) });
                 }
                 await Task.Yield();
             }

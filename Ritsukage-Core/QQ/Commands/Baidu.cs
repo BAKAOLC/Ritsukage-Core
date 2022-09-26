@@ -1,6 +1,5 @@
 ﻿using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
-using Sora.Entities.CQCodes;
 using System;
 using System.Text;
 using System.Threading.Tasks;

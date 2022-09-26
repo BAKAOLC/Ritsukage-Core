@@ -22,3 +22,4 @@ TestResults
 /Ritsukage-Core/QQ/Service/Service.cs
 /Ritsukage-Core/QQ/Service/ArknightsService.cs
 /Ritsukage-Core/Discord/Services/OSYManager.cs
+/Ritsukage-Core/QQ/Events/LuaSTGGroupEvent.cs

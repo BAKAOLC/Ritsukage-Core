@@ -1,6 +1,6 @@
 ﻿using Ritsukage.Library.Netease.CloudMusic;
 using Ritsukage.Tools;
-using Sora.Entities.CQCodes;
+using Sora.Entities.Segment;
 using System.Text;
 
 namespace Ritsukage.QQ.Commands
@@ -33,18 +33,20 @@ namespace Ritsukage.QQ.Commands
                 var url = await CloudMusicApi.GetSongUrl(id, 128000);
                 if (url.Id == detail.Id && url.Id == id)
                 {
-                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512))),
+                    await e.Reply(SoraSegment.Image(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512),
+                        enableAria2Download: true, enableSimpleDownload: true)),
                         new StringBuilder().AppendLine()
                         .AppendLine("♬ " + detail.Name)
                         .AppendLine("✎ " + string.Join(" / ", detail.Artists))
                         .AppendLine(detail.Url)
                         .Append("√ 曲目链接已解析，正在下载中……")
                         .ToString());
-                    await e.Reply(CQCode.CQRecord(url.Url));
+                    await e.Reply(SoraSegment.Record(url.Url));
                 }
                 else
                 {
-                    await e.Reply(CQCode.CQImage(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512))),
+                    await e.Reply(SoraSegment.Image(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512),
+                        enableAria2Download: true, enableSimpleDownload: true)),
                         new StringBuilder().AppendLine()
                         .AppendLine("♬ " + detail.Name)
                         .AppendLine("✎ " + string.Join(" / ", detail.Artists))
