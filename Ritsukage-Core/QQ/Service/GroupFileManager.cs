@@ -186,7 +186,7 @@ namespace Ritsukage.QQ.Service
             {
                 await Task.Run(() =>
                 {
-                    while (Updating.Count == 0)
+                    while (Updating.Count == 0 || (!Updating.Contains(group) && Waiting.Contains(group)))
                         Thread.Sleep(100);
                     while (!(Updating.Count == 0 || Updating.Contains(group)))
                         Thread.Sleep(100);
