@@ -142,8 +142,8 @@ namespace Ritsukage.QQ
             server.Event.OnEssenceChange += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnOfflineFileEvent += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
             server.Event.OnPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnSelfGroupMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
-            server.Event.OnSelfPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e));
+            server.Event.OnSelfGroupMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e, true));
+            server.Event.OnSelfPrivateMessage += async (s, e) => await Task.Run(() => EventManager.Trigger(s, e, true));
             #endregion
         }
     }
