@@ -209,7 +209,9 @@ namespace Ritsukage.QQ
 
         public async ValueTask Recall()
         {
-            if (Event is GroupMessageEventArgs gm)
+            if (Sender.Id == LoginUid)
+                await Message.RecallMessage();
+            else if (Event is GroupMessageEventArgs gm)
                 await gm.RecallSourceMessage();
         }
 
@@ -233,11 +235,10 @@ namespace Ritsukage.QQ
 
         public async ValueTask<(ApiStatus apiStatus, int messageId)> ReplyToOriginal(params object[] msg)
         {
-            msg = (new object[] { SoraSegment.Reply(Message.MessageId) }).Concat(msg).ToArray();
             if (Event is GroupMessageEventArgs gm)
-                return await gm.Reply(BuildMessageBody(msg));
+                return await gm.Reply(BuildMessageBody(SoraSegment.Reply(Message.MessageId), msg));
             else if (Event is PrivateMessageEventArgs pm)
-                return await pm.Reply(BuildMessageBody(msg));
+                return await pm.Reply(BuildMessageBody(SoraSegment.Reply(Message.MessageId), msg));
             return (default(ApiStatus), -1);
         }
 
@@ -245,7 +246,7 @@ namespace Ritsukage.QQ
         {
             if (Event is GroupMessageEventArgs gm)
             {
-                await gm.Reply(BuildMessageBody(msg));
+                await gm.Reply(BuildMessageBody(gm.Sender.At(), msg));
             }
             else if (Event is PrivateMessageEventArgs pm)
                 await pm.Reply(BuildMessageBody(msg));
@@ -283,18 +284,49 @@ namespace Ritsukage.QQ
 
         public static string Encode(string s) => s.Replace("&", "&amp;").Replace("[", "&#91;").Replace("]", "&#93;").Replace(",", "&#44;");
 
-        public static MessageBody BuildMessageBody(List<SoraSegment> segments)
+        public static MessageBody BuildMessageBody(IEnumerable<SoraSegment> segments)
             => segments.ToMessageBody();
+
+        public static MessageBody BuildMessageBody(IEnumerable<object> segments)
+            => BuildMessageBody(BuildSoraSegment(segments));
 
         public static MessageBody BuildMessageBody(params object[] msg)
             => BuildMessageBody(BuildSoraSegment(msg));
+
+        static IEnumerable<SoraSegment> _BuildSoraSegment(IEnumerable<object> data)
+        {
+            var result = new List<SoraSegment>();
+            foreach (var obj in data)
+            {
+                if (obj is IEnumerable<SoraSegment> segs)
+                    foreach (var o in _BuildSoraSegment(segs))
+                        result.Add(o);
+                else if (obj is IEnumerable<object> e)
+                    foreach (var o in _BuildSoraSegment(e))
+                        result.Add(o);
+                else if (obj is SoraSegment seg)
+                    result.Add(seg);
+                else
+                    result.Add(SoraSegment.Text(obj.ToString()));
+            }
+            return result;
+        }
+
+        static IEnumerable<SoraSegment> _BuildSoraSegment(IEnumerable<SoraSegment> data)
+            => _BuildSoraSegment(data.Select(x => x as object));
 
         public static List<SoraSegment> BuildSoraSegment(params object[] msg)
         {
             var result = new List<SoraSegment>();
             foreach (var obj in msg)
             {
-                if (obj is SoraSegment seg)
+                if (obj is IEnumerable<SoraSegment> segs)
+                    foreach (var o in _BuildSoraSegment(segs))
+                        result.Add(o);
+                else if(obj is IEnumerable<object> e)
+                    foreach (var o in _BuildSoraSegment(e))
+                        result.Add(o);
+                else if (obj is SoraSegment seg)
                     result.Add(seg);
                 else
                     result.Add(SoraSegment.Text(obj.ToString()));
