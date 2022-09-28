@@ -132,6 +132,13 @@ namespace Ritsukage.QQ.Commands
         public static async void WorkMirrorBottom(SoraMessage e)
             => await Worker(e, MirrorBottom);
 
+        [Command("外围消除")]
+        [CommandDescription("将图像指定范围外的像素修改为透明色")]
+        [ParameterDescription(1, "范围(<=0时取图像短轴作为半径范围)")]
+        [ParameterDescription(1, "图像")]
+        public static async void WorkMirrorBottom(SoraMessage e, int size = 0)
+            => await Worker(e, x => FillCircleOutRangeColor(x, size, Transparent));
+
         [Command("马赛克")]
         [CommandDescription("修改为马赛克处理后的图像")]
         [ParameterDescription(1, "马赛克大小")]

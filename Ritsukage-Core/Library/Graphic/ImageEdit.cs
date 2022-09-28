@@ -114,6 +114,9 @@ namespace Ritsukage.Library.Graphic
         public static Image<Rgba32> MirrorBottom(Image<Rgba32> image)
             => Worker(image, _MirrorBottom);
 
+        public static Image<Rgba32> FillCircleOutRangeColor(Image<Rgba32> image, int size = 0, Rgba32 color = default)
+            => Worker(image, x => _FillCircleOutRangeColor(x, size, color));
+
         public static Image<Rgba32> Mosaic(Image<Rgba32> image, int size = 2, int px = 0, int py = 0)
             => Worker(image, x => _Mosaic(x, size, px, py));
 
@@ -298,6 +301,30 @@ namespace Ritsukage.Library.Graphic
             return img;
         }
 
+        static Image<Rgba32> _FillCircleOutRangeColor(Image<Rgba32> image, int size = 0, Rgba32 color = default)
+        {
+            if (size <= 0)
+                size = Math.Min(image.Width, image.Height);
+            double range = size / 2;
+            range *= range;
+            var img = image.Clone();
+            var cx = ((double)image.Width) / 2;
+            var cy = ((double)image.Height) / 2;
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    var dx = Math.Ceiling(x - cx);
+                    var dy = Math.Ceiling(y - cy);
+                    if (dx * dx + dy * dy > range)
+                    {
+                        img[x, y] = color;
+                    }
+                }
+            }
+            return img;
+        }
+
         static Image<Rgba32> _Mosaic(Image<Rgba32> image, int size = 2, int px = 0, int py = 0)
         {
             var img = image.Clone();
@@ -307,9 +334,9 @@ namespace Ritsukage.Library.Graphic
             {
                 for (int x = 0; x < image.Width; x++)
                 {
-                    int tx = Math.Min(Convert.ToInt32(Math.Floor((double)x / size)) * size + px,
+                    int tx = Math.Min(Convert.ToInt32(Math.Floor(((double)x) / size)) * size + px,
                         image.Width - 1);
-                    int ty = Math.Min(Convert.ToInt32(Math.Floor((double)y / size)) * size + py,
+                    int ty = Math.Min(Convert.ToInt32(Math.Floor(((double)y) / size)) * size + py,
                         image.Height - 1);
                     img[x, y] = image[tx, ty];
                 }
