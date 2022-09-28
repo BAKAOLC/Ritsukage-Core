@@ -5,7 +5,9 @@ using Ritsukage.Library.Data;
 using Ritsukage.Library.Graphic;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.Segment;
 using Sora.Enumeration.EventParamsType;
 using System;
@@ -25,15 +27,13 @@ namespace Ritsukage.QQ.Commands
         public static async void Login(SoraMessage e)
         {
             await Task.Run(() => Library.Bilibili.Bilibili.QRCodeLoginRequest(
-                async (bitmap) =>
+                async (image) =>
                 {
                     if (e.IsGroupMessage)
                         await e.ReplyToOriginal("登录任务已建立，请前往私聊等待登录二维码的发送");
                     else
                         await e.ReplyToOriginal("登录任务已建立，请等待登录二维码的发送");
-                    var qr = new MemoryImage(bitmap);
-                    var path = qr.ToBase64File();
-                    await e.SendPrivateMessage(SoraSegment.Image(path), "\n请使用Bilibili客户端扫码登录");
+                    await e.SendPrivateMessage(SoraSegment.Image(image.ToBase64File()), "\n请使用Bilibili客户端扫码登录");
                 },
                 async () => await e.SendPrivateMessage("检测到扫描事件，请在客户端中确认登录"),
                 async (cookie) =>

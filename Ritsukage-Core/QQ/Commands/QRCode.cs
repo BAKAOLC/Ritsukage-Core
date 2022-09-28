@@ -1,4 +1,5 @@
-﻿using Ritsukage.Tools;
+﻿using Ritsukage.Library.Graphic;
+using Ritsukage.Tools;
 using Sora.Entities.Segment;
 
 namespace Ritsukage.QQ.Commands
@@ -11,7 +12,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "内容")]
         public static async void Generate(SoraMessage e, string content)
         {
-            var qr = new MemoryImage(QRCodeTool.Generate(content));
+            var qr = QRCodeTool.Generate(content);
             var path = qr.ToBase64File();
             await e.ReplyToOriginal(SoraSegment.Image(path));
             await e.RemoveCoins(2);

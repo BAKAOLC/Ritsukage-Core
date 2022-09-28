@@ -1,64 +1,16 @@
-﻿using Ritsukage.Tools.Console;
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
 using System.Linq;
+using static Ritsukage.Library.Graphic.GraphicDataDefinition;
 
 namespace Ritsukage.Library.Graphic
 {
     public static class ImageEdit
     {
-        public static Rgba32 Transparent = new Rgba32(0, 0, 0, 0);
-
-        static readonly ImageFormatManager ImageFormatManager;
-
-        static ImageEdit()
-        {
-            ImageFormatManager = new ImageFormatManager();
-            ImageFormatManager.AddImageFormat(PngFormat.Instance);
-            #region Bmp
-            {
-                ImageFormatManager.AddImageFormat(BmpFormat.Instance);
-                var encoder = new BmpEncoder
-                {
-                    SupportTransparency = true
-                };
-                ImageFormatManager.SetEncoder(BmpFormat.Instance, encoder);
-            }
-            #endregion
-            #region Gif
-            {
-                ImageFormatManager.AddImageFormat(GifFormat.Instance);
-                var encoder = new GifEncoder
-                {
-                    ColorTableMode = GifColorTableMode.Local
-                };
-                ImageFormatManager.SetEncoder(GifFormat.Instance, encoder);
-            }
-            #endregion
-            #region Jpeg
-            {
-                ImageFormatManager.AddImageFormat(JpegFormat.Instance);
-                var encoder = new JpegEncoder();
-                ImageFormatManager.SetEncoder(JpegFormat.Instance, encoder);
-            }
-            #endregion
-            #region Png
-            {
-                ImageFormatManager.AddImageFormat(PngFormat.Instance);
-                var encoder = new PngEncoder();
-                ImageFormatManager.SetEncoder(PngFormat.Instance, encoder);
-            }
-            #endregion
-        }
-
         public static Image<Rgba32> LoadImage(Stream stream, out IImageFormat format)
         {
             var img = Image.Load<Rgba32>(stream, out format);
@@ -81,24 +33,15 @@ namespace Ritsukage.Library.Graphic
 
         public static async void SaveImage(Image<Rgba32> image, IImageFormat format, string path)
         {
-            try
+            var encoder = FindEncoder(format);
+            if (encoder == null)
             {
-                var encoder = ImageFormatManager.FindEncoder(format);
-                if (encoder == null)
-                {
-                    ConsoleLog.Error("Image Edit", "未能找到对应图像格式的编码器定义，将使用PNG格式编码\n"
-                        + new System.Diagnostics.StackFrame(true).ToString());
-                    encoder = ImageFormatManager.FindEncoder(PngFormat.Instance);
-                }
-                await image.SaveAsync(path, encoder);
-                if (format == GifFormat.Instance)
-                {
-                    await GIFsicle.Compress(path);
-                }
+                encoder = FindEncoder(ImageFormat.Png);
             }
-            catch (Exception ex)
+            await image.SaveAsync(path, encoder);
+            if (format == ImageFormat.Gif)
             {
-                ConsoleLog.Error("Image Edit", "图像储存失败\n" + Environment.NewLine + ex.GetFormatString());
+                await GIFsicle.Compress(path);
             }
         }
 

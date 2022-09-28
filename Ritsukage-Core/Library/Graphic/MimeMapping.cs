@@ -2,30 +2,24 @@
 using System.Collections;
 using System.IO;
 
-namespace Ritsukage.Tools
+namespace Ritsukage.Library.Graphic
 {
     public static class MimeMapping
     {
-        private static Hashtable _mimeMappingTable;
+        static Hashtable _mimeMappingTable;
 
-        private static void AddMimeMapping(string extension, string MimeType)
-        {
-            _mimeMappingTable.Add(extension, MimeType);
-        }
+        static void AddMimeMapping(string extension, string mimeType)
+            => _mimeMappingTable.Add(extension, mimeType);
 
-        public static string GetMimeMapping(string FileName)
+        public static string GetMimeMapping(string fileName)
         {
-            FileName = Path.GetFileName(FileName);
+            fileName = Path.GetFileName(fileName);
             string text = null;
-            int num = FileName.LastIndexOf('.');
+            int num = fileName.LastIndexOf('.');
             if (num >= 0)
-            {
-                text = (string)_mimeMappingTable[FileName[num..]];
-            }
-            if (text == null)
-            {
+                text = (string)_mimeMappingTable[fileName[num..]];
+            if (string.IsNullOrWhiteSpace(text))
                 text = (string)_mimeMappingTable[".*"];
-            }
             return text;
         }
 
