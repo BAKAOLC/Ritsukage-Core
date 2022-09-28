@@ -1,4 +1,5 @@
-﻿using Ritsukage.Tools;
+﻿using Ritsukage.Library.Graphic;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -10,6 +11,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static Ritsukage.Library.Graphic.GraphicDataDefinition;
 using static Ritsukage.Library.Graphic.ImageEdit;
 
 namespace Ritsukage.QQ.Commands
@@ -131,6 +133,25 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "图像")]
         public static async void WorkMirrorBottom(SoraMessage e)
             => await Worker(e, MirrorBottom);
+
+        [Command("反色")]
+        [CommandDescription("修改为反色的图像")]
+        [ParameterDescription(1, "图像")]
+        public static async void WorkReserve(SoraMessage e)
+            => await Worker(e, x => x.ColorReverse());
+
+        [Command("灰度化")]
+        [CommandDescription("修改为灰度化(基于比例混合算法)的图像")]
+        [ParameterDescription(1, "图像")]
+        public static async void WorkGraying(SoraMessage e)
+            => await Worker(e, x => x.ColorGraying());
+
+        [Command("外围消除")]
+        [CommandDescription("将图像指定范围外的像素修改为透明色")]
+        [ParameterDescription(1, "范围(<=0时取图像短轴作为半径范围)")]
+        [ParameterDescription(1, "图像")]
+        public static async void WorkFillCircleOutRangeColor(SoraMessage e, int size = 0)
+            => await Worker(e, x => FillCircleOutRangeColor(x, size, TransparentColor));
 
         [Command("马赛克")]
         [CommandDescription("修改为马赛克处理后的图像")]

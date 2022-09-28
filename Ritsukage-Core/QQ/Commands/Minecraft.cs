@@ -1,14 +1,15 @@
 ﻿using Ritsukage.Library.Data;
+using Ritsukage.Library.Graphic;
 using Ritsukage.Library.Minecraft.Changelog;
 using Ritsukage.Library.Minecraft.Jila;
 using Ritsukage.Library.Minecraft.Server;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.Segment;
 using Sora.Enumeration.EventParamsType;
 using System;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -89,7 +90,7 @@ namespace Ritsukage.QQ.Commands
                 sb.AppendLine($"MOTD：").Append(info.MOTD);
                 if (info.IconData != null)
                 {
-                    var icon = new MemoryImage(new Bitmap(new MemoryStream(info.IconData)));
+                    var icon = Image.Load<Rgba32>(info.IconData);
                     await e.Reply(SoraSegment.Image(icon.ToBase64File()), Environment.NewLine, sb.ToString());
                 }
                 else

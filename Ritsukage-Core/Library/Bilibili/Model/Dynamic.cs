@@ -2,12 +2,14 @@
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Ritsukage.Library.Graphic.GraphicDataDefinition;
 
 namespace Ritsukage.Library.Bilibili.Model
 {
@@ -71,21 +73,11 @@ namespace Ritsukage.Library.Bilibili.Model
                     foreach (var file in pics)
                     {
                         if (string.IsNullOrEmpty(file)) return null;
-                        var img = new FileImage(file);
-                        switch (img.ImageFormatString)
-                        {
-                            case ".png":
-                                imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Png.PngDecoder()));
-                                break;
-                            case ".jpg":
-                                imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Jpeg.JpegDecoder()));
-                                break;
-                            case ".bmp":
-                                imgs.Add(Image.Load<Rgba32>(img.GetBytes(), new SixLabors.ImageSharp.Formats.Bmp.BmpDecoder()));
-                                break;
-                            default:
-                                return null;
-                        }
+                        var img = Image.Load<Rgba32>(file, out IImageFormat format);
+                        if (format == ImageFormat.Bmp || format == ImageFormat.Jpeg || format == ImageFormat.Png)
+                            imgs.Add(img);
+                        else
+                            return null;
                     }
                     var first = imgs.First();
                     if (imgs.All(x => x.Width == first.Width && x.Height == first.Height))

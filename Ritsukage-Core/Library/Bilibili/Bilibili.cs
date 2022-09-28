@@ -1,7 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
-using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace Ritsukage.Library.Bilibili
         public static string GetJCT(string cookie = "")
             => MatchJCT.Match(RemoveEmptyChars.Replace(cookie, "")).Value;
 
-        public static void QRCodeLoginRequest(Action<Bitmap> GetQRCode, Action IsScanned, Action<string> LoginSuccess, Action<string> LoginFailed)
+        public static void QRCodeLoginRequest(Action<Image<Rgba32>> GetQRCode, Action IsScanned, Action<string> LoginSuccess, Action<string> LoginFailed)
         {
             Task.Run(() =>
             {

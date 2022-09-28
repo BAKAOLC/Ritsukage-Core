@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Ritsukage.Library.Bilibili.Model;
 using Ritsukage.Library.Data;
+using Ritsukage.Library.Graphic;
 using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using System;
@@ -298,13 +299,13 @@ namespace Ritsukage.Discord.Commands
             IUserMessage qr = null;
             IUserMessage dmmsg = null;
             Library.Bilibili.Bilibili.QRCodeLoginRequest(
-                async (bitmap) =>
+                async (image) =>
                 {
                     using var stream = new MemoryStream();
-                    bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    image.Save(stream, GraphicDataDefinition.ImageEncoder.Png);
                     stream.Seek(0, SeekOrigin.Begin);
                     qr = await dm.SendFileAsync(stream, "1.jpg");
-                    bitmap.Dispose();
+                    image.Dispose();
                     stream.Dispose();
                     dmmsg = await dm.SendMessageAsync("请在5分钟内使用Bilibili客户端扫描二维码进行登录");
                     await msg.ModifyAsync(x => x.Content = "登陆事件已建立，请前往私聊继续操作");

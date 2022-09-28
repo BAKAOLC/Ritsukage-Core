@@ -67,6 +67,7 @@ namespace Ritsukage.Library.FFXIV.WanaHome
                         "sold" => EventType.Sold,
                         "start_selling" => EventType.StartSelling,
                         "price_reduce" => EventType.PriceReduce,
+                        _ => EventType.Unknown
                     },
                     Param1 = (string)_change["param1"],
                     Param2 = (string)_change["param2"],
@@ -122,6 +123,7 @@ namespace Ritsukage.Library.FFXIV.WanaHome
                         "sold" => EventType.Sold,
                         "start_selling" => EventType.StartSelling,
                         "price_reduce" => EventType.PriceReduce,
+                        _ => EventType.Unknown
                     },
                     Param1 = (string)_change["param1"],
                     Param2 = (string)_change["param2"],
