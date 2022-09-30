@@ -170,7 +170,7 @@ namespace Ritsukage.Library.Subscribe.Listener
         static async Task<string[]> GetDiscordMessageChain(BilibiliDynamicCheckResult result)
         {
             List<string> records = new();
-            foreach (var dynamic in result.Dynamics)
+            foreach (var dynamic in result.Dynamics.OrderBy(x => x.Id))
             {
                 records.Add(dynamic.ToString());
                 await Task.Yield();
