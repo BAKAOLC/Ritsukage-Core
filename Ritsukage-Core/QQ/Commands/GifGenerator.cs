@@ -1,4 +1,5 @@
-﻿using Ritsukage.Tools;
+﻿using Ritsukage.Library.Graphic;
+using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -7,7 +8,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static Ritsukage.Library.Graphic.GifEdit;
+using static Ritsukage.Library.Graphic.GraphicEdit;
+using static Ritsukage.Library.Graphic.GraphicUtils;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -28,35 +30,21 @@ namespace Ritsukage.QQ.Commands
 
         static async Task<Image<Rgba32>> DownloadImage(string url)
         {
-            /*
-            var downloader = new DownloadService(new DownloadConfiguration()
-            {
-                BufferBlockSize = 4096,
-                ChunkCount = 5,
-                OnTheFlyDownload = false,
-                ParallelDownload = true
-            });
-            var stream = await downloader.DownloadFileTaskAsync(url);
-            stream.Seek(0, SeekOrigin.Begin);
-            return ReadGif(stream);
-            */
             var path = await DownloadManager.Download(url, enableAria2Download: true);
-            var fs = File.OpenRead(path);
-            var ms = new MemoryStream();
-            var buffer = new byte[4096];
-            int osize;
-            while ((osize = fs.Read(buffer, 0, 4096)) > 0)
-                ms.Write(buffer, 0, osize);
-            fs.Close();
-            fs.Dispose();
-            ms.Seek(0, SeekOrigin.Begin);
-            return ReadGif(ms);
+            var decoder = FindDecoder(ImageFormat.Gif);
+            var img = LoadImage(path, decoder);
+            if (img == null)
+            {
+                ConsoleLog.Debug(nameof(GifGenerator), $"Gif图像加载失败{Environment.NewLine}Url\t: {url}{Environment.NewLine}Path\t: {path}");
+                throw new FileLoadException("Gif图像加载失败");
+            }
+            return img;
         }
 
         static async Task SendGif(SoraMessage e, Image<Rgba32> gif)
         {
             var file = Path.GetTempFileName();
-            SaveGif(gif, file);
+            GraphicUtils.SaveImage(gif, GraphicUtils.ImageFormat.Gif, file);
             await e.Reply(SoraSegment.Image(file));
             await e.RemoveCoins(5);
         }
@@ -86,31 +74,31 @@ namespace Ritsukage.QQ.Commands
         [CommandDescription("生成倒序播放的gif")]
         [ParameterDescription(1, "图像")]
         public static async void Reverse(SoraMessage e)
-            => await Worker(e, CreateReverse);
+            => await Worker(e, ReserveGifFrames);
 
         [Command("gif左行")]
         [CommandDescription("生成往左移动播放的gif")]
         [ParameterDescription(1, "图像")]
         public static async void MoveLeft(SoraMessage e)
-            => await Worker(e, CreateMoveLeft);
+            => await Worker(e, SetGifLeftMotion);
 
         [Command("gif右行")]
         [CommandDescription("生成往右移动播放的gif")]
         [ParameterDescription(1, "图像")]
         public static async void MoveRight(SoraMessage e)
-            => await Worker(e, CreateMoveRight);
+            => await Worker(e, SetGifRightMotion);
 
         [Command("gif上行")]
         [CommandDescription("生成往上移动播放的gif")]
         [ParameterDescription(1, "图像")]
         public static async void MoveUp(SoraMessage e)
-            => await Worker(e, CreateMoveUp);
+            => await Worker(e, SetGifUpMotion);
 
         [Command("gif下行")]
         [CommandDescription("生成往下移动播放的gif")]
         [ParameterDescription(1, "图像")]
         public static async void MoveDown(SoraMessage e)
-            => await Worker(e, CreateMoveDown);
+            => await Worker(e, SetGifDownMotion);
 
         //0b10000 倒流
         //0b01000 左行
@@ -125,15 +113,15 @@ namespace Ritsukage.QQ.Commands
         {
             Func<Image<Rgba32>, Image<Rgba32>> func = null;
             if ((rot & 0b10000) == 0b10000) //倒流
-                func = func == null ? CreateReverse : Stack(func, CreateReverse);
+                func = func == null ? ReserveGifFrames : Stack(func, ReserveGifFrames);
             if ((rot & 0b1000) == 0b1000) //左行
-                func = func == null ? CreateMoveLeft : Stack(func, CreateMoveLeft);
+                func = func == null ? SetGifLeftMotion : Stack(func, SetGifLeftMotion);
             if ((rot & 0b100) == 0b100) //右行
-                func = func == null ? CreateMoveRight : Stack(func, CreateMoveRight);
+                func = func == null ? SetGifRightMotion : Stack(func, SetGifRightMotion);
             if ((rot & 0b10) == 0b10) //上行
-                func = func == null ? CreateMoveUp : Stack(func, CreateMoveUp);
+                func = func == null ? SetGifUpMotion : Stack(func, SetGifUpMotion);
             if ((rot & 0b1) == 0b1) //下行
-                func = func == null ? CreateMoveDown : Stack(func, CreateMoveDown);
+                func = func == null ? SetGifDownMotion : Stack(func, SetGifDownMotion);
             await Worker(e, func);
         }
     }

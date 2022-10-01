@@ -83,7 +83,7 @@ namespace Ritsukage.QQ.Commands
                                 }
                             }
                         }
-                        ImageUtils.LimitImageScale(cache, 2500, 2500);
+                        GraphicUtils.LimitGraphicScale(cache, 2500, 2500);
                         msg.Add(SoraSegment.Image(cache));
                     }
                 }

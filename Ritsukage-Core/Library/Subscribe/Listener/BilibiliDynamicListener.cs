@@ -145,7 +145,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                         msg.Add("[图像下载失败]");
                     else
                     {
-                        ImageUtils.LimitImageScale(img, 2048, 2048);
+                        GraphicUtils.LimitGraphicScale(img, 2048, 2048);
                         msg.Add(SoraSegment.Image(img));
                     }
                     msg.Add(Environment.NewLine);

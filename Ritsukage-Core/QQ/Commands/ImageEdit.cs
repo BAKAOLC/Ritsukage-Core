@@ -3,16 +3,14 @@ using Ritsukage.Tools;
 using Ritsukage.Tools.Console;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.Segment;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static Ritsukage.Library.Graphic.GraphicDataDefinition;
-using static Ritsukage.Library.Graphic.ImageEdit;
+using static Ritsukage.Library.Graphic.GraphicEdit;
+using static Ritsukage.Library.Graphic.GraphicUtils;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -43,32 +41,8 @@ namespace Ritsukage.QQ.Commands
             return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
         }
 
-        static async Task<Stream> DownloadImage(string url)
-        {
-            /*
-            var downloader = new DownloadService(new DownloadConfiguration()
-            {
-                BufferBlockSize = 4096,
-                ChunkCount = 5,
-                OnTheFlyDownload = false,
-                ParallelDownload = true
-            });
-            var stream = await downloader.DownloadFileTaskAsync(url);
-            stream.Seek(0, SeekOrigin.Begin);
-            return stream;
-            */
-            var path = await DownloadManager.Download(url, enableAria2Download: true);
-            var fs = File.OpenRead(path);
-            var ms = new MemoryStream();
-            var buffer = new byte[4096];
-            int osize;
-            while ((osize = fs.Read(buffer, 0, 4096)) > 0)
-                ms.Write(buffer, 0, osize);
-            fs.Close();
-            fs.Dispose();
-            ms.Seek(0, SeekOrigin.Begin);
-            return ms;
-        }
+        static async Task<string> DownloadImage(string url)
+            => await DownloadManager.Download(url, enableAria2Download: true);
 
         static async Task SendImage(SoraMessage e, Image<Rgba32> image, IImageFormat format)
         {
@@ -98,8 +72,8 @@ namespace Ritsukage.QQ.Commands
                 var url = await GetImageUrl(e);
                 if (url == null)
                     return;
-                var stream = await DownloadImage(url);
-                var image = LoadImage(stream, out IImageFormat format);
+                var path = await DownloadImage(url);
+                var image = LoadImage(path, out IImageFormat format);
                 var product = func.Invoke(image);
                 await SendImage(e, product, format);
             }
@@ -166,8 +140,8 @@ namespace Ritsukage.QQ.Commands
                 var url = await GetImageUrl(e);
                 if (url == null)
                     return;
-                var stream = await DownloadImage(url);
-                var image = LoadImage(stream, out IImageFormat format);
+                var path = await DownloadImage(url);
+                var image = LoadImage(path, out IImageFormat format);
                 var product = Mosaic(image, size, px, py);
                 await SendImage(e, product, format);
             }
@@ -200,10 +174,10 @@ namespace Ritsukage.QQ.Commands
                     var url = await GetImageUrl(e);
                     if (url == null)
                         return;
-                    var stream = await DownloadImage(url);
-                    var image = LoadImage(stream);
+                    var path = await DownloadImage(url);
+                    var image = LoadImage(path);
                     var product = GenerateRotateImageWithOriginalSize(image, repeat, frameDelay);
-                    await SendImage(e, product, GifFormat.Instance);
+                    await SendImage(e, product, ImageFormat.Gif);
                 }
             }
             catch (Exception ex)
@@ -235,10 +209,10 @@ namespace Ritsukage.QQ.Commands
                     var url = await GetImageUrl(e);
                     if (url == null)
                         return;
-                    var stream = await DownloadImage(url);
-                    var image = LoadImage(stream);
+                    var path = await DownloadImage(url);
+                    var image = LoadImage(path);
                     var product = GenerateRotateImage(image, repeat, frameDelay);
-                    await SendImage(e, product, GifFormat.Instance);
+                    await SendImage(e, product, ImageFormat.Gif);
                 }
             }
             catch (Exception ex)
@@ -271,12 +245,12 @@ namespace Ritsukage.QQ.Commands
                 var imgs = new Image<Rgba32>[9];
                 for (int i = 0; i < 9; i++)
                 {
-                    var stream = await DownloadImage(urls[i]);
-                    imgs[i] = LoadImage(stream, out IImageFormat format);
+                    var path = await DownloadImage(urls[i]);
+                    imgs[i] = LoadImage(path);
                 }
                 var product = MergeNinePicture(imgs);
                 if (product != null)
-                    await SendImage(e, product, PngFormat.Instance);
+                    await SendImage(e, product, ImageFormat.Default);
                 else
                     await e.ReplyToOriginal("暂不支持合并图像大小不一致的九图图像");
             }
@@ -297,8 +271,8 @@ namespace Ritsukage.QQ.Commands
                 var url = await GetImageUrl(e);
                 if (url == null)
                     return;
-                var stream = await DownloadImage(url);
-                var image = LoadImage(stream, out IImageFormat format);
+                var path = await DownloadImage(url);
+                var image = LoadImage(path, out IImageFormat format);
                 if (image.Width % 3 == 0 || image.Height % 3 == 0)
                 {
                     var imgs = SplitNinePicture(image);

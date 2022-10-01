@@ -1,83 +1,29 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.ColorSpaces.Conversion;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
-using static Ritsukage.Library.Graphic.GraphicDataDefinition;
+using static Ritsukage.Library.Graphic.GraphicUtils;
 
 namespace Ritsukage.Library.Graphic
 {
-    public static class GraphicDataDefinition
-    {
-        public static readonly Rgba32 TransparentColor = new(0, 0, 0, 0);
-
-        public static class ImageFormat
-        {
-            public static IImageFormat Bmp => BmpFormat.Instance;
-
-            public static IImageFormat Gif => GifFormat.Instance;
-
-            public static IImageFormat Jpeg => JpegFormat.Instance;
-
-            public static IImageFormat Png => PngFormat.Instance;
-
-            public static IImageFormat Default => Png;
-        }
-
-        public static class ImageEncoder
-        {
-            public static IImageEncoder Bmp => new BmpEncoder
-            {
-                SupportTransparency = true
-            };
-
-            public static IImageEncoder Gif => new GifEncoder
-            {
-                ColorTableMode = GifColorTableMode.Local
-            };
-
-            public static IImageEncoder Jpeg => new JpegEncoder();
-
-            public static IImageEncoder Png => new PngEncoder();
-        }
-
-        static readonly ImageFormatManager ImageFormatManager;
-
-        static GraphicDataDefinition()
-        {
-            ImageFormatManager = new ImageFormatManager();
-            ImageFormatManager.AddImageFormat(ImageFormat.Bmp);
-            ImageFormatManager.SetEncoder(ImageFormat.Bmp, ImageEncoder.Bmp);
-            ImageFormatManager.AddImageFormat(ImageFormat.Gif);
-            ImageFormatManager.SetEncoder(ImageFormat.Gif, ImageEncoder.Gif);
-            ImageFormatManager.AddImageFormat(ImageFormat.Jpeg);
-            ImageFormatManager.SetEncoder(ImageFormat.Jpeg, ImageEncoder.Jpeg);
-            ImageFormatManager.AddImageFormat(ImageFormat.Png);
-            ImageFormatManager.SetEncoder(ImageFormat.Png, ImageEncoder.Png);
-        }
-
-        public static IImageDecoder FindDecoder(IImageFormat format)
-            => ImageFormatManager.FindDecoder(format);
-
-        public static IImageEncoder FindEncoder(IImageFormat format)
-            => ImageFormatManager.FindEncoder(format);
-
-        public static IImageFormat FindFormatByFileExtension(string extension)
-            => ImageFormatManager.FindFormatByFileExtension(extension);
-
-        public static IImageFormat FindFormatByMimeType(string mimeType)
-            => ImageFormatManager.FindFormatByMimeType(mimeType);
-    }
-
     public static class ImageExtension
     {
         static readonly ColorSpaceConverter Converter = new();
+
+        public static Image<TPixel> CloneEmpty<TPixel>(this Image<TPixel> image) where TPixel : unmanaged, IPixel<TPixel>
+            => new(image.GetConfiguration(), image.Width, image.Height);
+
+        #region Property
+        public static void SetGifRepeatCount<TPixel>(this Image<TPixel> image, ushort repeatCount) where TPixel : unmanaged, IPixel<TPixel>
+            => image.Metadata.GetGifMetadata().RepeatCount = repeatCount;
+
+        public static void SetFrameDelay<TPixel>(this ImageFrame<TPixel> image, ushort frameDelay) where TPixel : unmanaged, IPixel<TPixel>
+            => image.Metadata.GetGifMetadata().FrameDelay = frameDelay;
+        #endregion
 
         #region Byte & Base64
         public static byte[] GetBytes<TPixel>(this Image<TPixel> image, IImageFormat format = null) where TPixel : unmanaged, IPixel<TPixel>

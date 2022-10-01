@@ -1,48 +1,80 @@
 ﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
-using System.IO;
 using System.Linq;
-using static Ritsukage.Library.Graphic.GraphicDataDefinition;
 
 namespace Ritsukage.Library.Graphic
 {
-    public static class ImageEdit
+    public static class GraphicEdit
     {
-        public static Image<Rgba32> LoadImage(Stream stream, out IImageFormat format)
+        static void FixGifRepeatCount(Image<Rgba32> image)
+            => image.SetGifRepeatCount(0);
+
+        public static Image<Rgba32> ReserveGifFrames(Image<Rgba32> original)
         {
-            var img = Image.Load<Rgba32>(stream, out format);
-            stream.Dispose();
-            return img;
+            var gif = original.CloneEmpty();
+            for (int i = original.Frames.Count - 1; i >= 0; i--)
+                gif.Frames.AddFrame(original.Frames.CloneFrame(i).Frames.RootFrame);
+            gif.Frames.RemoveFrame(0);
+            FixGifRepeatCount(gif);
+            return gif;
         }
 
-        public static Image<Rgba32> LoadImage(Stream stream)
+        public static Image<Rgba32> SetGifLeftMotion(Image<Rgba32> original)
         {
-            var img = Image.Load<Rgba32>(stream);
-            stream.Dispose();
-            return img;
+            var gif = original.CloneEmpty();
+            for (var i = 0; i < original.Frames.Count; i++)
+            {
+                var image = original.Frames.CloneFrame(i);
+                MovePixel(ref image, Lerp(i, original.Frames.Count, original.Height), 0);
+                gif.Frames.AddFrame(image.Frames.RootFrame);
+            }
+            gif.Frames.RemoveFrame(0);
+            FixGifRepeatCount(gif);
+            return gif;
         }
 
-        public static Image<Rgba32> LoadImage(string path, out IImageFormat format)
-            => LoadImage(File.OpenRead(path), out format);
-
-        public static Image<Rgba32> LoadImage(string path)
-            => LoadImage(File.OpenRead(path));
-
-        public static async void SaveImage(Image<Rgba32> image, IImageFormat format, string path)
+        public static Image<Rgba32> SetGifRightMotion(Image<Rgba32> original)
         {
-            var encoder = FindEncoder(format);
-            if (encoder == null)
+            var gif = original.CloneEmpty();
+            for (var i = 0; i < original.Frames.Count; i++)
             {
-                encoder = FindEncoder(ImageFormat.Png);
+                var image = original.Frames.CloneFrame(i);
+                MovePixel(ref image, -Lerp(i, original.Frames.Count, original.Width), 0);
+                gif.Frames.AddFrame(image.Frames.RootFrame);
             }
-            await image.SaveAsync(path, encoder);
-            if (format == ImageFormat.Gif)
+            gif.Frames.RemoveFrame(0);
+            FixGifRepeatCount(gif);
+            return gif;
+        }
+
+        public static Image<Rgba32> SetGifUpMotion(Image<Rgba32> original)
+        {
+            var gif = original.CloneEmpty();
+            for (var i = 0; i < original.Frames.Count; i++)
             {
-                await GIFsicle.Compress(path);
+                var image = original.Frames.CloneFrame(i);
+                MovePixel(ref image, 0, Lerp(i, original.Frames.Count, original.Height));
+                gif.Frames.AddFrame(image.Frames.RootFrame);
             }
+            gif.Frames.RemoveFrame(0);
+            FixGifRepeatCount(gif);
+            return gif;
+        }
+
+        public static Image<Rgba32> SetGifDownMotion(Image<Rgba32> original)
+        {
+            var gif = original.CloneEmpty();
+            for (var i = 0; i < original.Frames.Count; i++)
+            {
+                var image = original.Frames.CloneFrame(i);
+                MovePixel(ref image, 0, -Lerp(i, original.Frames.Count, original.Height));
+                gif.Frames.AddFrame(image.Frames.RootFrame);
+            }
+            gif.Frames.RemoveFrame(0);
+            FixGifRepeatCount(gif);
+            return gif;
         }
 
         public static Image<Rgba32> MirrorLeft(Image<Rgba32> image)
@@ -332,6 +364,18 @@ namespace Ritsukage.Library.Graphic
         {
             x %= mod;
             return x < 0 ? x + mod : x;
+        }
+
+        static int Lerp(int i, int n, int total)
+            => Convert.ToInt32(Math.Ceiling(i * ((double)total / n)));
+
+        static void MovePixel(ref Image<Rgba32> image, int dx, int dy)
+        {
+            var original = image.Clone();
+            for (int x = 0; x < original.Width; x++)
+                for (int y = 0; y < original.Height; y++)
+                    image[x, y] = original[Mod(x + dx, original.Width), Mod(y + dy, original.Height)];
+            original.Dispose();
         }
 
         static void ClonePixel(Image<Rgba32> source, Image<Rgba32> to, int dx = 0, int dy = 0)
