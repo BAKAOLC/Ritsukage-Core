@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Ritsukage.Library.Graphic.GraphicDataDefinition;
+using static Ritsukage.Library.Graphic.GraphicUtils;
 
 namespace Ritsukage.Library.Bilibili.Model
 {

@@ -102,7 +102,7 @@ namespace Ritsukage.Discord.Commands
                                 }
                             }
                         }
-                        ImageUtils.LimitImageScale(cache, 2500, 2500);
+                        GraphicUtils.LimitGraphicScale(cache, 2500, 2500);
                         streams[current] = cache;
                         successed++;
                         await UpdateInfo(info, current + 1, total, successed, failed);

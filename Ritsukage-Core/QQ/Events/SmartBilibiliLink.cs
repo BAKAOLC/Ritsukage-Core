@@ -381,7 +381,7 @@ namespace Ritsukage.QQ.Events
                     msg.Add("[图像下载失败]");
                 else
                 {
-                    ImageUtils.LimitImageScale(pic, 2048, 2048);
+                    GraphicUtils.LimitGraphicScale(pic, 2048, 2048);
                     msg.Add(SoraSegment.Image(pic));
                 }
                 msg.Add(Environment.NewLine);

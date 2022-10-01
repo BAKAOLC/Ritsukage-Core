@@ -302,7 +302,7 @@ namespace Ritsukage.Discord.Commands
                 async (image) =>
                 {
                     using var stream = new MemoryStream();
-                    image.Save(stream, GraphicDataDefinition.ImageEncoder.Png);
+                    image.Save(stream, GraphicUtils.ImageEncoder.Png);
                     stream.Seek(0, SeekOrigin.Begin);
                     qr = await dm.SendFileAsync(stream, "1.jpg");
                     image.Dispose();

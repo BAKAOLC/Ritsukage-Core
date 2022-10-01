@@ -6,7 +6,7 @@ namespace Ritsukage.Library.Graphic
 {
     public static class MimeMapping
     {
-        static Hashtable _mimeMappingTable;
+        static readonly Hashtable _mimeMappingTable;
 
         static void AddMimeMapping(string extension, string mimeType)
             => _mimeMappingTable.Add(extension, mimeType);
