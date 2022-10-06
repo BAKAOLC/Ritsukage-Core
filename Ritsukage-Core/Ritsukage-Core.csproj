@@ -43,6 +43,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Acquisition\Acquisition.csproj" />
     <ProjectReference Include="..\GifCompress\GifCompress.csproj" />
+    <ProjectReference Include="..\SimpleWatchDog\SimpleWatchDog.csproj" />
     <ProjectReference Include="..\Sora\Sora\Sora.csproj" />
     <ProjectReference Include="..\SteamAuth\SteamAuth\SteamAuth.csproj" />
   </ItemGroup>
