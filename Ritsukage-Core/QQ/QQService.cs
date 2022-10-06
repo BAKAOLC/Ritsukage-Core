@@ -23,7 +23,7 @@ namespace Ritsukage.QQ
             CommandManager.Init();
             EventManager.Init();
             ServiceManager.Init();
-            Server = (SoraWebsocketServer)SoraServiceFactory.CreateService(config);
+            Server = (SoraWebsocketServer)SoraServiceFactory.CreateService(config, _ => { });
             CombineEvent(Server);
         }
 

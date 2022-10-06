@@ -20,7 +20,7 @@ namespace Ritsukage.QQ.Commands
         static async Task<string> GetImageUrl(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
-            if (imglist.Count() <= 0)
+            if (!imglist.Any())
             {
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;
@@ -32,7 +32,7 @@ namespace Ritsukage.QQ.Commands
         static async Task<string[]> GetImageUrls(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
-            if (imglist.Count() <= 0)
+            if (!imglist.Any())
             {
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;

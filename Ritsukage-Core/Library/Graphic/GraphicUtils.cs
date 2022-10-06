@@ -9,7 +9,6 @@ using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Graphic
 {
@@ -129,34 +128,31 @@ namespace Ritsukage.Library.Graphic
             }
         }
 
-        public static async void LimitGraphicScale(string path, int maxWidth, int maxHeight)
+        public static void LimitGraphicScale(string path, int maxWidth, int maxHeight)
         {
-            await Task.Run(() =>
+            var image = LoadImage(path, out IImageFormat format);
+            bool flag = false;
+            var width = image.Width;
+            var height = image.Height;
+            if (width > maxWidth)
             {
-                var image = LoadImage(path, out IImageFormat format);
-                bool flag = false;
-                var width = image.Width;
-                var height = image.Height;
-                if (width > maxWidth)
-                {
-                    flag = true;
-                    var rate = (double)maxWidth / width;
-                    width = Convert.ToInt32(Math.Floor(width * rate));
-                    height = Convert.ToInt32(Math.Floor(height * rate));
-                }
-                if (height > maxHeight)
-                {
-                    flag = true;
-                    var rate = (double)maxHeight / height;
-                    width = Convert.ToInt32(Math.Floor(width * rate));
-                    height = Convert.ToInt32(Math.Floor(height * rate));
-                }
-                if (flag)
-                {
-                    image.Mutate(x => x.Resize(width, height));
-                    SaveImage(image, format, path);
-                }
-            });
+                flag = true;
+                var rate = (double)maxWidth / width;
+                width = Convert.ToInt32(Math.Floor(width * rate));
+                height = Convert.ToInt32(Math.Floor(height * rate));
+            }
+            if (height > maxHeight)
+            {
+                flag = true;
+                var rate = (double)maxHeight / height;
+                width = Convert.ToInt32(Math.Floor(width * rate));
+                height = Convert.ToInt32(Math.Floor(height * rate));
+            }
+            if (flag)
+            {
+                image.Mutate(x => x.Resize(width, height));
+                SaveImage(image, format, path);
+            }
         }
 
         public static void LimitGraphicScale(string path, int maxScale)
