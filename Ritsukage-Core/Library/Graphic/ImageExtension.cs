@@ -69,10 +69,10 @@ namespace Ritsukage.Library.Graphic
         {
             Rgba32 originalRGBA32 = new();
             pixel.ToRgba32(ref originalRGBA32);
-            var hsv = Converter.ToHsv(originalRGBA32);
+            var hsv = ColorSpaceConverter.ToHsv(originalRGBA32);
             float H = (hsv.H + h) % 360;
             H = H < 0 ? H + 360 : H;
-            Rgba32 translateRGBA32 = Converter.ToRgb(new Hsv(H, Math.Clamp(hsv.S + s, 0, 1), Math.Clamp(hsv.V + v, 0, 1)));
+            Rgba32 translateRGBA32 = ColorSpaceConverter.ToRgb(new Hsv(H, Math.Clamp(hsv.S + s, 0, 1), Math.Clamp(hsv.V + v, 0, 1)));
             translateRGBA32.A = originalRGBA32.A;
             pixel.FromRgba32(translateRGBA32);
         }

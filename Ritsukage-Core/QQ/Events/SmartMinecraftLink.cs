@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 namespace Ritsukage.QQ.Events
 {
     [EventGroup]
-    public static class SmartMinecraftLink
+    public static partial class SmartMinecraftLink
     {
         [Event(typeof(GroupMessageEventArgs))]
         public static async void Receiver(object sender, GroupMessageEventArgs args)
@@ -22,7 +22,6 @@ namespace Ritsukage.QQ.Events
         static readonly Dictionary<long, Dictionary<string, DateTime>> Delay = new();
 
         const string MoJira = "https://bugs.mojang.com/browse/";
-        static readonly Regex Regex_MojiraID = new Regex(@"^MC(PE)?-\d+$");
 
         static async void Trigger(GroupMessageEventArgs args)
         {
@@ -35,7 +34,7 @@ namespace Ritsukage.QQ.Events
             var msg = args.Message.RawText;
             if (msg.StartsWith(MoJira))
                 msg = msg[MoJira.Length..];
-            var m = Regex_MojiraID.Match(msg);
+            var m = GetMOJIRAIDRegex().Match(msg);
             if (m.Success)
             {
                 if (!record.ContainsKey(m.Value) || (DateTime.Now - record[m.Value]).TotalSeconds >= DelayTime)
@@ -51,5 +50,8 @@ namespace Ritsukage.QQ.Events
                 }
             }
         }
+
+        [GeneratedRegex("^MC(PE)?-\\d+$")]
+        private static partial Regex GetMOJIRAIDRegex();
     }
 }

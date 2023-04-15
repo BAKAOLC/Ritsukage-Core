@@ -73,7 +73,7 @@ namespace Ritsukage.Library.Bilibili.Model
                     foreach (var file in pics)
                     {
                         if (string.IsNullOrEmpty(file)) return null;
-                        var img = Image.Load<Rgba32>(file, out IImageFormat format);
+                        var img = LoadImage(file, out IImageFormat format);
                         if (format == ImageFormat.Bmp || format == ImageFormat.Jpeg || format == ImageFormat.Png)
                             imgs.Add(img);
                         else

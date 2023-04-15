@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Bilibili
 {
-    class Bilibili
+    partial class Bilibili
     {
         private const string LoginPage = "https://passport.bilibili.com/login";
         private const string GetLoginUrl = "https://passport.bilibili.com/qrcode/getLoginUrl";
@@ -24,10 +24,8 @@ namespace Ritsukage.Library.Bilibili
         public static string SendDynamic(string msg, string cookie = "")
             => Utils.HttpPOST(PostDynamicUrl, $"dynamic_id=0&type=4&rid=0&content={Utils.UrlEncode(msg)}&extension=%7B%22emoji_type%22%3A1%7D&at_uids=&ctrl=%5B%5D&csrf_token={GetJCT(cookie)}", 20000, cookie, "https://t.bilibili.com/", "https://t.bilibili.com");
 
-        private readonly static Regex RemoveEmptyChars = new Regex(@"\s");
-        private readonly static Regex MatchJCT = new Regex("(?<=bili_jct=)[^;]+");
         public static string GetJCT(string cookie = "")
-            => MatchJCT.Match(RemoveEmptyChars.Replace(cookie, "")).Value;
+            => GetJCTMatchRegex().Match(GetEmptyCharRegex().Replace(cookie, "")).Value;
 
         public static void QRCodeLoginRequest(Action<Image<Rgba32>> GetQRCode, Action IsScanned, Action<string> LoginSuccess, Action<string> LoginFailed)
         {
@@ -69,5 +67,10 @@ namespace Ritsukage.Library.Bilibili
                 }
             });
         }
+
+        [GeneratedRegex(@"\s")]
+        private static partial Regex GetEmptyCharRegex();
+        [GeneratedRegex("(?<=bili_jct=)[^;]+")]
+        private static partial Regex GetJCTMatchRegex();
     }
 }

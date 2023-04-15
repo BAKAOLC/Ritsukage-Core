@@ -84,7 +84,8 @@ void CreateWatchThread()
             LogWarning("心跳已超时，尝试停止目标进程");
             try
             {
-                WatchedProcess.Kill(true);
+                KillProgress(WatchedProcess.Id);
+                //WatchedProcess.Kill(true);
             }
             catch
             {
@@ -130,4 +131,17 @@ bool SolveArgs(string[] args)
     PID = (ushort)ar.PID;
     TimeoutTimeSpan = TimeSpan.FromSeconds(ar.Duration ?? 30);
     return true;
+}
+
+void KillProgress(int pid)
+{
+    Process p = new();
+    p.StartInfo.FileName = "cmd.exe";
+    p.StartInfo.Arguments = $"/c taskkill /pid {pid} -t -f";
+    p.StartInfo.UseShellExecute = false;
+    p.StartInfo.RedirectStandardInput = true;
+    p.StartInfo.RedirectStandardOutput = true;
+    p.StartInfo.RedirectStandardError = true;
+    p.StartInfo.CreateNoWindow = true;
+    p.Start();
 }

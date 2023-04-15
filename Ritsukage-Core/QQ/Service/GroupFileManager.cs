@@ -284,14 +284,14 @@ namespace Ritsukage.QQ.Service
                     }
                     else
                     {
-                        ConsoleLog.Error(nameof(GroupFileManager), "文件列表更新失败: " + group);
+                        ConsoleLog.Error(nameof(GroupFileManager), $"文件列表更新失败: {group}  ErrorCode:{status.RetCode}");
                         return false;
                     }
                 }
             }
             else
             {
-                ConsoleLog.Error(nameof(GroupFileManager), "文件列表更新失败: " + group);
+                ConsoleLog.Error(nameof(GroupFileManager), $"文件列表更新失败: {group}  ErrorCode:{status.RetCode}");
                 return false;
             }
             return true;

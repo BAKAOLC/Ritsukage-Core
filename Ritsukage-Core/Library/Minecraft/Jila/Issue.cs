@@ -10,7 +10,7 @@ using System.Xml;
 
 namespace Ritsukage.Library.Minecraft.Jila
 {
-    public class Issue
+    public partial class Issue
     {
         public string Id { get; init; }
         public string Project { get; init; }
@@ -38,14 +38,12 @@ namespace Ritsukage.Library.Minecraft.Jila
         public IssueLink[] IssueLinks { get; init; }
         public string Url => $"https://bugs.mojang.com/browse/{Id}";
 
-        static readonly Regex HtmlTagParser = new Regex(@"<[^>]+>");
-
         public Issue(XmlNode data) //data from <item> label
         {
             Id = data["key"].InnerText;
             Project = data["project"].InnerText;
             Title = data["title"].InnerText;
-            Description = Utils.RemoveEmptyLine(HtmlTagParser.Replace(data["description"].InnerText, (s) =>
+            Description = Utils.RemoveEmptyLine(GetHtmlTagRegex().Replace(data["description"].InnerText, (s) =>
             {
                 var text = s.Value;
                 if (text == "<br/>")
@@ -170,7 +168,7 @@ namespace Ritsukage.Library.Minecraft.Jila
         public override string ToString()
             => Title;
 
-        static readonly object _lock = new object();
+        static readonly object _lock = new();
         static Certificate Token;
 
         public static Issue GetIssue(string id)
@@ -245,5 +243,8 @@ namespace Ritsukage.Library.Minecraft.Jila
                 return issues.ToArray();
             }
         }
+
+        [GeneratedRegex("<[^>]+>")]
+        private static partial Regex GetHtmlTagRegex();
     }
 }

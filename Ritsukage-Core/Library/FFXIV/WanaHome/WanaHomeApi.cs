@@ -133,7 +133,7 @@ namespace Ritsukage.Library.FFXIV.WanaHome
             return new HouseState() { Data = house, Changes = changes };
         }
 
-        static readonly object _lock = new object();
+        static readonly object _lock = new();
         static Dictionary<string, Server> ServerKeyMaps;
         public static Server MatchServer(string name)
         {

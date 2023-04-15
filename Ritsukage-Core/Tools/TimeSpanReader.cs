@@ -3,14 +3,12 @@ using System.Text.RegularExpressions;
 
 namespace Ritsukage.Tools
 {
-    public static class TimeSpanReader
+    public static partial class TimeSpanReader
     {
-        static readonly Regex TSMatcher = new Regex(@"((?<day>\d+)(天|日|d(ays?)?))?((?<hour>\d+)(小?时|h(ours?)?))?((?<minute>\d+)(分钟?|m(in(utes?)?)?))?((?<second>\d+)(秒|s(ec(onds?)?)?))?");
-
         public static TimeSpan Parse(string original)
         {
             var s = original.ToLower();
-            var m = TSMatcher.Match(s);
+            var m = GetTimeSpanRegex().Match(s);
             bool flag = false;
             int day = 0, hour = 0, minute = 0, second = 0;
             flag = flag || int.TryParse(m.Groups["day"].Value, out day);
@@ -21,5 +19,8 @@ namespace Ritsukage.Tools
                 throw new ArgumentException($"{original} is not a timespan value.");
             return new TimeSpan(day, hour, minute, second);
         }
+
+        [GeneratedRegex("((?<day>\\d+)(天|日|d(ays?)?))?((?<hour>\\d+)(小?时|h(ours?)?))?((?<minute>\\d+)(分钟?|m(in(utes?)?)?))?((?<second>\\d+)(秒|s(ec(onds?)?)?))?")]
+        private static partial Regex GetTimeSpanRegex();
     }
 }

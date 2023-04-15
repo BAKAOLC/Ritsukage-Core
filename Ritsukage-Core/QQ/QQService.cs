@@ -36,22 +36,16 @@ namespace Ritsukage.QQ
             return null;
         }
 
-        public void Start()
+        public async void Start()
         {
-            new Thread(async () =>
+            try
             {
-                try
-                {
-                    await Server.StartService();
-                }
-                catch (Exception e)
-                {
-                    ConsoleLog.Error("Sora", ConsoleLog.ErrorLogBuilder(e));
-                }
-            })
+                await Server.StartService();
+            }
+            catch (Exception e)
             {
-                IsBackground = true
-            }.Start();
+                ConsoleLog.Error("Sora", ConsoleLog.ErrorLogBuilder(e));
+            }
         }
 
         public void Stop()

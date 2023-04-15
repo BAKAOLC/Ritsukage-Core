@@ -35,39 +35,49 @@ namespace Ritsukage.QQ.Commands
         public static async void Normal(SoraMessage e)
             => await e.Reply(DateTime.Now.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
 
+        const string ASL_Url = "https://store.steampowered.com/app/1000440/__Abyss_Soul_Lotus/";
+        static readonly DateTime ASL_Finish = new DateTime(2023, 2, 3, 0, 0, 0);
+
         [Command("北欧历")]
         [CommandDescription("获取bot服务器当前的时间所对应的北欧历时间")]
         public static async void BOL(SoraMessage e)
         {
-            var day = Math.Floor((DateTime.Now.Date - new DateTime(2019, 8, 1, 0, 0, 0)).TotalDays) + 1;
-            await e.Reply($"当前为北欧历时间：\n2019年08月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+            var day = System.Math.Floor((ASL_Finish - new DateTime(2019, 8, 1, 0, 0, 0)).TotalDays) + 1;
+            await e.Reply($"北欧历时间计时已终结：\n2019年08月{day,2}日");
         }
 
         [Command("新北欧历")]
         [CommandDescription("获取bot服务器当前的时间所对应的新北欧历时间")]
         public static async void NewBOL(SoraMessage e)
         {
-            var day = Math.Floor((DateTime.Now.Date - new DateTime(2020, 6, 1, 0, 0, 0)).TotalDays) + 1;
-            await e.Reply($"当前为新北欧历时间：\n2020年06月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+            var day = System.Math.Floor((ASL_Finish - new DateTime(2020, 6, 1, 0, 0, 0)).TotalDays) + 1;
+            await e.Reply($"新北欧历时间计时已终结：\n2020年06月{day,2}日");
         }
 
         [Command("新新北欧历")]
         [CommandDescription("获取bot服务器当前的时间所对应的新新北欧历时间")]
         public static async void NewNewBOL(SoraMessage e)
         {
-            var day = Math.Floor((DateTime.Now.Date - new DateTime(2021, 7, 1, 0, 0, 0)).TotalDays) + 1;
-            await e.Reply($"当前为新新北欧历时间：\n2021年07月{day,2}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+            var day = System.Math.Floor((ASL_Finish - new DateTime(2021, 7, 1, 0, 0, 0)).TotalDays) + 1;
+            await e.Reply($"新新北欧历时间计时已终结：\n2021年07月{day,2}日");
         }
 
         [Command("新新新北欧历")]
         [CommandDescription("获取bot服务器当前的时间所对应的不存在的新新新北欧历时间")]
         public static async void NewNewNewBOL(SoraMessage e)
         {
-            var day = Math.Floor((DateTime.Now.Date - new DateTime(2021, 6, 25, 0, 0, 0)).TotalDays);
+            var day = System.Math.Floor((ASL_Finish - new DateTime(2021, 6, 25, 0, 0, 0)).TotalDays);
             if (day > 0)
-                await e.Reply($"当前为新新新北欧历时间：\nxxxx年xx月xx-{day}日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+                await e.Reply($"新新新北欧历时间计时已终结：\nxxxx年xx月xx-{day}日");
             else
-                await e.Reply($"当前为新新新北欧历时间：\nxxxx年xx月xx日 " + DateTime.Now.ToString("HH时mm分ss秒"));
+                await e.Reply($"新新新北欧历时间计时已终结：\nxxxx年xx月xx日");
+        }
+
+        [Command("新新新新北欧历")]
+        [CommandDescription("获取bot服务器当前的时间所对应的新新新新北欧历时间")]
+        public static async void NewNewNewNewBOL(SoraMessage e)
+        {
+            await e.Reply($"新新新新北欧历时间计时已终结，现已发售：\n{ASL_Url}");
         }
 
         [Command("寿司历")]
@@ -78,13 +88,22 @@ namespace Ritsukage.QQ.Commands
             await e.Reply($"当前为寿司历时间：\n{(date.Year == 1 ? "元" : date.Year.ToString("D2"))}年{date.Month:D2}月{date.Day:D2}日 {date.TimeOfDay.Hours:D2}时{date.TimeOfDay.Minutes:D2}分{date.TimeOfDay.Seconds:D2}秒");
         }
 
+        [Command("云绝历")]
+        [CommandDescription("获取bot服务器当前的时间所对应的云绝历时间")]
+        public static async void YunJue(SoraMessage e)
+        {
+            var now = DateTime.Now;
+            var day = System.Math.Floor((now.Date - new DateTime(2018, 8, 19, 0, 0, 0)).TotalDays) + 1;
+            await e.Reply($"当前为云绝历时间：\n2018年08月{day,2}日 " + now.ToString("HH时mm分ss秒"));
+        }
+
         static readonly DateTime NextExaminationDate = new(2022, 6, 7, 0, 0, 0);
 
         [Command("高考倒计时")]
         [CommandDescription("获取bot服务器当前的时间到高考开始所差的时间")]
         public static async void Examination(SoraMessage e)
         {
-            var day = Math.Floor((NextExaminationDate - DateTime.Now.Date).TotalDays);
+            var day = System.Math.Floor((NextExaminationDate - DateTime.Now.Date).TotalDays);
             if (day > 3)
                 await e.Reply($"距离高考还有 {day} 天");
             else if (day == 3)

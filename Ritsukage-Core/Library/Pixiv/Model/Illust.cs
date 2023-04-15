@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Pixiv.Model
 {
-    public class Illust
+    public partial class Illust
     {
         public bool IsUgoira { get; init; }
 
@@ -159,8 +159,7 @@ namespace Ritsukage.Library.Pixiv.Model
         {
             if (!string.IsNullOrWhiteSpace(original))
             {
-                var regex = new Regex(@"<[^>]+>");
-                return Utils.RemoveEmptyLine(regex.Replace(Escape(original), x =>
+                return Utils.RemoveEmptyLine(GetXmlTagRegex().Replace(Escape(original), x =>
                 {
                     return x.Value switch
                     {
@@ -173,9 +172,12 @@ namespace Ritsukage.Library.Pixiv.Model
         }
 
         public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
+
+        [GeneratedRegex("<[^>]+>")]
+        private static partial Regex GetXmlTagRegex();
     }
 
-    public struct UgoiraMetadata
+    public readonly struct UgoiraMetadata
     {
         public string ZipUrl { get; init; }
         public UgoiraMetadataGifFrame[] Frames { get; init; }
@@ -190,7 +192,7 @@ namespace Ritsukage.Library.Pixiv.Model
         }
     }
 
-    public struct UgoiraMetadataGifFrame
+    public readonly struct UgoiraMetadataGifFrame
     {
         public string File { get; init; }
         public int Delay { get; init; }
@@ -204,7 +206,7 @@ namespace Ritsukage.Library.Pixiv.Model
         }
     }
 
-    public struct ImageUrls
+    public readonly struct ImageUrls
     {
         public string SquareMedium { get; init; }
         public string Medium { get; init; }
@@ -228,7 +230,7 @@ namespace Ritsukage.Library.Pixiv.Model
             => url.Replace("https://i.pximg.net", "https://i.pixiv.re");
     }
 
-    public struct IllustAuthor
+    public readonly struct IllustAuthor
     {
         public int Id { get; init; }
         public string Name { get; init; }
@@ -252,7 +254,7 @@ namespace Ritsukage.Library.Pixiv.Model
             => $"{Name} ({Url})";
     }
 
-    public struct Tags
+    public readonly struct Tags
     {
         public string Name { get; init; }
         public string TranslatedName { get; init; }

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Subscribe.Listener
 {
-    public class MinecraftVersionListener : Base.SubscribeListener
+    public partial class MinecraftVersionListener : Base.SubscribeListener
     {
         const string type = "minecraft version";
 
@@ -99,10 +99,10 @@ namespace Ritsukage.Library.Subscribe.Listener
 
         static string GetString(MinecraftVersionCheckResult result)
         {
-            var m = Regex.Match(result.Title.Trim(), "^(?<version>[^ ]+) (?<type>快照|正式版)更新$");
+            var m = GetVersionRegex().Match(result.Title.Trim());
             var type = m.Groups["type"].Value;
             var version = m.Groups["version"].Value.Trim();
-            var vm = Regex.Match(version, @"^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\d+))?$");
+            var vm = GetVersionRegex2().Match(version);
             var mainVersion = vm.Groups["mainVersion"].Value;
             var subType = type == "快照" ? "snapshot" : "release";
             var subNum = "";
@@ -121,8 +121,8 @@ namespace Ritsukage.Library.Subscribe.Listener
                     {
                         var articles = new ArticleList("snapshot");
                         var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
-                        && subType == "snapshot" || ((subType == "pre" ? x.Key.Contains("PRE-RELEASE")
-                        : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
+                        && subType == "snapshot" || (subType == "pre" ? x.Key.Contains("PRE-RELEASE")
+                        : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum)).FirstOrDefault();
                         if (!string.IsNullOrEmpty(article.Key))
                             changelog = article.Value;
                     }
@@ -140,5 +140,11 @@ namespace Ritsukage.Library.Subscribe.Listener
                 sb.AppendLine().Append("Change logs: " + changelog);
             return sb.ToString();
         }
+
+        [GeneratedRegex("^(?<version>[^ ]+) (?<type>快照|正式版)更新$")]
+        private static partial Regex GetVersionRegex();
+
+        [GeneratedRegex("^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\\d+))?$")]
+        private static partial Regex GetVersionRegex2();
     }
 }

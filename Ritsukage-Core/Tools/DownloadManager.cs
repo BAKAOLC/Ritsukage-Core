@@ -346,12 +346,11 @@ namespace Ritsukage.Tools
 
     public class DownloadTask
     {
-        public static readonly DownloadConfiguration DefaultDownloadConfig = new DownloadConfiguration()
+        public static readonly DownloadConfiguration DefaultDownloadConfig = new()
         {
             BufferBlockSize = 4096,
             ChunkCount = 5,
             MaxTryAgainOnFailover = 5,
-            OnTheFlyDownload = false,
             ParallelDownload = true,
             Timeout = 20000
         };

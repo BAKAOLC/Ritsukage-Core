@@ -16,12 +16,10 @@ using Group = Sora.Entities.Group;
 
 namespace Ritsukage.QQ
 {
-    public class SoraMessage
+    public partial class SoraMessage
     {
-        public static class AdditionalMethod
+        public static partial class AdditionalMethod
         {
-            readonly static Regex _CQ_Regex = new(@"^\[CQ:(?<type>[^,]+)(,(?<data>[^]]+))?\]$");
-
             public static List<SoraSegment> ToSoraSegment(string msg)
             {
                 List<SoraSegment> codes = new();
@@ -33,7 +31,7 @@ namespace Ritsukage.QQ
                     codes.Add(SoraSegment.Text(Escape(msg[n..i])));
                     if (e >= i)
                     {
-                        var m = _CQ_Regex.Match(msg[i..(e + 1)]);
+                        var m = GetCQRegex().Match(msg[i..(e + 1)]);
                         if (m.Success)
                         {
                             Dictionary<string, string> param = new();
@@ -118,6 +116,9 @@ namespace Ritsukage.QQ
                 }
                 return sb.ToString();
             }
+
+            [GeneratedRegex(@"^\[CQ:(?<type>[^,]+)(,(?<data>[^]]+))?\]$")]
+            private static partial Regex GetCQRegex();
         }
 
         /// <summary>
@@ -207,6 +208,9 @@ namespace Ritsukage.QQ
             IsAnonymousMessage = false;
         }
 
+        public override string ToString()
+            => Message.ToString();
+
         public async ValueTask Recall()
         {
             if (Sender.Id == LoginUid)
@@ -293,16 +297,16 @@ namespace Ritsukage.QQ
         public static MessageBody BuildMessageBody(params object[] msg)
             => BuildMessageBody(BuildSoraSegment(msg));
 
-        static IEnumerable<SoraSegment> _BuildSoraSegment(IEnumerable<object> data)
+        static IEnumerable<SoraSegment> InnerBuildSoraSegment(IEnumerable<object> data)
         {
             var result = new List<SoraSegment>();
             foreach (var obj in data)
             {
                 if (obj is IEnumerable<SoraSegment> segs)
-                    foreach (var o in _BuildSoraSegment(segs))
+                    foreach (var o in InnerBuildSoraSegment(segs))
                         result.Add(o);
                 else if (obj is IEnumerable<object> e)
-                    foreach (var o in _BuildSoraSegment(e))
+                    foreach (var o in InnerBuildSoraSegment(e))
                         result.Add(o);
                 else if (obj is SoraSegment seg)
                     result.Add(seg);
@@ -312,8 +316,8 @@ namespace Ritsukage.QQ
             return result;
         }
 
-        static IEnumerable<SoraSegment> _BuildSoraSegment(IEnumerable<SoraSegment> data)
-            => _BuildSoraSegment(data.Select(x => x as object));
+        static IEnumerable<SoraSegment> InnerBuildSoraSegment(IEnumerable<SoraSegment> data)
+            => InnerBuildSoraSegment(data.Cast<object>());
 
         public static List<SoraSegment> BuildSoraSegment(params object[] msg)
         {
@@ -321,10 +325,10 @@ namespace Ritsukage.QQ
             foreach (var obj in msg)
             {
                 if (obj is IEnumerable<SoraSegment> segs)
-                    foreach (var o in _BuildSoraSegment(segs))
+                    foreach (var o in InnerBuildSoraSegment(segs))
                         result.Add(o);
                 else if(obj is IEnumerable<object> e)
-                    foreach (var o in _BuildSoraSegment(e))
+                    foreach (var o in InnerBuildSoraSegment(e))
                         result.Add(o);
                 else if (obj is SoraSegment seg)
                     result.Add(seg);

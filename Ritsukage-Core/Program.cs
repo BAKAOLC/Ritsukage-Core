@@ -165,7 +165,6 @@ namespace Ritsukage
             else
             {
                 ConsoleLog.Error("Ritsukage Core", "本程序目前不支持同一架构多实例同时运行");
-                return;
             }
             ConsoleLog.Info("Main", "程序主逻辑已结束，按任意键结束程序");
             Console.ReadKey();
@@ -218,7 +217,7 @@ namespace Ritsukage
             {
                 Working = true;
                 ConsoleLog.Info("Main", "已启用Discord功能");
-                new Thread(() =>
+                Task.Run(() =>
                 {
                     try
                     {
@@ -231,17 +230,14 @@ namespace Ritsukage
                         ConsoleLog.Error("Main", ConsoleLog.ErrorLogBuilder(ex));
                         Working = false;
                     }
-                })
-                {
-                    IsBackground = true
-                }.Start();
+                });
             }
 
             if (cfg.QQ)
             {
                 Working = true;
                 ConsoleLog.Info("Main", "已启用QQ功能");
-                new Thread(() =>
+                Task.Run(() =>
                 {
                     try
                     {
@@ -261,10 +257,7 @@ namespace Ritsukage
                         ConsoleLog.Error("Main", ConsoleLog.ErrorLogBuilder(ex, true));
                         Working = false;
                     }
-                })
-                {
-                    IsBackground = true
-                }.Start();
+                });
             }
         }
 

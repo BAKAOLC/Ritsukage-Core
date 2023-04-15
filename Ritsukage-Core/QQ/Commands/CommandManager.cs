@@ -4,6 +4,8 @@ using Sora.EventArgs.SoraEvent;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -37,6 +39,7 @@ namespace Ritsukage.QQ.Commands
                 switch (c)
                 {
                     case ' ':
+                    case '\n':
                         {
                             this.SingleArg.Add(sb.ToString());
                             sb = new();
@@ -87,6 +90,9 @@ namespace Ritsukage.QQ.Commands
         public string Next() => SingleArg[index++];
 
         public bool HasNext() => index < SingleArg.Count;
+
+        public override string ToString()
+            => "Arguments:" + Environment.NewLine + string.Join(Environment.NewLine, SingleArg.Select((x, index) => $"{index + 1,4}| " + Utils.ToLiteral(x)));
     }
 
     public interface ICommandParser
@@ -141,6 +147,8 @@ namespace Ritsukage.QQ.Commands
             _init = true;
             RegisterAllCommands();
         }
+
+        static readonly char[] SplitChar = new char[] { '\n', ' ' };
 
         public static readonly Dictionary<Type, ICommandParser> Parsers = new();
         public static readonly Dictionary<string, Dictionary<string, List<Command>>> Commands = new();
@@ -297,12 +305,12 @@ namespace Ritsukage.QQ.Commands
             SoraMessage m = null;
             if (arg is GroupMessageEventArgs a1)
             {
-                msg = a1.Message.RawText;
+                msg = a1.Message.GetText().Replace("\r", string.Empty);
                 m = new(a1);
             }
             else if (arg is PrivateMessageEventArgs a2)
             {
-                msg = a2.Message.RawText;
+                msg = a2.Message.GetText().Replace("\r", string.Empty);
                 m = new(a2);
             }
             if (!string.IsNullOrEmpty(msg))
@@ -312,11 +320,14 @@ namespace Ritsukage.QQ.Commands
                 {
                     if (msg.StartsWith(node.Key))
                     {
-                        var caa = msg[node.Key.Length..].Split(" ", 2);
-                        if (node.Value.TryGetValue(caa[0].ToLower(), out var commandlist))
+                        var splitIndex = msg.IndexOfAny(SplitChar, node.Key.Length);
+                        var hasArg = splitIndex != -1;
+                        var caa = hasArg ? msg[node.Key.Length..splitIndex] : msg[node.Key.Length..];
+                        var args = new CommandArgs(hasArg ? msg[splitIndex..].TrimStart(SplitChar) : string.Empty);
+                        if (args.Length > 0) ConsoleLog.Debug("Commands", args.ToString());
+                        if (node.Value.TryGetValue(caa.ToLower(), out var commandlist))
                         {
-                            ConsoleLog.Debug("Commands", $"found {commandlist.Count} command(s) for {caa[0]}");
-                            var args = new CommandArgs(caa.Length == 2 ? caa[1] : "");
+                            ConsoleLog.Debug("Commands", $"found {commandlist.Count} command(s) for {caa}");
                             foreach (var command in commandlist.OrderByDescending(x => x.ArgTypes.Length).ToArray())
                             {
                                 if (args.Length >= (command.ArgTypes.Where(a => !a.HasDefaultValue && !IsParams(a)).Count() - 1)

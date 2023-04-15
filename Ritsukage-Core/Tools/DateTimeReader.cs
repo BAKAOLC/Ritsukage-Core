@@ -4,16 +4,16 @@ using System.Text.RegularExpressions;
 
 namespace Ritsukage.Tools
 {
-    public static class DateTimeReader
+    public static partial class DateTimeReader
     {
         static readonly Regex[] DateMatch = {
-            new Regex(@"((?<year>\d{4})年)?((?<month>\d{1,2})月)?((?<day>\d{1,2})日)?"),
-            new Regex(@"(?<year>\d{4})/(?<month>\d{1,2})/(?<day>\d{1,2})"),
-            new Regex(@"(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})"),
-            new Regex(@"(?<year>\d{4})/(?<month>\d{1,2})"),
-            new Regex(@"(?<year>\d{4})-(?<month>\d{1,2})"),
-            new Regex(@"(?<month>\d{1,2})/(?<day>\d{1,2})"),
-            new Regex(@"(?<month>\d{1,2})-(?<day>\d{1,2})"),
+            GetDateRegex1(),
+            GetDateRegex2(),
+            GetDateRegex3(),
+            GetDateRegex4(),
+            GetDateRegex5(),
+            GetDateRegex6(),
+            GetDateRegex7(),
         };
         static DateTime? GetDate(string original)
         {
@@ -97,5 +97,20 @@ namespace Ritsukage.Tools
             else
                 throw new ArgumentException($"{original} is not a datetime value.");
         }
+
+        [GeneratedRegex("((?<year>\\d{4})年)?((?<month>\\d{1,2})月)?((?<day>\\d{1,2})日)?")]
+        private static partial Regex GetDateRegex1();
+        [GeneratedRegex("(?<year>\\d{4})/(?<month>\\d{1,2})/(?<day>\\d{1,2})")]
+        private static partial Regex GetDateRegex2();
+        [GeneratedRegex("(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})")]
+        private static partial Regex GetDateRegex3();
+        [GeneratedRegex("(?<year>\\d{4})/(?<month>\\d{1,2})")]
+        private static partial Regex GetDateRegex4();
+        [GeneratedRegex("(?<year>\\d{4})-(?<month>\\d{1,2})")]
+        private static partial Regex GetDateRegex5();
+        [GeneratedRegex("(?<month>\\d{1,2})/(?<day>\\d{1,2})")]
+        private static partial Regex GetDateRegex6();
+        [GeneratedRegex("(?<month>\\d{1,2})-(?<day>\\d{1,2})")]
+        private static partial Regex GetDateRegex7();
     }
 }

@@ -9,13 +9,11 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Tools
 {
-    public static class Poem
+    public static partial class Poem
     {
         static string DatabasePath => Program.Config.PoetryDatabasePath;
 
         const string SearchPage = "https://sou-yun.cn/CharInClause.aspx?c=";
-
-        static readonly Regex Sentence = new Regex(@"<li class='label'>(?<author>[^<]+)</li><li class='none'><span class='poemSentence'>(?<sentence>[^<]+)</span>&nbsp;<a target='_blank' class='small' href=""[^""]+"">(?<poem>[^<]+)</a></li>");
 
         public static async Task<List<string>> Search(string _char)
             => await Task.Run(async () =>
@@ -23,7 +21,7 @@ namespace Ritsukage.Tools
                 if (string.IsNullOrWhiteSpace(DatabasePath))
                 {
                     var html = Utils.HttpGET(SearchPage + _char);
-                    var matches = Sentence.Matches(html);
+                    var matches = GetSentenceRegex().Matches(html);
                     var result = new List<string>();
                     foreach (Match match in matches)
                     {
@@ -156,5 +154,7 @@ namespace Ritsukage.Tools
                     }
                 }
             });
+        [GeneratedRegex("<li class='label'>(?<author>[^<]+)</li><li class='none'><span class='poemSentence'>(?<sentence>[^<]+)</span>&nbsp;<a target='_blank' class='small' href=\"[^\"]+\">(?<poem>[^<]+)</a></li>")]
+        private static partial Regex GetSentenceRegex();
     }
 }
