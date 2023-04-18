@@ -6,6 +6,7 @@ using Sora.Entities.Segment;
 using System;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
 {
@@ -14,39 +15,13 @@ namespace Ritsukage.QQ.Commands
     {
         const string LatexApi = "https://latex.codecogs.com/png.image?";
 
-        [Command("math")]
-        [CommandDescription("1", "expr")]
-        public static async void Normal(SoraMessage e, string exprString)
-        {
-            exprString = e.Message.GetText()[6..];
-            try
-            {
-                var expr = MathS.FromString(exprString);
-                if (expr == null)
-                {
-                    await e.ReplyToOriginal("表达式解析错误");
-                    return;
-                }
-                var sb = new StringBuilder();
-                sb.Append(expr.ToString());
-                if (expr.EvaluableNumerical)
-                    sb.AppendLine().Append("= " + expr.EvalNumerical().ToString());
-                else if (expr.EvaluableBoolean)
-                    sb.AppendLine().Append("= " + expr.EvalBoolean().ToString());
-                await e.ReplyToOriginal(sb.ToString());
-            }
-            catch (Exception ex)
-            {
-                await e.ReplyToOriginal(ex.Message);
-                ConsoleLog.Error(nameof(Math), ex.GetFormatString());
-            }
-        }
-
         [Command("solve")]
-        [CommandDescription("1", "expr")]
+        [CommandDescription("求解表达式")]
+        [ParameterDescription(1, "表达式/求解定义式")]
         public static async void Solve(SoraMessage e, string exprString)
         {
             exprString = e.Message.GetText()[7..];
+            var sb = new StringBuilder();
             try
             {
                 var lines = exprString.Replace("\r", string.Empty)
@@ -58,11 +33,29 @@ namespace Ritsukage.QQ.Commands
                     ?.Select(x => x[6..].ToEntity())?.Cast<Entity.Variable>();
                 if (exprEntity == null || !exprEntity.Any())
                 {
-                    await e.ReplyToOriginal("表达式解析错误");
-                    return;
+                    try
+                    {
+                        var expr = MathS.FromString(exprString);
+                        if (expr == null)
+                        {
+                            sb.Append("表达式解析错误");
+                        }
+                        else
+                        {
+                            sb.Append(expr.ToString());
+                            if (expr.EvaluableNumerical)
+                                sb.AppendLine().Append("= " + expr.EvalNumerical().ToString());
+                            else if (expr.EvaluableBoolean)
+                                sb.AppendLine().Append("= " + expr.EvalBoolean().ToString());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        sb.Append(ex.Message);
+                        ConsoleLog.Error(nameof(Math), ex.GetFormatString());
+                    }
                 }
-                var sb = new StringBuilder();
-                if (exprEntity.Count() > 1)
+                else if (exprEntity.Count() > 1)
                 {
                     var equation = MathS.Equations(exprEntity.Select(x =>
                     {
@@ -108,23 +101,24 @@ namespace Ritsukage.QQ.Commands
                         }
                     }
                 }
-                await e.ReplyToOriginal(sb.ToString());
             }
             catch (Exception ex)
             {
-                await e.ReplyToOriginal(ex.Message);
+                sb.Append(ex.Message);
                 ConsoleLog.Error(nameof(Math), ex.GetFormatString());
             }
+            await e.ReplyToOriginal(sb.ToString());
         }
 
         [Command("tolatex")]
-        [CommandDescription("1", "expr")]
+        [CommandDescription("将指定函数表达式转换为latex表达式")]
+        [ParameterDescription(1, "函数表达式")]
         public static async void ToLatex(SoraMessage e, string exprString)
         {
             exprString = e.Message.GetText()[9..];
             try
             {
-                await e.ReplyToOriginal(exprString.Latexise().ToString());
+                await e.ReplyToOriginal(InnerToLatexString(exprString));
             }
             catch (Exception ex)
             {
@@ -134,16 +128,42 @@ namespace Ritsukage.QQ.Commands
         }
 
         [Command("latex")]
-        [CommandDescription("1", "latex")]
+        [CommandDescription("将latex表达式转换为latex图像")]
+        [ParameterDescription(1, "latex表达式")]
         public static async void Latex(SoraMessage e, string latexString)
         {
             latexString = e.Message.GetText()[7..];
             if (!string.IsNullOrWhiteSpace(latexString))
             {
-                var file = await DownloadManager.Download(LatexApi + Utils.UrlEncode(latexString));
+                var file = await InnerToLatexPic(latexString);
                 if (!string.IsNullOrWhiteSpace(file))
                     await e.ReplyToOriginal(SoraSegment.Image(file));
             }
         }
+
+        [Command("tolatexpic")]
+        [CommandDescription("将指定函数表达式转换为latex图像")]
+        [ParameterDescription(1, "函数表达式")]
+        public static async void ToLatexPic(SoraMessage e, string exprString)
+        {
+            exprString = e.Message.GetText()[12..];
+            try
+            {
+                var file = await InnerToLatexPic(InnerToLatexString(exprString));
+                if (!string.IsNullOrWhiteSpace(file))
+                    await e.ReplyToOriginal(SoraSegment.Image(file));
+            }
+            catch (Exception ex)
+            {
+                await e.ReplyToOriginal(ex.Message);
+                ConsoleLog.Error(nameof(Math), ex.GetFormatString());
+            }
+        }
+
+        static string InnerToLatexString(string exprString)
+            => exprString.Latexise().ToString();
+
+        static async Task<string> InnerToLatexPic(string latexString)
+            => await DownloadManager.Download(LatexApi + latexString);
     }
 }
