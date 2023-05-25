@@ -29,8 +29,8 @@ namespace Ritsukage.QQ.Commands
                     .Select(x => x.Trim());
                 var exprEntity = lines?.Where(x => x.StartsWith("expr>"))
                     ?.Select(x => x[5..].ToEntity());
-                var needSolveEntity = lines?.Where(x => x.StartsWith("solve>"))
-                    ?.Select(x => x[6..].ToEntity())?.Cast<Entity.Variable>();
+                var needSolveEntity = lines?.Where(x => x.StartsWith("var>"))
+                    ?.Select(x => x[4..].ToEntity())?.Cast<Entity.Variable>();
                 if (exprEntity == null || !exprEntity.Any())
                 {
                     try
@@ -44,7 +44,13 @@ namespace Ritsukage.QQ.Commands
                         {
                             sb.Append(expr.ToString());
                             if (expr.EvaluableNumerical)
-                                sb.AppendLine().Append("= " + expr.EvalNumerical().ToString());
+                            {
+                                var a = expr.EvalNumerical().ToString();
+                                var b = ((double)expr.EvalNumerical()).ToString();
+                                sb.AppendLine().Append("= " + a);
+                                if (string.Compare(a, b, true) != 0)
+                                    sb.AppendLine().Append("= " + ((double)expr.EvalNumerical()).ToString());
+                            }
                             else if (expr.EvaluableBoolean)
                                 sb.AppendLine().Append("= " + expr.EvalBoolean().ToString());
                         }

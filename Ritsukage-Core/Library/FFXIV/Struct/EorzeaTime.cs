@@ -22,7 +22,6 @@ namespace Ritsukage.Library.FFXIV.Struct
         public const int SecondsOfDay = SecondsOfMinute * MinutesOfHour * HoursOfDay;
         public const int SecondsOfHour = SecondsOfMinute * MinutesOfHour;
 
-        static readonly DateTime DATETIME_ZERO = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public static EorzeaTime Now => new(DateTime.UtcNow);
 
         double ET;

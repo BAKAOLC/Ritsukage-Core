@@ -97,13 +97,18 @@ namespace Ritsukage.QQ.Commands
             await e.Reply($"当前为云绝历时间：\n2018年08月{day,2}日 " + now.ToString("HH时mm分ss秒"));
         }
 
-        static readonly DateTime NextExaminationDate = new(2022, 6, 7, 0, 0, 0);
-
         [Command("高考倒计时")]
         [CommandDescription("获取bot服务器当前的时间到高考开始所差的时间")]
         public static async void Examination(SoraMessage e)
         {
-            var day = System.Math.Floor((NextExaminationDate - DateTime.Now.Date).TotalDays);
+            var now = DateTime.Now.Date;
+            var target = new DateTime(now.Year, 6, 7, 0, 0, 0);
+            var day = System.Math.Floor((target - now).TotalDays);
+            if (day < -90)
+            {
+                target.AddYears(1);
+                day = System.Math.Floor((target - now).TotalDays);
+            }
             if (day > 3)
                 await e.Reply($"距离高考还有 {day} 天");
             else if (day == 3)

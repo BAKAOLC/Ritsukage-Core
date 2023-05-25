@@ -41,6 +41,7 @@
     <PackageReference Include="DnsClient" Version="1.7.0" />
     <PackageReference Include="Downloader" Version="3.0.4" />
     <PackageReference Include="Meowtrix.PixivApi" Version="0.3.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.6.0-1.final" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.3.23174.8" />
     <PackageReference Include="NetCoreHTMLToImage" Version="1.1.1.7" />
     <PackageReference Include="NeteaseCloudMusicApi" Version="3.25.3.10000" />
