@@ -4,7 +4,7 @@
 	<br>
     Ritsukage Core
 	<h4 align="center">
-        一个基于 <a href="https://github.com/howmanybots/onebot">OneBot</a> 协议开发的 <a href="https://dotnet.microsoft.com/download/dotnet/5.0">C#/.Net</a> 异步机器人
+        一个基于 <a href="https://github.com/howmanybots/onebot">OneBot</a> 协议开发的 <a href="https://dotnet.microsoft.com/download/dotnet/7.0">C#/.Net</a> 异步机器人
 	</h4>
 	<h4 align="center">
         使用框架：<a href="https://github.com/Yukari316/Sora">Sora</a> & <a href="https://github.com/discord-net/Discord.Net">Discord.Net</a>
@@ -16,7 +16,7 @@
         <img src="https://img.shields.io/badge/OneBot-v11-black?style=for-the-badge">
         <img src="https://img.shields.io/github/license/BAKAOLC/Ritsukage-Core?style=for-the-badge&color=blueviolet">
         <img src="https://img.shields.io/github/stars/BAKAOLC/Ritsukage-Core?style=for-the-badge">
-        <img src="https://img.shields.io/github/workflow/status/BAKAOLC/Ritsukage-Core/.NET%20Core/master?style=for-the-badge">
+        <img src="https://img.shields.io/github/actions/workflow/status/BAKAOLC/Ritsukage-Core/.github/workflows/ci.yml?branch=master&style=for-the-badge">
 	</h4>
 </h1>
 
