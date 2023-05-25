@@ -16,7 +16,7 @@
         <img src="https://img.shields.io/badge/OneBot-v11-black?style=for-the-badge">
         <img src="https://img.shields.io/github/license/BAKAOLC/Ritsukage-Core?style=for-the-badge&color=blueviolet">
         <img src="https://img.shields.io/github/stars/BAKAOLC/Ritsukage-Core?style=for-the-badge">
-        <img src="https://img.shields.io/github/workflow/status/BAKAOLC/Ritsukage-Core/.NET%20Core/master?style=for-the-badge">
+        <img src="https://img.shields.io/github/actions/workflow/status/BAKAOLC/Ritsukage-Core/.github/workflows/ci.yml?branch=master&style=for-the-badge">
 	</h4>
 </h1>
 
