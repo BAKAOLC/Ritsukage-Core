@@ -17,7 +17,7 @@ using System.Text.RegularExpressions;
 namespace Ritsukage.QQ.Commands
 {
     [CommandGroup("Minecraft")]
-    public static class Minecraft
+    public static partial class Minecraft
     {
         const string Indent = "    ";
         public static string GetIssueInfo(string id)
@@ -65,14 +65,12 @@ namespace Ritsukage.QQ.Commands
             return sb.ToString();
         }
 
-        static readonly Regex _ServerRegex = new Regex(@"^(?<host>[^:]+)(:(?<port>\d+))?$");
-
         [Command("获取mc服务器状态")]
         [CommandDescription("获取指定MC服务器的状态信息")]
         [ParameterDescription(1, "服务器IP")]
         public static async void ServerStatus(SoraMessage e, string target)
         {
-            var x = _ServerRegex.Match(target);
+            var x = GetServerIPRegex().Match(target);
             string host = x.Groups["host"].Value;
             ushort port = 25565;
             if (ushort.TryParse(x.Groups["port"].Value, out ushort _port))
@@ -105,7 +103,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "ID")]
         public static async void MOJIRA(SoraMessage e, string id)
         {
-            if (!Regex.IsMatch(id, @"^MC(PE)?-\d+$"))
+            if (!GetMOJIRAIDRegex().IsMatch(id))
                 await e.ReplyToOriginal($"不合法的ID指定：{id}");
             else
             {
@@ -195,7 +193,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "版本号")]
         public static async void FindMCSnapshot(SoraMessage e, string version)
         {
-            var vm = Regex.Match(version.Trim(), @"^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\d+))?$");
+            var vm = GetMinecraftVersionRegex().Match(version.Trim());
             var mainVersion = vm.Groups["mainVersion"].Value;
             var subType = "snapshot";
             var subNum = "";
@@ -207,8 +205,8 @@ namespace Ritsukage.QQ.Commands
             string changelog = null;
             var articles = new ArticleList("snapshot");
             var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
-            && (subType == "snapshot" || ((subType == "pre" ? x.Key.Contains("PRE-RELEASE")
-            : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum)))).FirstOrDefault();
+            && (subType == "snapshot" || (subType == "pre" ? x.Key.Contains("PRE-RELEASE")
+            : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
             if (!string.IsNullOrEmpty(article.Key))
                 changelog = article.Value;
             if (!string.IsNullOrEmpty(changelog))
@@ -247,7 +245,6 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "网页URL")]
         public static async void MoChangeLogsFormat(SoraMessage e, string url)
         {
-            url = SoraMessage.Escape(url);
             if (!url.StartsWith("https://feedback.minecraft.net/hc/en-us/articles/"))
             {
                 await e.ReplyToOriginal("无效的目标文章网址");
@@ -467,5 +464,14 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("因未知原因导致功能禁用失败，请稍后重试");
             });
         }
+
+        [GeneratedRegex("^MC(PE)?-\\d+$")]
+        private static partial Regex GetMOJIRAIDRegex();
+
+        [GeneratedRegex("^(?<mainVersion>[^-]+)(?<sub>-(?<subType>pre|rc)(?<subNum>\\d+))?$")]
+        private static partial Regex GetMinecraftVersionRegex();
+
+        [GeneratedRegex("^(?<host>[^:]+)(:(?<port>\\d+))?$")]
+        private static partial Regex GetServerIPRegex();
     }
 }

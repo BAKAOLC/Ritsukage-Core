@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Ritsukage.Tools
 {
-    public static class BilibiliAVBVConverter
+    public static partial class BilibiliAVBVConverter
     {
         static readonly char[] CharSet = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF".ToCharArray();
         static readonly Dictionary<char, int> CharValue = new Dictionary<char, int>();
@@ -33,9 +33,6 @@ namespace Ritsukage.Tools
             return string.Join("", result);
         }
 
-        static readonly Regex BVCheck1 = new Regex("^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$");
-        static readonly Regex BVCheck2 = new Regex("^1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$");
-
         public static long ToAV(string bv)
         {
             lock (CharValue)
@@ -47,9 +44,9 @@ namespace Ritsukage.Tools
                 }
             }
 
-            if (!BVCheck1.IsMatch(bv))
+            if (!GetBVCheckRegex1().IsMatch(bv))
             {
-                if (!BVCheck2.IsMatch(bv))
+                if (!GetBVCheckRegex2().IsMatch(bv))
                     throw new("BV号格式非法，正确的BV号应是以 BV1..4.1.7.. 为格式且满足base58字符集设定的字符串");
                 else
                     bv = "BV" + bv;
@@ -59,12 +56,17 @@ namespace Ritsukage.Tools
             long av = 0;
             for (var i = 0; i <= 5; ++i)
                 av += CharValue[chars[Pos[i]]] * (long)Math.Pow(58, i);
-            av = (av - ADD) ^ XOR;
+            av = av - ADD ^ XOR;
 
             if (av <= 0)
                 throw new($"得出错误的转换结果({av})");
 
             return av;
         }
+
+        [GeneratedRegex("^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
+        private static partial Regex GetBVCheckRegex1();
+        [GeneratedRegex("^1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
+        private static partial Regex GetBVCheckRegex2();
     }
 }

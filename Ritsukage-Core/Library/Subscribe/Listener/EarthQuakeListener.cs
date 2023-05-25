@@ -38,12 +38,12 @@ namespace Ritsukage.Library.Subscribe.Listener
                 var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == target);
                 if (records != null && records.Length > 0)
                 {
-                    var datas = b.Data.Where(x => x.震级 >= 4).Select(x => x.ToString());
-                    if (datas.Any())
+                    var data = b.Data.Where(x => x.震级 >= 4).Select(x => x.ToString());
+                    if (data.Any())
                     {
                         var sb = new StringBuilder();
                         sb.Append("[Earth Quake]");
-                        foreach (var m in datas)
+                        foreach (var m in data)
                             sb.AppendLine().Append(m);
                         var msg = sb.ToString();
                         if (Program.Config.QQ)

@@ -14,7 +14,6 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "目标文本")]
         public static async void Translate(SoraMessage e, string text)
         {
-            text = SoraMessage.Escape(text);
             try
             {
                 var result = BaiduTranslate.GetTranslateResult(text);

@@ -10,7 +10,6 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "关键字")]
         public static async void FHL(SoraMessage e, string _char)
         {
-            _char = SoraMessage.Escape(_char);
             if (_char.Length != 1)
             {
                 await e.ReplyToOriginal("参数错误，请检查后重试");
@@ -46,7 +45,7 @@ namespace Ritsukage.QQ.Commands
         {
             try
             {
-                var result = await Tools.Poem.GetOrigin(SoraMessage.Escape(poem));
+                var result = await Tools.Poem.GetOrigin(poem);
                 await e.ReplyToOriginal(result);
                 await e.RemoveCoins(2);
             }

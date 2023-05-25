@@ -4,7 +4,7 @@
 	<br>
     Ritsukage Core
 	<h4 align="center">
-        一个基于 <a href="https://github.com/howmanybots/onebot">OneBot</a> 协议开发的 <a href="https://dotnet.microsoft.com/download/dotnet/5.0">C#/.Net 5</a> 异步机器人
+        一个基于 <a href="https://github.com/howmanybots/onebot">OneBot</a> 协议开发的 <a href="https://dotnet.microsoft.com/download/dotnet/5.0">C#/.Net</a> 异步机器人
 	</h4>
 	<h4 align="center">
         使用框架：<a href="https://github.com/Yukari316/Sora">Sora</a> & <a href="https://github.com/discord-net/Discord.Net">Discord.Net</a>

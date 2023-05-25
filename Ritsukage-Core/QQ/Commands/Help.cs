@@ -27,8 +27,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("提供的参数非法捏");
                 return;
             }
-            var self_attr = Attribute.GetCustomAttributes(typeof(Help).GetMethod("GetHelpForCommand"), true).Where(a => a is CommandAttribute).FirstOrDefault() as CommandAttribute;
-            if (self_attr == null) return;
+            if (Attribute.GetCustomAttributes(typeof(Help).GetMethod("GetHelpForCommand"), true).Where(a => a is CommandAttribute).FirstOrDefault() is not CommandAttribute self_attr) return;
             var header = self_attr.StartHeader;
             var lc = command_str.ToLower();
             var matches = CommandManager.Commands

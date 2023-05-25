@@ -113,7 +113,7 @@ namespace Ritsukage.Library.Graphic
         public static Image<Rgba32> GenerateRotateImage(Image<Rgba32> image, int repeat = 1, int frameDelay = 1)
         {
             int total = image.Frames.Count * repeat;
-            var size = new Size(GetRotateMaxBound(image.Size()));
+            var size = new Size(GetRotateMaxBound(image.Size));
             var oimg = image.Clone();
             oimg.Mutate(x => x.Resize(new ResizeOptions()
             {
@@ -148,7 +148,7 @@ namespace Ritsukage.Library.Graphic
         public static Image<Rgba32> GenerateRotateImageWithOriginalSize(Image<Rgba32> image, int repeat = 1, int frameDelay = 1)
         {
             int total = image.Frames.Count * repeat;
-            var size = new Size(GetRotateMaxBound(image.Size()));
+            var size = new Size(GetRotateMaxBound(image.Size));
             var oimg = image.Clone();
             oimg.Mutate(x => x.Resize(new ResizeOptions()
             {

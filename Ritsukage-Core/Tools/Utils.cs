@@ -4,6 +4,7 @@ using Ritsukage.Tools.Console;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,14 +15,14 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.Tools
 {
-    public static class Utils
+    public static partial class Utils
     {
-        public static readonly Regex UrlRegex = new Regex(@"((http|ftp|https)://)((\[::\])|([a-zA-Z0-9\._-]+(\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\._-]+|/)*(\?[a-zA-Z0-9\&%_\./-~-]*)?)?");
+        public static readonly Regex UrlRegex = GetUrlRegex();
         public static string[] MatchUrls(string text)
             => UrlRegex.Matches(text).Where(x => x.Success).Select(x => x.Value).ToArray();
 
         public static string ToSignNumberString(int num)
-            => num < 0 ? num.ToString() : ("+" + num);
+            => num < 0 ? num.ToString() : "+" + num;
 
         public static string ToUrlParameter(Dictionary<string, object> param = null)
         {
@@ -54,6 +55,37 @@ namespace Ritsukage.Tools
         public static int GetRandomSeed()
             => BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0);
 
+        public static string ToLiteral(this string input)
+        {
+            var literal = new StringBuilder(input.Length + 2);
+            literal.Append('"');
+            foreach (var c in input)
+            {
+                switch (c)
+                {
+                    case '\'': literal.Append(@"\'"); break;
+                    case '\"': literal.Append("\\\""); break;
+                    case '\\': literal.Append(@"\\"); break;
+                    case '\0': literal.Append(@"\0"); break;
+                    case '\a': literal.Append(@"\a"); break;
+                    case '\b': literal.Append(@"\b"); break;
+                    case '\f': literal.Append(@"\f"); break;
+                    case '\n': literal.Append(@"\n"); break;
+                    case '\r': literal.Append(@"\r"); break;
+                    case '\t': literal.Append(@"\t"); break;
+                    case '\v': literal.Append(@"\v"); break;
+                    default:
+                        if (char.GetUnicodeCategory(c) != UnicodeCategory.Control)
+                            literal.Append(c);
+                        else
+                            literal.Append(@"\u").Append(((ushort)c).ToString("x4"));
+                        break;
+                }
+            }
+            literal.Append('"');
+            return literal.ToString();
+        }
+
         public static string RemoveEmptyLine(string text)
         {
             char splitChar = '\n';
@@ -76,7 +108,7 @@ namespace Ritsukage.Tools
 
         public static string UrlRemoveParam(string url)
         {
-            var m = Regex.Match(url, @"^[^\?]+");
+            var m = GetUrlHostAndPathRegex().Match(url);
             if (m.Success)
             {
                 if (m.Value.EndsWith("/"))
@@ -87,11 +119,10 @@ namespace Ritsukage.Tools
             return url;
         }
 
-        static Regex _UrlEncodeParser = new Regex("%[a-f0-9]{2}");
         public static string UrlEncode(string url)
         {
             var encode = System.Web.HttpUtility.UrlEncode(url, Encoding.UTF8);
-            return _UrlEncodeParser.Replace(encode, (s) => s.Value.ToUpper());
+            return GetUrlEncodeUnitRegex().Replace(encode, (s) => s.Value.ToUpper());
         }
 
         public static string GetQQHeadImageUrl(long qq) => "http://q.qlogo.cn/headimg_dl?spec=640&img_type=png&dst_uin=" + qq;
@@ -137,7 +168,6 @@ namespace Ritsukage.Tools
             {
                 BufferBlockSize = 4096,
                 ChunkCount = 5,
-                OnTheFlyDownload = false,
                 ParallelDownload = true
             };
             if (!string.IsNullOrWhiteSpace(referer))
@@ -153,7 +183,7 @@ namespace Ritsukage.Tools
 
         public static async Task<Stream> GetFileAsync(string url, string referer = null)
         {
-            using HttpClient hc = new HttpClient();
+            using HttpClient hc = new();
             var resp = await hc.GetAsync(url);
             if (!string.IsNullOrEmpty(referer))
                 resp.Headers.Add("referer", referer);
@@ -292,7 +322,7 @@ namespace Ritsukage.Tools
             HttpWebRequest request = null;
             try
             {
-                request = CreateHttpWebRequest(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : ("?" + postDataStr)));
+                request = CreateHttpWebRequest(Url + (string.IsNullOrWhiteSpace(postDataStr) ? "" : "?" + postDataStr));
                 request.Timeout = (int)timeout;
                 SetHttpHeaders(request, "pc", cookie);
                 if (!string.IsNullOrWhiteSpace(referer))
@@ -411,5 +441,11 @@ namespace Ritsukage.Tools
         }
 
         public static StringBuilder CreateStringBuilder(this string s) => new StringBuilder(s);
+        [GeneratedRegex("((http|ftp|https)://)((\\[::\\])|([a-zA-Z0-9\\._-]+(\\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\\._-]+|/)*(\\?[a-zA-Z0-9\\&%_\\./-~-]*)?)?")]
+        private static partial Regex GetUrlRegex();
+        [GeneratedRegex("^[^\\?]+")]
+        private static partial Regex GetUrlHostAndPathRegex();
+        [GeneratedRegex("%[a-f0-9]{2}")]
+        private static partial Regex GetUrlEncodeUnitRegex();
     }
 }

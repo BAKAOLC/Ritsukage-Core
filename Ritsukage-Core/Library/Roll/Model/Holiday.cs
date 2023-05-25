@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Ritsukage.Library.Roll.Model
 {
-    public struct Holiday
+    public partial struct Holiday
     {
         public string Name { get; init; }
         public string Date { get; init; }
@@ -19,7 +19,7 @@ namespace Ritsukage.Library.Roll.Model
             Date = (string)data["date"];
             LunarDate = (string)data["lunarDate"];
             ForLunar = (bool)data["lunarHoliday"];
-            var m = Regex.Match(Date, @"^(?<year>\d+)年(?<month>\d+)月(?<day>\d+)日$");
+            var m = GetDateTimeRegex().Match(Date);
             ResidueDays = Convert.ToInt32((new DateTime(
                 int.Parse(m.Groups["year"].Value),
                 int.Parse(m.Groups["month"].Value),
@@ -78,5 +78,8 @@ namespace Ritsukage.Library.Roll.Model
             }
             throw new Exception("最近节日获取失败");
         }
+
+        [GeneratedRegex("^(?<year>\\d+)年(?<month>\\d+)月(?<day>\\d+)日$")]
+        private static partial Regex GetDateTimeRegex();
     }
 }

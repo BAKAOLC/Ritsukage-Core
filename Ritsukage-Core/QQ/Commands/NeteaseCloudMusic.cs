@@ -13,7 +13,7 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "关键词", "接口来自 https://music.163.com")]
         public static async void Search(SoraMessage e, string keyword)
         {
-            var search = await CloudMusicApi.SearchSong(SoraMessage.Escape(keyword));
+            var search = await CloudMusicApi.SearchSong(keyword);
             if (search != null && search.Length > 0)
                 Play(e, search[0].Id);
             else

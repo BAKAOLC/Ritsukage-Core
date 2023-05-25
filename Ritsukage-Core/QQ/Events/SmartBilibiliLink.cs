@@ -19,7 +19,7 @@ using System.Text.RegularExpressions;
 namespace Ritsukage.QQ.Events
 {
     [EventGroup]
-    public static class SmartBilibiliLink
+    public static partial class SmartBilibiliLink
     {
         [Event(typeof(GroupMessageEventArgs))]
         public static async void Receiver(object sender, GroupMessageEventArgs args)
@@ -45,16 +45,6 @@ namespace Ritsukage.QQ.Events
         const int DelayTime = 10;
         static readonly object _lock = new();
         static readonly Dictionary<long, Dictionary<string, Dictionary<string, DateTime>>> Delay = new();
-
-        #region Regex define
-        static readonly Regex Regex_ShortLink = new Regex(@"^((https?://)?b23\.tv/)(?<data>[0-9a-zA-Z]+)");
-        static readonly Regex Regex_User = new Regex(@"^((https?://)?space\.bilibili\.com/)(?<id>\d+)");
-        static readonly Regex Regex_AV = new Regex(@"^[Aa][Vv](?<av>\d+)$");
-        static readonly Regex Regex_BV = new Regex(@"^[Bb][Vv](?<bv>1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2})$");
-        static readonly Regex Regex_Video = new Regex(@"^((https?://)?www\.bilibili\.com/video/)(?<id>[0-9a-zA-Z]+)");
-        static readonly Regex Regex_LiveRoom = new Regex(@"^((https?://)?live\.bilibili\.com/)(?<id>\d+)");
-        static readonly Regex Regex_Dynamic = new Regex(@"^((https?://)?t\.bilibili\.com/)(?<id>\d+)");
-        #endregion
 
         const string BilibiliVideo = "https://www.bilibili.com/video/";
 
@@ -87,7 +77,7 @@ namespace Ritsukage.QQ.Events
             #endregion
             #region RawText Match
             #region User
-            m = Regex_User.Match(baseStr);
+            m = GetUserRegex().Match(baseStr);
             if (m.Success)
             {
                 var o = m.Groups["id"].Value;
@@ -110,7 +100,7 @@ namespace Ritsukage.QQ.Events
             }
             #endregion
             #region AV
-            m = Regex_AV.Match(baseStr);
+            m = GetAVRegex().Match(baseStr);
             if (m.Success)
             {
                 var av = m.Groups["av"].Value;
@@ -133,7 +123,7 @@ namespace Ritsukage.QQ.Events
             }
             #endregion
             #region BV
-            m = Regex_BV.Match(baseStr);
+            m = GetBVRegex().Match(baseStr);
             if (m.Success)
             {
                 var bv = m.Groups["bv"].Value;
@@ -153,7 +143,7 @@ namespace Ritsukage.QQ.Events
             }
             #endregion
             #region Live
-            m = Regex_LiveRoom.Match(baseStr);
+            m = GetLiveRoomRegex().Match(baseStr);
             if (m.Success)
             {
                 var o = m.Groups["id"].Value;
@@ -176,7 +166,7 @@ namespace Ritsukage.QQ.Events
             }
             #endregion
             #region Dynamic
-            m = Regex_Dynamic.Match(baseStr);
+            m = GetDynamicRegex().Match(baseStr);
             if (m.Success)
             {
                 var o = m.Groups["id"].Value;
@@ -202,13 +192,13 @@ namespace Ritsukage.QQ.Events
             #region Generate Url List
             List<string> urls = new();
             var matches = Utils.UrlRegex.Matches(baseStr);
-            foreach (Match match in matches)
+            foreach (Match match in matches.Cast<Match>())
             {
-                m = Regex_ShortLink.Match(match.Value);
+                m = GetShortLinkRegex().Match(match.Value);
                 if (m.Success)
                 {
                     var sv = m.Groups["data"].Value;
-                    if (Regex_AV.IsMatch(sv) || Regex_BV.IsMatch(sv))
+                    if (GetAVRegex().IsMatch(sv) || GetBVRegex().IsMatch(sv))
                         urls.Add(BilibiliVideo + sv);
                     else
                         urls.Add(await Utils.GetOriginalUrl(m.Value));
@@ -221,7 +211,7 @@ namespace Ritsukage.QQ.Events
             foreach (var url in urls)
             {
                 #region User
-                m = Regex_User.Match(url);
+                m = GetUserRegex().Match(url);
                 if (m.Success)
                 {
                     var o = m.Groups["id"].Value;
@@ -244,12 +234,12 @@ namespace Ritsukage.QQ.Events
                 }
                 #endregion
                 #region Video
-                m = Regex_Video.Match(url);
+                m = GetVideoRegex().Match(url);
                 if (m.Success)
                 {
                     var id = m.Groups["id"].Value;
                     #region AV
-                    m = Regex_AV.Match(id);
+                    m = GetAVRegex().Match(id);
                     if (m.Success)
                     {
                         var av = m.Groups["av"].Value;
@@ -272,7 +262,7 @@ namespace Ritsukage.QQ.Events
                     }
                     #endregion
                     #region BV
-                    m = Regex_BV.Match(id);
+                    m = GetBVRegex().Match(id);
                     if (m.Success)
                     {
                         var bv = m.Groups["bv"].Value;
@@ -295,7 +285,7 @@ namespace Ritsukage.QQ.Events
                 }
                 #endregion
                 #region Live
-                m = Regex_LiveRoom.Match(url);
+                m = GetLiveRoomRegex().Match(url);
                 if (m.Success)
                 {
                     var o = m.Groups["id"].Value;
@@ -319,7 +309,7 @@ namespace Ritsukage.QQ.Events
                 }
                 #endregion
                 #region Dynamic
-                m = Regex_Dynamic.Match(url);
+                m = GetDynamicRegex().Match(url);
                 if (m.Success)
                 {
                     var o = m.Groups["id"].Value;
@@ -399,5 +389,20 @@ namespace Ritsukage.QQ.Events
                 await e.Reply(SoraSegment.Image(name));
             }
         }
+
+        [GeneratedRegex("^((https?://)?b23\\.tv/)(?<data>[0-9a-zA-Z]+)")]
+        private static partial Regex GetShortLinkRegex();
+        [GeneratedRegex("^((https?://)?space\\.bilibili\\.com/)(?<id>\\d+)")]
+        private static partial Regex GetUserRegex();
+        [GeneratedRegex("^[Aa][Vv](?<av>\\d+)$")]
+        private static partial Regex GetAVRegex();
+        [GeneratedRegex("^[Bb][Vv](?<bv>1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2})$")]
+        private static partial Regex GetBVRegex();
+        [GeneratedRegex("^((https?://)?www\\.bilibili\\.com/video/)(?<id>[0-9a-zA-Z]+)")]
+        private static partial Regex GetVideoRegex();
+        [GeneratedRegex("^((https?://)?live\\.bilibili\\.com/)(?<id>\\d+)")]
+        private static partial Regex GetLiveRoomRegex();
+        [GeneratedRegex("^((https?://)?t\\.bilibili\\.com/)(?<id>\\d+)")]
+        private static partial Regex GetDynamicRegex();
     }
 }

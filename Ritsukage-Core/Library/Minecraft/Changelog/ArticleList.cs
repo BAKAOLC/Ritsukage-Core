@@ -1,11 +1,11 @@
-﻿using HtmlAgilityPack;
-using Ritsukage.Tools;
+﻿using Ritsukage.Tools;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Ritsukage.Library.Minecraft.Changelog
 {
-    public class ArticleList
+    public partial class ArticleList
     {
         const string Host = "https://feedback.minecraft.net";
         const string MC_Beta = "https://feedback.minecraft.net/hc/en-us/sections/360001185332-Beta-Information-and-Changelogs";
@@ -28,12 +28,18 @@ namespace Ritsukage.Library.Minecraft.Changelog
                 return;
             var html = Utils.HttpGET(url);
             var index = html.IndexOf("<header class=\"page-header\">");
-            var titleMatch = Regex.Match(html[index..], "<h1>(?<title>[^<]+)</h1>");
+            var titleMatch = GetTitleMatchRegex().Match(html[index..]);
             Title = titleMatch.Groups["title"].Value.Trim();
-            var articlesMatch = Regex.Matches(html, "<a href=\"(?<url>[^\"]+)\" class=\"article-list-link\">(?<name>[^<]+)</a>");
-            foreach (Match article in articlesMatch)
+            var articlesMatch = GetArticlesMatchRegex().Matches(html);
+            foreach (Match article in articlesMatch.Cast<Match>())
                 if (!Articles.ContainsKey(article.Groups["name"].Value))
                     Articles.Add(article.Groups["name"].Value, Host + article.Groups["url"].Value);
         }
+
+        [GeneratedRegex("<h1>(?<title>[^<]+)</h1>")]
+        private static partial Regex GetTitleMatchRegex();
+
+        [GeneratedRegex("<a href=\"(?<url>[^\"]+)\" class=\"article-list-link\">(?<name>[^<]+)</a>")]
+        private static partial Regex GetArticlesMatchRegex();
     }
 }

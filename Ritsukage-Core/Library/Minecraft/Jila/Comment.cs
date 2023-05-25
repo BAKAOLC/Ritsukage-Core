@@ -4,20 +4,19 @@ using System.Text.RegularExpressions;
 
 namespace Ritsukage.Library.Minecraft.Jila
 {
-    public struct Comment
+    public partial struct Comment
     {
         public string Id { get; init; }
         public string Author { get; init; }
         public DateTime CreatedTime { get; init; }
         public string Message { get; init; }
 
-        static readonly Regex HtmlTagParser = new Regex(@"<[^>]+>");
         public Comment(string id, string author, DateTime datetime, string message)
         {
             Id = id;
             Author = author;
             CreatedTime = datetime;
-            Message = HtmlTagParser.Replace(message, (s) =>
+            Message = GetHtmlTagRegex().Replace(message, (s) =>
             {
                 var text = s.Value;
                 if (text == "<br/>")
@@ -35,5 +34,8 @@ namespace Ritsukage.Library.Minecraft.Jila
             .AppendLine(Message)
             .Append(CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"))
             .ToString();
+
+        [GeneratedRegex("<[^>]+>")]
+        private static partial Regex GetHtmlTagRegex();
     }
 }

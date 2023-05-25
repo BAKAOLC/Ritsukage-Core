@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
 using Ritsukage.Tools;
-using Ritsukage.Tools.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ritsukage.Library.Bilibili.Model
@@ -240,10 +238,8 @@ namespace Ritsukage.Library.Bilibili.Model
         public TimeSpan Duration;
     }
 
-    public static class VideoExtensions
+    public static partial class VideoExtensions
     {
-        static readonly Regex CookieParse = new Regex(@"(?<key>[^=]+)=(?<value>[^;]+)");
-
         public static string PutCoin(string bv, string cookie)
             => PutCoin(BilibiliAVBVConverter.ToAV(bv), cookie);
         public static string PutCoin(long av, string cookie)
@@ -270,7 +266,7 @@ namespace Ritsukage.Library.Bilibili.Model
         public static async Task<bool> ShamWatchVideo(long av, string cookie)
         {
             var jct = Bilibili.GetJCT(cookie);
-            var cookies = CookieParse.Matches(cookie.Replace(" ", string.Empty));
+            var cookies = GetCookieItemRegex().Matches(cookie.Replace(" ", string.Empty));
             var uid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID").FirstOrDefault()?.Groups["value"].Value;
             var sid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID__ckMd5").FirstOrDefault()?.Groups["value"].Value;
             var video = Video.Get(av);
@@ -324,5 +320,7 @@ namespace Ritsukage.Library.Bilibili.Model
         }
         public static async Task<bool> ShamWatchVideo(this Video video, string cookie)
             => await ShamWatchVideo(video.AV, cookie);
+        [GeneratedRegex("(?<key>[^=]+)=(?<value>[^;]+)")]
+        private static partial Regex GetCookieItemRegex();
     }
 }

@@ -1,30 +1,36 @@
-name: .NET Core
+name: CI (.NET Core)
 
-on:
-  push:
-    branches: [ master,dev ]
-  pull_request:
-    branches: [ master,dev ]
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  PR_PROMPT: "::warning:: Build artifact will not be uploaded due to the workflow is trigged by pull request."
 
 jobs:
   build:
-
+    name: Build binary CI
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.302
+        dotnet-version: 7.0.203
     - name: Initialize Submodules
       run: git submodule update --init --recursive
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      env:
+        IS_PR: ${{ !!github.head_ref }}
+      run: |
+        if $IS_PR ; then echo $PR_PROMPT; fi
+        dotnet build --configuration Release --no-restore
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      if: ${{ !github.head_ref }}
+      with:
+        name: windows_amd64
+        path: bin/net6.0/
     - uses: toolmantim/release-drafter@v5.2.0
       name: Draft
       env:

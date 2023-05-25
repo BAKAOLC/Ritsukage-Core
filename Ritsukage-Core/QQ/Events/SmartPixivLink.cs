@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 namespace Ritsukage.QQ.Events
 {
     [EventGroup]
-    public static class SmartPixivLink
+    public static partial class SmartPixivLink
     {
         [Event(typeof(GroupMessageEventArgs))]
         public static async void Receiver(object sender, GroupMessageEventArgs args)
@@ -28,7 +28,6 @@ namespace Ritsukage.QQ.Events
         const string Host = "www.pixiv.net/";
         const string IllustID = "illust_id=";
         const string Artworks = "artworks/";
-        static readonly Regex MatchID = new Regex(@"^\d+");
 
         static void Trigger(GroupMessageEventArgs args)
         {
@@ -54,7 +53,7 @@ namespace Ritsukage.QQ.Events
                         if (index >= 0)
                             sub = sub[(Artworks.Length + index)..];
                     }
-                    var match = MatchID.Match(sub);
+                    var match = GetIDRegex().Match(sub);
                     if (match.Success)
                         ids.Add(int.Parse(match.Value));
                 }
@@ -81,5 +80,8 @@ namespace Ritsukage.QQ.Events
                 }
             }
         }
+
+        [GeneratedRegex("^\\d+")]
+        private static partial Regex GetIDRegex();
     }
 }

@@ -33,10 +33,7 @@ namespace Ritsukage.Discord
             _ = Service.GetRequiredService<CommandHandling>().InitializeAsync();
         }
 
-        public void Start() => new Thread(RunThread)
-        {
-            IsBackground = true
-        }.Start();
+        public void Start() => Task.Run(RunThread);
 
         public void Stop()
         {
@@ -60,9 +57,9 @@ namespace Ritsukage.Discord
                 {
                     repeat = true;
                     ConsoleLog.Error("Discord", ConsoleLog.ErrorLogBuilder(e));
-                    ConsoleLog.Info("Discord", "已断开连接，五秒后将重新登陆");
-                    Thread.Sleep(5000);
                 }
+                ConsoleLog.Info("Discord", "已断开连接，五秒后将重新登陆");
+                Thread.Sleep(5000);
             }
         }
 

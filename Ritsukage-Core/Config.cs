@@ -65,6 +65,26 @@ namespace Ritsukage
         public string BaiduTranslateKey = "";
         #endregion
 
+        #region
+        /// <summary>
+        /// OpenAI Api Key
+        /// </summary>
+        public string OpenAISessionToken = "";
+        /// <summary>
+        /// OpenAI Api Key Is Pro
+        /// </summary>
+        public bool OpenAIIsPro = false;
+        /// <summary>
+        /// Bing Chat Cookie Token
+        /// </summary>
+        public string BingChatCookieToken = "";
+        #endregion
+
+        /// <summary>
+        /// OCRSpace Token
+        /// </summary>
+        public string OCRSpaceToken = "";
+
         #region QQ
         /// <summary>
         /// 是否启用QQ相关功能

@@ -57,7 +57,7 @@ namespace Ritsukage.Library.Bilibili.Model
                 LiveStatus = (LiveStatus)(int)info["data"]["live_status"],
                 Type = type,
                 Thread = new()
-        };
+            };
             if (stream.LiveStatus == LiveStatus.Live)
                 stream.LiveStartTime = Utils.GetDateTime((long)info["data"]["live_time"]);
             else

@@ -10,8 +10,12 @@
   "MoJiraPassword": "", //Mojang Jira Password
   "BaiduTranslateAppId": "", //百度翻译Api App Id
   "BaiduTranslateKey": "", //百度翻译Api Key
+  "OpenAISessionToken": "", //OpenAI Api Key
+  "OpenAIIsPro": false, //OpenAI Api Key Is Pro
+  "BingChatCookieToken": "", //Bing Chat Cookie Token
   "GetLoveApiKey": "", //灵犀API(https://account.getlove.cn/login/) Key(用于诗词)
   "GetLoveApiSecret": "", //灵犀API Secret(用于诗词)
+  "OCRSpaceToken": "", //OCRSpace Token
   "QQ": false, //是否启用QQ相关功能
   "Host": "[::]", //要连接的目标IP
   "Port": 23150, //要监听的目标端口

@@ -22,7 +22,7 @@ namespace Ritsukage.QQ.Commands
         public static void GetIllustDetail(SoraMessage e, params int[] ids)
             => GetIllustDetail(ids, async (msg) => await e.ReplyToOriginal(msg), async (msg) => await e.Reply(msg));
 
-        static async void _GetIllustDetail(int id, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
+        static async void InnerGetIllustDetail(int id, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
         {
             try
             {
@@ -104,7 +104,7 @@ namespace Ritsukage.QQ.Commands
         {
             if (!slient)
                 Reply?.Invoke(new object[] { $"数据(pid:{id})获取中，请稍后" });
-            _GetIllustDetail(id, Reply, SendMessage, slient);
+            InnerGetIllustDetail(id, Reply, SendMessage, slient);
         }
 
         public static void GetIllustDetail(int[] ids, Action<object[]> Reply, Action<object[]> SendMessage, bool slient = false)
@@ -112,7 +112,7 @@ namespace Ritsukage.QQ.Commands
             if (!slient)
                 Reply?.Invoke(new object[] { $"数据(pid:{string.Join(", ", ids)})获取中，请稍后" });
             foreach (var id in ids)
-                _GetIllustDetail(id, Reply, SendMessage, slient);
+                InnerGetIllustDetail(id, Reply, SendMessage, slient);
         }
 
         [Command("启用pixiv智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
