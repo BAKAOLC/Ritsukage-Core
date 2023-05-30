@@ -10,9 +10,9 @@ jobs:
     name: Build binary CI
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 7.0.203
     - name: Initialize Submodules
@@ -26,11 +26,11 @@ jobs:
         if $IS_PR ; then echo $PR_PROMPT; fi
         dotnet build --configuration Release --no-restore
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: ${{ !github.head_ref }}
       with:
         name: windows_amd64
-        path: bin/net6.0/
+        path: bin/net7.0/
     - uses: toolmantim/release-drafter@v5.2.0
       name: Draft
       env:
