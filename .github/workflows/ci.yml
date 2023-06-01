@@ -8,7 +8,11 @@ env:
 jobs:
   build:
     name: Build binary CI
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+    
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET Core
@@ -19,7 +23,8 @@ jobs:
       run: git submodule update --init --recursive
     - name: Install dependencies
       run: dotnet restore
-    - name: Build
+    - shell: bash
+      name: Build
       env:
         IS_PR: ${{ !!github.head_ref }}
       run: |
@@ -29,9 +34,10 @@ jobs:
       uses: actions/upload-artifact@v3
       if: ${{ !github.head_ref }}
       with:
-        name: windows_amd64
+        name: ${{ matrix.os }}
         path: bin/net7.0/
     - uses: toolmantim/release-drafter@v5.2.0
+      if: matrix.os == 'ubuntu-latest'
       name: Draft
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
