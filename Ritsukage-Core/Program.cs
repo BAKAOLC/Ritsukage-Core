@@ -73,7 +73,12 @@ namespace Ritsukage
                 {
                     (string verify, string url) = pixiv_api.BeginAuth();
                     File.WriteAllText("PixivLoginUrl.txt", "请在浏览器中打开并登录Pixiv，然后在F12的Network页面中获取其中 pixiv://....?code=xxx 的xxx部分粘贴在程序中" + Environment.NewLine + url);
-                    Process.Start("notepad.exe", "PixivLoginUrl.txt");
+                    try
+                    {
+                        Process.Start("notepad.exe", "PixivLoginUrl.txt");
+                    } catch (Exception)
+                    {
+                    }
                     await Task.Factory.StartNew(async () =>
                     {
                         string key = Console.ReadLine();
@@ -316,7 +321,7 @@ namespace Ritsukage
             if (_initedWatchDog) return;
             _initedWatchDog = true;
             ConsoleLog.Info("Main", "初始化进程监视器……");
-            var process = Process.Start(new ProcessStartInfo("SimpleWatchDog.exe", $"{pid} -n \"{name}\"")
+            var process = Process.Start(new ProcessStartInfo("SimpleWatchDog", $"{pid} -n \"{name}\"")
             {
                 UseShellExecute = false
             });
