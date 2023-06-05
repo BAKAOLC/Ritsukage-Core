@@ -2,7 +2,6 @@
 using SQLite;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -88,41 +87,41 @@ namespace Ritsukage.Library.Data
             }
             return deleted;
         }
-        /*
-        public static AsyncTableQuery<T> Where<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => Data.Table<T>()?.Where(predicate);
-        public static Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => Table<T>()?.CountAsync(predicate) ?? Task.FromResult(0);
-        public static Task<int> CountAsync<T>() where T : new()
-            => Table<T>()?.CountAsync() ?? Task.FromResult(0);
-        */
-        /*
-        public static Task<T[]> GetArrayAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => Table<T>()?.Where(predicate)?.ToArrayAsync() ?? Task.FromResult(Array.Empty<T>());
-        */
-        public static Task<T[]> GetArrayAsync<T>() where T : new()
-            => Table<T>()?.ToArrayAsync() ?? Task.FromResult(Array.Empty<T>());
-        /*
-        public static Task<List<T>> GetListAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => Table<T>()?.Where(predicate)?.ToListAsync() ?? Task.FromResult(new List<T>());
-        */
-        public static Task<List<T>> GetListAsync<T>() where T : new()
-            => Table<T>()?.ToListAsync() ?? Task.FromResult(new List<T>());
+        public static async Task<T[]> GetArrayAsync<T>()
+            where T : new()
+            => await Table<T>()?.ToArrayAsync() ?? Array.Empty<T>();
+        public static async Task<T[]> GetArrayAsync<T>(Expression<Func<T, bool>> predicate)
+            where T : new()
+            => (await Where<T>(predicate)).ToArray();
 
-        public static async Task<IQueryable<T>> Where<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => (await GetArrayAsync<T>()).AsQueryable().Where(predicate);
-        public static async Task<T> FindAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => (await Where(predicate)).FirstOrDefault();
-        public static async Task<T> GetAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => (await Where(predicate)).First();
-        public static async Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => (await Where(predicate)).Count();
-        public static async Task<int> CountAsync<T>() where T : new()
+        static async Task<IQueryable<T>> GetQueryable<T>()
+            where T : new()
+            => (await GetArrayAsync<T>()).AsQueryable();
+
+        public static async Task<IQueryable<T>> Where<T>(Expression<Func<T, bool>> predicate)
+            where T : new()
+            => (await GetQueryable<T>()).Where(predicate);
+
+        public static async Task<T> FirstOrDefault<T>()
+            where T : new()
+            => (await GetQueryable<T>()).FirstOrDefault();
+        public static async Task<T> FirstOrDefault<T>(Expression<Func<T, bool>> predicate)
+            where T : new()
+            => (await GetQueryable<T>()).FirstOrDefault(predicate);
+        public static async Task<T> FirstOrDefault<T>(Expression<Func<T, bool>> predicate, T defaultValue)
+            where T : new()
+            => (await GetQueryable<T>()).FirstOrDefault(predicate, defaultValue);
+
+        public static async Task<T> FindAsync<T>(Expression<Func<T, bool>> predicate)
+            where T : new()
+            => await FirstOrDefault(predicate);
+
+        public static async Task<int> CountAsync<T>()
+            where T : new()
             => (await GetArrayAsync<T>()).Length;
-        public static async Task<T[]> GetArrayAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => (await Where<T>(predicate)).ToArray() ?? Array.Empty<T>();
-        public static async Task<List<T>> GetListAsync<T>(Expression<Func<T, bool>> predicate) where T : new()
-            => (await Where<T>(predicate)).ToList() ?? new List<T>();
+        public static async Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate)
+            where T : new()
+            => (await GetQueryable<T>()).Count(predicate);
     }
 
     [AttributeUsage(AttributeTargets.Class)]
