@@ -24,3 +24,5 @@ TestResults
 /Ritsukage-Core/Discord/Services/OSYManager.cs
 /Ritsukage-Core/QQ/Events/LuaSTGGroupEvent.cs
 /.history
+/Ritsukage-Core/QQ/Commands/TeamSpeak.cs
+/Ritsukage-Core/QQ/Service/TeamSpeak.cs

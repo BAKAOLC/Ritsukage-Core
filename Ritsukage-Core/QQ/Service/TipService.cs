@@ -20,9 +20,9 @@ namespace Ritsukage.QQ.Service
             return Task.CompletedTask;
         }
 
-        static readonly TimeSpan CheckSpan = new TimeSpan(0, 0, 0, 0, 500);
+        static readonly TimeSpan CheckSpan = TimeSpan.FromMilliseconds(500);
 
-        static object _lock = new object();
+        static readonly object _lock = new();
         public static void CheckMethod()
         {
             while (true)
@@ -60,7 +60,6 @@ namespace Ritsukage.QQ.Service
                                 }
                             }
                         await TipMessageService.RefreshTipMessages(now);
-                        _lock = false;
                     });
                 }
             }

@@ -69,15 +69,11 @@ namespace Ritsukage
         /// <summary>
         /// OpenAI Api Key
         /// </summary>
-        public string OpenAISessionToken = "";
+        public string OpenAIApiKey = "";
         /// <summary>
-        /// OpenAI Api Key Is Pro
+        /// OpenAI Organization
         /// </summary>
-        public bool OpenAIIsPro = false;
-        /// <summary>
-        /// Bing Chat Cookie Token
-        /// </summary>
-        public string BingChatCookieToken = "";
+        public string OpenAIOrganization = "";
         #endregion
 
         /// <summary>
