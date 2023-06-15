@@ -1,66 +1,89 @@
 ﻿using Ritsukage.Library.Data;
 using Ritsukage.Library.Service;
 using Ritsukage.Tools.Console;
+using Sora.Entities;
+using Sora.Entities.Base;
 using Sora.Entities.Segment;
 using System;
 using System.Collections;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Timer = System.Timers.Timer;
 
 namespace Ritsukage.QQ.Service
 {
     [Service]
     public static class TipService
     {
+
+        static Timer Timer;
+
+        static readonly int CheckInterval = 500;
+
         public static Task Init()
         {
-            new Thread(CheckMethod) { IsBackground = true }.Start();
+            Timer = new()
+            {
+                Interval = CheckInterval
+            };
+            Timer.Elapsed += (s, e) => CheckMethod();
+            Timer.Start();
             return Task.CompletedTask;
         }
 
-        static readonly TimeSpan CheckSpan = TimeSpan.FromMilliseconds(500);
-
-        static readonly object _lock = new();
-        public static void CheckMethod()
+        static async Task<TipMessage[]> GetTipMessages()
         {
-            while (true)
+            var now = DateTime.Now;
+            var messages = await TipMessageService.GetTipMessages(TipMessage.TipTargetType.QQGroup, now).ConfigureAwait(false);
+            await TipMessageService.RefreshTipMessages(now).ConfigureAwait(false);
+            return messages;
+        }
+
+        static MessageBody BuildMessage(TipMessage message)
+        {
+            var m = new ArrayList
             {
-                Thread.Sleep(CheckSpan);
-                lock (_lock)
-                {
-                    Task.Run(async () =>
+                "[Tip Message]",
+                Environment.NewLine
+            };
+            int n = 0;
+            int i = message.Message.IndexOf("[@all]", n);
+            while (i < message.Message.Length && i >= n)
+            {
+                m.Add(message.Message[n..i]);
+                m.Add(SoraSegment.AtAll());
+                i = message.Message.IndexOf("[@all]", n = i + 6);
+            }
+            m.Add(message.Message[n..]);
+            return SoraMessage.BuildMessageBody(m.ToArray());
+        }
+
+        static void SendMessage(TipMessage message, params long[] bots)
+        {
+            var m = BuildMessage(message);
+            foreach (var bot in bots)
+            {
+                var api = Program.QQServer.GetSoraApi(bot);
+                Task.Run(async () => {
+                    if (await api.CheckHasGroup(message.TargetID))
                     {
-                        var now = DateTime.Now;
-                        var bots = Program.QQServer.GetBotList();
-                        var msgs = await TipMessageService.GetTipMessages(TipMessage.TipTargetType.QQGroup, now);
-                        foreach (var msg in msgs)
-                            foreach (var bot in bots)
-                            {
-                                var api = Program.QQServer.GetSoraApi(bot);
-                                if (await api.CheckHasGroup(msg.TargetID))
-                                {
-                                    ConsoleLog.Debug("TipMessage", $"Send tip message to group {msg.TargetID} with bot {bot}");
-                                    var m = new ArrayList
-                                    {
-                                        "[Tip Message]",
-                                        Environment.NewLine
-                                    };
-                                    int n = 0;
-                                    int i = msg.Message.IndexOf("[@all]", n);
-                                    while (i < msg.Message.Length && i >= n)
-                                    {
-                                        m.Add(msg.Message[n..i]);
-                                        m.Add(SoraSegment.AtAll());
-                                        i = msg.Message.IndexOf("[@all]", n = i + 6);
-                                    }
-                                    m.Add(msg.Message[n..]);
-                                    await api.SendGroupMessage(msg.TargetID, SoraMessage.BuildMessageBody(m.ToArray()));
-                                }
-                            }
-                        await TipMessageService.RefreshTipMessages(now);
-                    });
+                        ConsoleLog.Debug("TipMessage", $"Send tip message to group {message.TargetID} with bot {bot}");
+                        await api.SendGroupMessage(message.TargetID, m).ConfigureAwait(false);
+                    }
+                }).ConfigureAwait(false);
+            }
+        }
+
+        static async void CheckMethod()
+        {
+            var messages = await GetTipMessages().ConfigureAwait(false);
+            if (messages.Any())
+            {
+                var bots = Program.QQServer.GetBotList();
+                foreach (var message in messages)
+                {
+                    SendMessage(message, bots);
                 }
             }
         }
