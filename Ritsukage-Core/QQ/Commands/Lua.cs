@@ -1,7 +1,7 @@
 ﻿using NLua;
 using Ritsukage.Library.Lua;
 using System;
-using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Commands
@@ -11,7 +11,8 @@ namespace Ritsukage.QQ.Commands
     {
         class LuaStdOutput
         {
-            readonly List<string> data = new();
+            readonly StringBuilder sb = new();
+            bool first = true;
 
             public LuaStdOutput() { }
             public LuaStdOutput(LuaEnv lua) => RegisterToLuaEnv(lua);
@@ -20,7 +21,11 @@ namespace Ritsukage.QQ.Commands
             {
                 for (int i = 0; i < args.Length; i++)
                     args[i] = args[i]?.ToString() ?? "nil";
-                data.Add(string.Join("\t", args));
+                if (first)
+                    first = false;
+                else
+                    sb.AppendLine();
+                sb.Append(string.Join("\t", args));
             }
 
             public void RegisterToLuaEnv(LuaEnv lua)
@@ -30,7 +35,7 @@ namespace Ritsukage.QQ.Commands
             }
 
             public override string ToString()
-                => string.Join(Environment.NewLine, data);
+                => sb.ToString();
         }
 
         static async void Process(SoraMessage e, LuaEnv lua, string code, int limitWorkTime = 10, int limitOutputLength = 0)
@@ -93,16 +98,21 @@ namespace Ritsukage.QQ.Commands
         public static void Normal(SoraMessage e, string code)
         {
             code = SoraMessage.Escape(e.Message.RawText[5..]);
-            var lua = new LuaEnv(false, true);
+            using var lua = new LuaEnv(false, true);
             LuaEnv.SetUpSecureEnvironment(lua);
             try
             {
                 Process(e, lua, code, 10, 100);
+            }
+            catch
+            {
+                //ignore
+            }
+            finally
+            {
                 lua?.Close();
                 lua?.Dispose();
             }
-            catch
-            { }
         }
 
         [Command("slua"), OnlyForSuperUser]
@@ -111,16 +121,21 @@ namespace Ritsukage.QQ.Commands
         public static void Admin(SoraMessage e, string code)
         {
             code = SoraMessage.Escape(e.Message.RawText[6..]);
-            var lua = new LuaEnv(true, true);
+            using var lua = new LuaEnv(true, true);
             lua["MessageObject"] = e;
             try
             {
                 Process(e, lua, code, 120, 1000);
+            }
+            catch
+            {
+                //ignore
+            }
+            finally
+            {
                 lua?.Close();
                 lua?.Dispose();
             }
-            catch
-            { }
         }
     }
 }
