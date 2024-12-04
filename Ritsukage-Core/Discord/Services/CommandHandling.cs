@@ -12,9 +12,9 @@ namespace Ritsukage.Discord.Services
     [Service]
     public class CommandHandling
     {
-        readonly CommandService _commands;
-        readonly DiscordSocketClient _discord;
-        readonly IServiceProvider _services;
+        private readonly CommandService _commands;
+        private readonly DiscordSocketClient _discord;
+        private readonly IServiceProvider _services;
 
         public CommandHandling(IServiceProvider services)
         {
@@ -35,11 +35,9 @@ namespace Ritsukage.Discord.Services
         {
             if (arg is not SocketUserMessage msg) return;
             if (msg.Author.Id == _discord.CurrentUser.Id || msg.Author.IsBot || msg.Author.IsWebhook) return;
-            int pos = 0;
+            var pos = 0;
             if (msg.HasCharPrefix('+', ref pos))
-            {
                 _ = _commands.ExecuteAsync(new SocketCommandContext(_discord, msg), pos, _services);
-            }
             await Task.CompletedTask;
         }
 
@@ -54,7 +52,7 @@ namespace Ritsukage.Discord.Services
             await context.Channel.SendMessageAsync($"执行指令时发生错误: {result}");
         }
 
-        Task LogCommandAsync(LogMessage msg)
+        private Task LogCommandAsync(LogMessage msg)
         {
             switch (msg.Severity)
             {
@@ -62,7 +60,8 @@ namespace Ritsukage.Discord.Services
                 case LogSeverity.Error:
                     ConsoleLog.Error("Discord Commands", $"[{msg.Source}] " + msg.Message.ToString());
                     if (msg.Severity == LogSeverity.Error)
-                        ConsoleLog.Error("Discord Commands", $"[{msg.Source}] " + ConsoleLog.ErrorLogBuilder(msg.Exception));
+                        ConsoleLog.Error("Discord Commands",
+                            $"[{msg.Source}] " + ConsoleLog.ErrorLogBuilder(msg.Exception));
                     break;
                 case LogSeverity.Warning:
                     ConsoleLog.Warning("Discord Commands", $"[{msg.Source}] " + msg.Message.ToString());
@@ -76,7 +75,9 @@ namespace Ritsukage.Discord.Services
                     break;
                 default:
                     break;
-            };
+            }
+
+            ;
             return Task.CompletedTask;
         }
     }

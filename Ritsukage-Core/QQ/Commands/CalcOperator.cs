@@ -10,7 +10,7 @@
         {
             try
             {
-                double result = Tools.CalcTool.GetExprValue(expr.Replace(" ", ""));
+                var result = Tools.CalcTool.GetExprValue(expr.Replace(" ", ""));
                 await e.ReplyToOriginal($"{expr} = {result}");
             }
             catch

@@ -38,7 +38,8 @@ namespace Ritsukage.QQ.Commands
                 async () => await e.SendPrivateMessage("检测到扫描事件，请在客户端中确认登录"),
                 async (cookie) =>
                 {
-                    if (int.TryParse(cookie.Split(";").Where(x => x.StartsWith("DedeUserID=")).First()[11..], out var id))
+                    if (int.TryParse(cookie.Split(";").Where(x => x.StartsWith("DedeUserID=")).First()[11..],
+                            out var id))
                     {
                         await e.SendPrivateMessage("登录成功\n数据储存中……");
                         var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id || x.Bilibili == id);
@@ -66,7 +67,7 @@ namespace Ritsukage.QQ.Commands
                             {
                                 QQ = e.Sender.Id,
                                 Bilibili = id,
-                                BilibiliCookie = cookie
+                                BilibiliCookie = cookie,
                             };
                             await Database.InsertAsync(data).ContinueWith(async x =>
                             {
@@ -83,7 +84,9 @@ namespace Ritsukage.QQ.Commands
                         }
                     }
                     else
+                    {
                         await e.SendPrivateMessage("登录失败\n未能匹配到用户UID");
+                    }
                 },
                 async (errMsg) => await e.SendPrivateMessage("登录失败\n" + errMsg)));
         }
@@ -101,14 +104,13 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (user != null)
-            {
                 await e.Reply(SoraSegment.Image(await DownloadManager.Download(user.FaceUrl,
                     enableAria2Download: true, enableSimpleDownload: true)), new StringBuilder()
                     .AppendLine()
                     .AppendLine(user.BaseToString())
                     .ToString());
-            }
             else
                 await e.Reply($"[Bilibili] 用户{uid}信息获取失败");
         }
@@ -126,15 +128,19 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (room != null)
             {
-                string cover = await DownloadManager.Download(string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
+                var cover = await DownloadManager.Download(
+                    string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
                     enableAria2Download: true, enableSimpleDownload: true);
                 await e.Reply(string.IsNullOrEmpty(cover) ? "[图像下载失败]" : SoraSegment.Image(cover), new StringBuilder()
                     .AppendLine().Append(room.BaseToString()).ToString());
             }
             else
+            {
                 await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
+            }
         }
 
         [Command("获取b站直播间推流地址")]
@@ -150,6 +156,7 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (stream != null)
             {
                 if (stream.LiveStatus != LiveStatus.Live)
@@ -167,7 +174,9 @@ namespace Ritsukage.QQ.Commands
                 }
             }
             else
+            {
                 await e.Reply($"[Bilibili Live] 直播间{roomid}信息获取失败");
+            }
         }
 
         [Command("获取b站视频信息")]
@@ -188,14 +197,18 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (video != null)
             {
-                var img = await DownloadManager.Download(video.PicUrl, enableAria2Download: true, enableSimpleDownload: true);
+                var img = await DownloadManager.Download(video.PicUrl, enableAria2Download: true,
+                    enableSimpleDownload: true);
                 await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img), new StringBuilder()
                     .AppendLine().Append(video.BaseToString()).ToString());
             }
             else
+            {
                 await e.Reply($"[Bilibili] 视频{id}信息获取失败");
+            }
         }
 
         [Command("获取b站视频分P信息")]
@@ -216,40 +229,50 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (video != null)
             {
-                int hour = video.Duration.Days * 24 + video.Duration.Hours;
-                string hourStr = hour > 0 ? $"{hour}时" : string.Empty;
+                var hour = video.Duration.Days * 24 + video.Duration.Hours;
+                var hourStr = hour > 0 ? $"{hour}时" : string.Empty;
                 var sb = new StringBuilder();
                 sb.AppendLine(video.Title);
-                sb.AppendLine($"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : ("  分区：" + video.AreaName))}");
+                sb.AppendLine(
+                    $"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : "  分区：" + video.AreaName)}");
                 sb.AppendLine($"UP：{video.UserName}(https://space.bilibili.com/{video.UserId})");
-                sb.AppendLine($"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒");
+                sb.AppendLine(
+                    $"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒");
                 sb.AppendLine("分P列表如下：");
                 foreach (var page in video.Pages)
                 {
-                    int ph = page.Duration.Days * 24 + page.Duration.Hours;
-                    string phStr = ph > 0 ? $"{ph}时" : string.Empty;
+                    var ph = page.Duration.Days * 24 + page.Duration.Hours;
+                    var phStr = ph > 0 ? $"{ph}时" : string.Empty;
                     sb.AppendLine($"  P{page.Index}  长度：{phStr}{page.Duration.Minutes:D2}分{page.Duration.Seconds:D2}秒");
                     sb.Append("    ").AppendLine(page.Name);
                 }
+
                 sb.Append(video.Url);
                 if (video.Pages.Length > 10)
                 {
                     var bin = UbuntuPastebin.Paste(sb.ToString(), "text", "Bilibili Video Pages");
                     await e.ReplyToOriginal(new StringBuilder()
                         .AppendLine(video.Title)
-                        .AppendLine($"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : ("  分区：" + video.AreaName))}")
+                        .AppendLine(
+                            $"av{video.AV}  {video.BV}{(string.IsNullOrEmpty(video.AreaName) ? "" : "  分区：" + video.AreaName)}")
                         .AppendLine($"UP：{video.UserName}(https://space.bilibili.com/{video.UserId})")
-                        .AppendLine($"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒")
+                        .AppendLine(
+                            $"视频共{video.Pages.Length}P 总长度：{hourStr}{video.Duration.Minutes:D2}分{video.Duration.Seconds:D2}秒")
                         .AppendLine("数据过多，请前往以下链接查看")
                         .Append(bin).ToString());
                 }
                 else
+                {
                     await e.Reply(sb.ToString());
+                }
             }
             else
+            {
                 await e.Reply($"[Bilibili] 视频{id}信息获取失败");
+            }
         }
 
         [Command("获取b站音频信息")]
@@ -265,14 +288,18 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (audio != null)
             {
-                var img = await DownloadManager.Download(audio.CoverUrl, enableAria2Download: true, enableSimpleDownload: true);
+                var img = await DownloadManager.Download(audio.CoverUrl, enableAria2Download: true,
+                    enableSimpleDownload: true);
                 await e.Reply(string.IsNullOrEmpty(img) ? "[图像下载失败]" : SoraSegment.Image(img), new StringBuilder()
                     .AppendLine().Append(audio.BaseToString()).ToString());
             }
             else
+            {
                 await e.Reply($"[Bilibili] 音频{id}信息获取失败");
+            }
         }
 
         [Command("获取b站专栏信息")]
@@ -288,6 +315,7 @@ namespace Ritsukage.QQ.Commands
             catch
             {
             }
+
             if (article != null)
                 await e.Reply(article.ToString());
             else
@@ -308,23 +336,29 @@ namespace Ritsukage.QQ.Commands
             {
                 ConsoleLog.Error("Bilibili", ex.GetFormatString(true));
             }
+
             if (dynamic != null)
             {
                 ArrayList msg = new();
                 if (dynamic.Pictures.Length > 4)
                     await e.Reply("该动态含有超过4张图像存在，任务时长可能较长，请耐心等候");
-                var pics = await DownloadManager.Download(dynamic.Pictures, enableAria2Download: true, enableSimpleDownload: true);
+                var pics = await DownloadManager.Download(dynamic.Pictures, enableAria2Download: true,
+                    enableSimpleDownload: true);
                 foreach (var pic in pics)
                 {
                     if (string.IsNullOrEmpty(pic))
+                    {
                         msg.Add("[图像下载失败]");
+                    }
                     else
                     {
                         GraphicUtils.LimitGraphicScale(pic, 2048, 2048);
                         msg.Add(SoraSegment.Image(pic));
                     }
+
                     msg.Add(Environment.NewLine);
                 }
+
                 msg.Add(dynamic.BaseToString());
                 await e.Reply(msg.ToArray());
                 var np = await dynamic.GetNinePicture();
@@ -339,7 +373,9 @@ namespace Ritsukage.QQ.Commands
                 }
             }
             else
+            {
                 await e.Reply($"[Bilibili] 动态{id}信息获取失败");
+            }
         }
 
         [Command("开启直播")]
@@ -354,22 +390,27 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
+
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
                 await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
+
             try
             {
                 var result = JObject.Parse(BiliLive.StartLive(roomid, area, data.BilibiliCookie));
                 var msg = (string)result["message"];
                 if (!(string.IsNullOrEmpty(msg) || msg == "0"))
+                {
                     await e.ReplyToOriginal("服务器返回消息：" + (string)result["message"]);
+                }
                 else
                 {
                     await e.ReplyToOriginal("开播成功，直播分区已设置为 " + (await LiveAreaList.Get(area)).ToString());
-                    await e.SendPrivateMessage($"rtmp地址: {(string)result["data"]["rtmp"]["addr"]}\n推流码: {(string)result["data"]["rtmp"]["code"]}");
+                    await e.SendPrivateMessage(
+                        $"rtmp地址: {(string)result["data"]["rtmp"]["addr"]}\n推流码: {(string)result["data"]["rtmp"]["code"]}");
                     if (!string.IsNullOrEmpty(title))
                         SetLiveTitle(e, title);
                 }
@@ -402,10 +443,14 @@ namespace Ritsukage.QQ.Commands
                     sb.Append($"[共搜索到 {list.Length} 个目标，仅显示前 10 个]");
                 }
                 else
+                {
                     sb.AppendLine(string.Join(Environment.NewLine, list));
+                }
+
                 await e.ReplyToOriginal(sb.ToString());
                 return;
             }
+
             StartLive(e, list[0].Id, title);
         }
 
@@ -419,12 +464,14 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
+
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
                 await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
+
             try
             {
                 var result = JObject.Parse(BiliLive.StopLive(roomid, data.BilibiliCookie));
@@ -450,12 +497,14 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
+
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
                 await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
+
             try
             {
                 var result = JObject.Parse(BiliLive.UpdateLiveArea(roomid, area, data.BilibiliCookie));
@@ -491,10 +540,14 @@ namespace Ritsukage.QQ.Commands
                     sb.Append($"[共搜索到 {list.Length} 个目标，仅显示前 10 个]");
                 }
                 else
+                {
                     sb.AppendLine(string.Join(Environment.NewLine, list));
+                }
+
                 await e.ReplyToOriginal(sb.ToString());
                 return;
             }
+
             SetLiveArea(e, list[0].Id);
         }
 
@@ -509,12 +562,14 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("数据库中没有用户信息，无法执行该指令，请通过 +login 进行账户登录");
                 return;
             }
+
             var roomid = BiliLive.GetUserLiveRoom(data.Bilibili);
             if (roomid == 0)
             {
                 await e.ReplyToOriginal("用户直播间数据获取失败，请稍后重试");
                 return;
             }
+
             try
             {
                 var result = JObject.Parse(BiliLive.UpdateLiveTitle(roomid, title, data.BilibiliCookie));
@@ -529,28 +584,31 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        [Command("订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("订阅b站直播")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         [CommandDescription("订阅目标B站直播间的状态更新事件")]
         [ParameterDescription(1, "直播间ID")]
         public static async void AddLiveListener(SoraMessage e, int roomid)
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "bilibili live"
-                && x.Target == roomid.ToString()
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "bilibili live"
+                       && x.Target == roomid.ToString()
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data != null)
             {
                 await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "bilibili live",
                 Target = roomid.ToString(),
-                Listener = e.SourceGroup.Id.ToString()
+                Listener = e.SourceGroup.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -565,22 +623,25 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("取消订阅b站直播"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("取消订阅b站直播")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         [CommandDescription("取消订阅目标B站直播间的状态更新事件")]
         [ParameterDescription(1, "直播间ID")]
         public static async void RemoveLiveListener(SoraMessage e, int roomid)
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "bilibili live"
-                && x.Target == roomid.ToString()
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "bilibili live"
+                       && x.Target == roomid.ToString()
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data == null)
             {
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -595,28 +656,31 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("订阅b站动态")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         [CommandDescription("订阅目标B站用户动态更新事件")]
         [ParameterDescription(1, "用户UID")]
         public static async void AddDynamicListener(SoraMessage e, int userid)
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString()
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "bilibili dynamic"
+                       && x.Target == userid.ToString()
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data != null)
             {
                 await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "bilibili dynamic",
                 Target = userid.ToString(),
-                Listener = e.SourceGroup.Id.ToString()
+                Listener = e.SourceGroup.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -631,22 +695,25 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("取消订阅b站动态"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("取消订阅b站动态")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         [CommandDescription("取消订阅目标B站用户动态更新事件")]
         [ParameterDescription(1, "用户UID")]
         public static async void RemoveDynamicListener(SoraMessage e, int userid)
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString()
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "bilibili dynamic"
+                       && x.Target == userid.ToString()
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data == null)
             {
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -661,7 +728,9 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("启用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("启用b站链接智能解析")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         [CommandDescription("启用B站相关链接的自动信息解析功能")]
         public static async void EnableAutoLink(SoraMessage e)
         {
@@ -673,6 +742,7 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
                     return;
                 }
+
                 data.SmartBilibiliLink = true;
                 await Database.UpdateAsync(data).ContinueWith(async x =>
                 {
@@ -692,7 +762,7 @@ namespace Ritsukage.QQ.Commands
                 await Database.InsertAsync(new QQGroupSetting()
                 {
                     Group = e.SourceGroup.Id,
-                    SmartBilibiliLink = true
+                    SmartBilibiliLink = true,
                 }).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
@@ -708,7 +778,9 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        [Command("禁用b站链接智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("禁用b站链接智能解析")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         [CommandDescription("禁用B站相关链接的自动信息解析功能")]
         public static async void DisableAutoLink(SoraMessage e)
         {
@@ -718,6 +790,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("本群未启用该功能，无需禁用");
                 return;
             }
+
             data.SmartBilibiliLink = false;
             await Database.UpdateAsync(data).ContinueWith(async x =>
             {
@@ -739,12 +812,14 @@ namespace Ritsukage.QQ.Commands
         public static async void AV2BV(SoraMessage e, string av = "")
         {
             if (string.IsNullOrEmpty(av))
+            {
                 await e.ReplyToOriginal("参数错误，请重新输入");
+            }
             else
             {
                 if (av.ToLower().StartsWith("av"))
                     av = av[2..];
-                long id = long.Parse(av);
+                var id = long.Parse(av);
                 string msg;
                 try
                 {
@@ -754,6 +829,7 @@ namespace Ritsukage.QQ.Commands
                 {
                     msg = ex.Message;
                 }
+
                 await e.ReplyToOriginal(msg);
             }
         }
@@ -764,7 +840,9 @@ namespace Ritsukage.QQ.Commands
         public static async void BV2AV(SoraMessage e, string bv = "")
         {
             if (string.IsNullOrEmpty(bv))
+            {
                 await e.ReplyToOriginal("参数错误，请重新输入");
+            }
             else
             {
                 string msg;
@@ -776,6 +854,7 @@ namespace Ritsukage.QQ.Commands
                 {
                     msg = ex.Message;
                 }
+
                 await e.ReplyToOriginal(msg);
             }
         }

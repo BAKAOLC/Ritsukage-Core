@@ -52,6 +52,8 @@ namespace Ritsukage.Library.FFXIV.WanaHome.Model
         };
 
         public override string ToString()
-            => $"[{Time.ToLocalTime():yyyy年MM月dd日 HH:mm:ss}][{HouseName}] " + EventMessage;
+        {
+            return $"[{Time.ToLocalTime():yyyy年MM月dd日 HH:mm:ss}][{HouseName}] " + EventMessage;
+        }
     }
 }

@@ -18,11 +18,16 @@ namespace Ritsukage.Tools
     public static partial class Utils
     {
         public static readonly Regex UrlRegex = GetUrlRegex();
+
         public static string[] MatchUrls(string text)
-            => UrlRegex.Matches(text).Where(x => x.Success).Select(x => x.Value).ToArray();
+        {
+            return UrlRegex.Matches(text).Where(x => x.Success).Select(x => x.Value).ToArray();
+        }
 
         public static string ToSignNumberString(int num)
-            => num < 0 ? num.ToString() : "+" + num;
+        {
+            return num < 0 ? num.ToString() : "+" + num;
+        }
 
         public static string ToUrlParameter(Dictionary<string, object> param = null)
         {
@@ -34,15 +39,20 @@ namespace Ritsukage.Tools
             return string.Join("&", sb);
         }
 
-        public static readonly DateTime BaseUTC = new DateTime(1970, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc);
+        public static readonly DateTime BaseUTC = new(1970, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc);
 
         public static DateTime GetDateTime(double ts)
-            => BaseUTC.AddSeconds(ts);
+        {
+            return BaseUTC.AddSeconds(ts);
+        }
 
         public static long GetTimeStamp()
-            => (long)(DateTime.UtcNow - BaseUTC).TotalSeconds;
+        {
+            return (long)(DateTime.UtcNow - BaseUTC).TotalSeconds;
+        }
 
-        const string TaobaoTimeStampApi = "http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp";
+        private const string TaobaoTimeStampApi = "http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp";
+
         public static long GetNetworkTimeStamp()
         {
             var data = HttpGET(TaobaoTimeStampApi);
@@ -53,27 +63,50 @@ namespace Ritsukage.Tools
         }
 
         public static int GetRandomSeed()
-            => BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0);
+        {
+            return BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0);
+        }
 
         public static string ToLiteral(this string input)
         {
             var literal = new StringBuilder(input.Length + 2);
             literal.Append('"');
             foreach (var c in input)
-            {
                 switch (c)
                 {
-                    case '\'': literal.Append(@"\'"); break;
-                    case '\"': literal.Append("\\\""); break;
-                    case '\\': literal.Append(@"\\"); break;
-                    case '\0': literal.Append(@"\0"); break;
-                    case '\a': literal.Append(@"\a"); break;
-                    case '\b': literal.Append(@"\b"); break;
-                    case '\f': literal.Append(@"\f"); break;
-                    case '\n': literal.Append(@"\n"); break;
-                    case '\r': literal.Append(@"\r"); break;
-                    case '\t': literal.Append(@"\t"); break;
-                    case '\v': literal.Append(@"\v"); break;
+                    case '\'':
+                        literal.Append(@"\'");
+                        break;
+                    case '\"':
+                        literal.Append("\\\"");
+                        break;
+                    case '\\':
+                        literal.Append(@"\\");
+                        break;
+                    case '\0':
+                        literal.Append(@"\0");
+                        break;
+                    case '\a':
+                        literal.Append(@"\a");
+                        break;
+                    case '\b':
+                        literal.Append(@"\b");
+                        break;
+                    case '\f':
+                        literal.Append(@"\f");
+                        break;
+                    case '\n':
+                        literal.Append(@"\n");
+                        break;
+                    case '\r':
+                        literal.Append(@"\r");
+                        break;
+                    case '\t':
+                        literal.Append(@"\t");
+                        break;
+                    case '\v':
+                        literal.Append(@"\v");
+                        break;
                     default:
                         if (char.GetUnicodeCategory(c) != UnicodeCategory.Control)
                             literal.Append(c);
@@ -81,14 +114,14 @@ namespace Ritsukage.Tools
                             literal.Append(@"\u").Append(((ushort)c).ToString("x4"));
                         break;
                 }
-            }
+
             literal.Append('"');
             return literal.ToString();
         }
 
         public static string RemoveEmptyLine(string text)
         {
-            char splitChar = '\n';
+            var splitChar = '\n';
             switch (Environment.NewLine)
             {
                 case "\r":
@@ -101,9 +134,10 @@ namespace Ritsukage.Tools
                     splitChar = '\n';
                     break;
             }
+
             return string.Join(Environment.NewLine,
                 text.Split(splitChar, StringSplitOptions.RemoveEmptyEntries)
-                .GroupBy(x => x).Select(x => x.Key));
+                    .GroupBy(x => x).Select(x => x.Key));
         }
 
         public static string UrlRemoveParam(string url)
@@ -116,42 +150,60 @@ namespace Ritsukage.Tools
                 else
                     return m.Value;
             }
+
             return url;
         }
 
-        public static string UrlEncode(string url)
+        public static string UrlEncode(string url, bool upper = true)
         {
             var encode = System.Web.HttpUtility.UrlEncode(url, Encoding.UTF8);
-            return GetUrlEncodeUnitRegex().Replace(encode, (s) => s.Value.ToUpper());
+            if (upper)
+                return GetUrlEncodeUnitRegex().Replace(encode, (s) => s.Value.ToUpper());
+            else
+                return encode;
         }
 
-        public static string GetQQHeadImageUrl(long qq) => "http://q.qlogo.cn/headimg_dl?spec=640&img_type=png&dst_uin=" + qq;
+        public static string GetQQHeadImageUrl(long qq)
+        {
+            return "http://q.qlogo.cn/headimg_dl?spec=640&img_type=png&dst_uin=" + qq;
+        }
 
-        public static string GetQQGroupHeadImageUrl(long group) => $"http://p.qlogo.cn/gh/{group}/{group}/";
+        public static string GetQQGroupHeadImageUrl(long group)
+        {
+            return $"http://p.qlogo.cn/gh/{group}/{group}/";
+        }
 
         public static async Task<string> GetShortUrl(string url)
-            => await Task.Run(() =>
+        {
+            return await Task.Run(() =>
             {
                 if (!string.IsNullOrWhiteSpace(Program.Config.SuoLinkToken))
                 {
-                    var data = JObject.Parse(HttpGET($"http://api.suolink.cn/api.htm?format=json&key={Program.Config.SuoLinkToken}&expireDate={DateTime.Now.AddDays(3).Date:yyyy-MM-dd}&url=" + UrlEncode(url)));
+                    var data = JObject.Parse(HttpGET(
+                        $"http://api.suolink.cn/api.htm?format=json&key={Program.Config.SuoLinkToken}&expireDate={DateTime.Now.AddDays(3).Date:yyyy-MM-dd}&url=" +
+                        UrlEncode(url)));
                     return (string)data["url"];
                 }
+
                 return url;
             });
+        }
 
         public static async Task<string> GetOriginalUrl(string url)
-            => await Task.Run(() => ExpandShortUrl(url));
+        {
+            return await Task.Run(() => ExpandShortUrl(url));
+        }
+
         private static string ExpandShortUrl(string shortUrl)
         {
-            string nativeUrl = shortUrl;
+            var nativeUrl = shortUrl;
             try
             {
 #pragma warning disable SYSLIB0014 // 类型或成员已过时
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(shortUrl);
+                var req = (HttpWebRequest)WebRequest.Create(shortUrl);
 #pragma warning restore SYSLIB0014 // 类型或成员已过时
-                req.AllowAutoRedirect = false;  // 禁止自动跳转
-                HttpWebResponse response = (HttpWebResponse)req.GetResponse();
+                req.AllowAutoRedirect = false; // 禁止自动跳转
+                var response = (HttpWebResponse)req.GetResponse();
                 if (response.StatusCode == HttpStatusCode.Found)
                     nativeUrl = response.Headers["Location"];
             }
@@ -159,6 +211,7 @@ namespace Ritsukage.Tools
             {
                 nativeUrl = shortUrl;
             }
+
             return nativeUrl;
         }
 
@@ -168,15 +221,13 @@ namespace Ritsukage.Tools
             {
                 BufferBlockSize = 4096,
                 ChunkCount = 5,
-                ParallelDownload = true
+                ParallelDownload = true,
             };
             if (!string.IsNullOrWhiteSpace(referer))
-            {
-                config.RequestConfiguration = new RequestConfiguration()
+                config.RequestConfiguration = new()
                 {
-                    Referer = referer
+                    Referer = referer,
                 };
-            }
             var downloader = new DownloadService(config);
             return await downloader.DownloadFileTaskAsync(url);
         }
@@ -273,13 +324,15 @@ namespace Ritsukage.Tools
             {
                 response = (HttpWebResponse)ex.Response;
             }
+
             return response != null && response.StatusCode == HttpStatusCode.PartialContent;
         }
 
         public static HttpWebRequest CreateHttpWebRequest(string url)
         {
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 |
+                                                   SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 #pragma warning disable SYSLIB0014 // 类型或成员已过时
             var request = (HttpWebRequest)WebRequest.Create(url);
 #pragma warning restore SYSLIB0014 // 类型或成员已过时
@@ -298,12 +351,16 @@ namespace Ritsukage.Tools
         }
 
         public static string GetUserAgent(string os = "app")
-            => os switch
+        {
+            return os switch
             {
                 "app" => "Mozilla/5.0 BiliDroid/5.51.1 (bbcallen@gmail.com)",
-                "pc" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
-                _ => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
+                "pc" =>
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/82.0.4056.0 Safari/537.36 Edg/82.0.431.0",
+                _ =>
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
             };
+        }
 
         public static void SetHttpHeaders(HttpWebRequest request, string os = "app", string cookie = "")
         {
@@ -337,10 +394,12 @@ namespace Ritsukage.Tools
                 ConsoleLog.Error("HTTP", new StringBuilder().Append("Target Url: ")
                     .AppendLine(Url).Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
+
             return string.Empty;
         }
+
         public static string HttpPOST(string Url, string postDataStr, long timeout = 20000,
-           string cookie = "", string referer = "", string origin = "", string contentType = "")
+            string cookie = "", string referer = "", string origin = "", string contentType = "")
         {
             HttpWebRequest request = null;
             try
@@ -360,10 +419,12 @@ namespace Ritsukage.Tools
                 ConsoleLog.Error("HTTP", new StringBuilder().Append("Target Url: ")
                     .AppendLine(Url).Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
+
             return string.Empty;
         }
+
         public static string HttpPUT(string Url, string postDataStr, long timeout = 20000,
-           string cookie = "", string referer = "", string origin = "", string contentType = "")
+            string cookie = "", string referer = "", string origin = "", string contentType = "")
         {
             HttpWebRequest request = null;
             try
@@ -383,6 +444,7 @@ namespace Ritsukage.Tools
                 ConsoleLog.Error("HTTP", new StringBuilder().Append("Target Url: ")
                     .AppendLine(Url).Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
+
             return string.Empty;
         }
 
@@ -390,15 +452,16 @@ namespace Ritsukage.Tools
         {
             request.AutomaticDecompression = DecompressionMethods.All;
             request.Method = "GET";
-            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            using Stream rs = response.GetResponseStream();
-            using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
-            string retString = sr.ReadToEnd();
+            using var response = (HttpWebResponse)request.GetResponse();
+            using var rs = response.GetResponseStream();
+            using var sr = new StreamReader(rs, Encoding.UTF8);
+            var retString = sr.ReadToEnd();
             response.Close();
             response.Dispose();
             request.Abort();
             return retString;
         }
+
         public static string HttpPOST(HttpWebRequest request, string content = "", string contentType = "")
         {
             request.AutomaticDecompression = DecompressionMethods.All;
@@ -406,19 +469,20 @@ namespace Ritsukage.Tools
             if (!string.IsNullOrWhiteSpace(contentType))
                 request.ContentType = contentType;
             request.ContentLength = content.Length;
-            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
-            using Stream stream = request.GetRequestStream();
+            var byteResquest = Encoding.UTF8.GetBytes(content);
+            using var stream = request.GetRequestStream();
             stream.Write(byteResquest, 0, byteResquest.Length);
             stream.Close();
-            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            using Stream rs = response.GetResponseStream();
-            using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
-            string retString = sr.ReadToEnd();
+            using var response = (HttpWebResponse)request.GetResponse();
+            using var rs = response.GetResponseStream();
+            using var sr = new StreamReader(rs, Encoding.UTF8);
+            var retString = sr.ReadToEnd();
             response.Close();
             response.Dispose();
             request.Abort();
             return retString;
         }
+
         public static string HttpPUT(HttpWebRequest request, string content = "", string contentType = "")
         {
             request.AutomaticDecompression = DecompressionMethods.All;
@@ -426,25 +490,32 @@ namespace Ritsukage.Tools
             if (!string.IsNullOrWhiteSpace(contentType))
                 request.ContentType = contentType;
             request.ContentLength = content.Length;
-            byte[] byteResquest = Encoding.UTF8.GetBytes(content);
-            using Stream stream = request.GetRequestStream();
+            var byteResquest = Encoding.UTF8.GetBytes(content);
+            using var stream = request.GetRequestStream();
             stream.Write(byteResquest, 0, byteResquest.Length);
             stream.Close();
-            using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            using Stream rs = response.GetResponseStream();
-            using StreamReader sr = new StreamReader(rs, Encoding.UTF8);
-            string retString = sr.ReadToEnd();
+            using var response = (HttpWebResponse)request.GetResponse();
+            using var rs = response.GetResponseStream();
+            using var sr = new StreamReader(rs, Encoding.UTF8);
+            var retString = sr.ReadToEnd();
             response.Close();
             response.Dispose();
             request.Abort();
             return retString;
         }
 
-        public static StringBuilder CreateStringBuilder(this string s) => new StringBuilder(s);
-        [GeneratedRegex("((http|ftp|https)://)((\\[::\\])|([a-zA-Z0-9\\._-]+(\\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\\._-]+|/)*(\\?[a-zA-Z0-9\\&%_\\./-~-]*)?)?")]
+        public static StringBuilder CreateStringBuilder(this string s)
+        {
+            return new(s);
+        }
+
+        [GeneratedRegex(
+            "((http|ftp|https)://)((\\[::\\])|([a-zA-Z0-9\\._-]+(\\.[a-zA-Z]{2,6})?)|([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}))(:[0-9]{1,5})?((/[a-zA-Z0-9\\._-]+|/)*(\\?[a-zA-Z0-9\\&%_\\./-~-]*)?)?")]
         private static partial Regex GetUrlRegex();
+
         [GeneratedRegex("^[^\\?]+")]
         private static partial Regex GetUrlHostAndPathRegex();
+
         [GeneratedRegex("%[a-f0-9]{2}")]
         private static partial Regex GetUrlEncodeUnitRegex();
     }

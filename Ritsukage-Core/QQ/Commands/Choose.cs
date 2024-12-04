@@ -7,11 +7,12 @@ using static Ritsukage.QQ.SoraMessage.AdditionalMethod;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup("Utils"), ExecutesCooldown("utils.choose", 10, true)]
+    [CommandGroup("Utils")]
+    [ExecutesCooldown("utils.choose", 10, true)]
     public static class Choose
     {
-        static readonly Rand rnd = new();
-        static bool _init = false;
+        private static readonly Rand rnd = new();
+        private static bool _init = false;
 
         [Command("choose", "抉择")]
         [CommandDescription("从给定的列表中随机选择一项输出")]
@@ -23,11 +24,13 @@ namespace Ritsukage.QQ.Commands
                 _init = true;
                 rnd.Seed(Convert.ToUInt32(DateTime.UtcNow.Millisecond));
             }
+
             if (c.Length <= 1)
             {
                 await e.ReplyToOriginal("参数不合法，请至少给出2项选择项");
                 return;
             }
+
             await e.ReplyToOriginal("#抉择：", ToSoraSegment(c[rnd.Int(0, c.Length - 1)]));
             await e.UpdateGroupCooldown("utils.choose");
         }
@@ -43,6 +46,7 @@ namespace Ritsukage.QQ.Commands
                 _init = true;
                 rnd.Seed(Convert.ToUInt32(DateTime.UtcNow.Millisecond));
             }
+
             if (num <= 0)
             {
                 await e.ReplyToOriginal("参数不合法，需求数量必须至少为1");
@@ -53,6 +57,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("参数不合法，给出的选择项必须大于需求数量");
                 return;
             }
+
             var lst = c.ToList();
             var choose = new string[num];
             for (var i = 0; i < num; i++)
@@ -61,6 +66,7 @@ namespace Ritsukage.QQ.Commands
                 choose[i] = lst[n];
                 lst.RemoveAt(n);
             }
+
             var sb = new StringBuilder();
             sb.Append("#抉择：");
             foreach (var s in choose)
@@ -79,6 +85,7 @@ namespace Ritsukage.QQ.Commands
                 _init = true;
                 rnd.Seed(Convert.ToUInt32(DateTime.UtcNow.Millisecond));
             }
+
             if (num <= 0)
             {
                 await e.ReplyToOriginal("参数不合法，需求数量必须至少为1");
@@ -89,6 +96,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("参数不合法，需求数量不应超过20，如有需求请使用其它工具");
                 return;
             }
+
             try
             {
                 var lst = (await e.SourceGroup.GetGroupMemberList()).groupMemberList;
@@ -97,6 +105,7 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("参数不合法，选择数量应小于群成员数量");
                     return;
                 }
+
                 var choose = new string[num];
                 for (var i = 0; i < num; i++)
                 {
@@ -104,6 +113,7 @@ namespace Ritsukage.QQ.Commands
                     choose[i] = $"{(string.IsNullOrEmpty(lst[n].Card) ? lst[n].Nick : lst[n].Card)}({lst[n].UserId})";
                     lst.RemoveAt(n);
                 }
+
                 var sb = new StringBuilder();
                 sb.Append("#群成员抉择：");
                 foreach (var s in choose)

@@ -45,12 +45,14 @@ namespace Ritsukage.Library.Bilibili.Model
         }
 
         public override string ToString()
-            => $"{ParentName}·{Name}(ID:{Id})";
+        {
+            return $"{ParentName}·{Name}(ID:{Id})";
+        }
     }
 
     public static class LiveAreaList
     {
-        static readonly List<LiveArea> AreaList = new();
+        private static readonly List<LiveArea> AreaList = new();
 
         public static async Task Refresh()
         {
@@ -58,17 +60,16 @@ namespace Ritsukage.Library.Bilibili.Model
             {
                 try
                 {
-                    var data = JObject.Parse(Utils.HttpGET("https://api.live.bilibili.com/room/v1/Area/getList?show_pinyin=1"));
+                    var data = JObject.Parse(
+                        Utils.HttpGET("https://api.live.bilibili.com/room/v1/Area/getList?show_pinyin=1"));
                     if ((string)data["message"] == "success")
-                    {
                         lock (AreaList)
                         {
                             AreaList.Clear();
                             foreach (var main in (JArray)data["data"])
-                                foreach (var area in (JArray)main["list"])
-                                    AreaList.Add(new(area));
+                            foreach (var area in (JArray)main["list"])
+                                AreaList.Add(new(area));
                         }
-                    }
                 }
                 catch (Exception ex)
                 {

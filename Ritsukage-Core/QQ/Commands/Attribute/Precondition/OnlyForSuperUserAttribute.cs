@@ -16,8 +16,11 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"<Limit for super user>";
+        {
+            return $"<Limit for super user>";
+        }
     }
+
     public class ForbidForSuperUserAttribute : OnlyForSuperUserAttribute
     {
         public override Task<bool> CheckPermissionsAsync(BaseSoraEventArgs args)
@@ -31,6 +34,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"<Skip for super user>";
+        {
+            return $"<Skip for super user>";
+        }
     }
 }

@@ -14,18 +14,23 @@ namespace Ritsukage.Discord.Commands
             var msg = await ReplyAsync("``数据检索中……``");
             var sb = new StringBuilder();
             sb.AppendLine("```");
+
             #region Discord
+
             {
                 var dcUser = Context.User;
                 sb.AppendLine("[Discord]");
                 sb.AppendLine(dcUser.ToString());
                 sb.AppendLine("ID：" + dcUser.Id);
             }
+
             #endregion
+
             var data = await Database.FindAsync<UserData>(x => x.Discord == Convert.ToInt64(Context.User.Id));
             if (data != null)
             {
                 #region QQ
+
                 {
                     sb.AppendLine("[Tencent QQ]");
                     if (data.QQ != 0)
@@ -33,8 +38,10 @@ namespace Ritsukage.Discord.Commands
                     else
                         sb.AppendLine("未绑定QQ账户");
                 }
+
                 #endregion
             }
+
             sb.AppendLine("```");
             await msg.ModifyAsync(x => x.Content = sb.ToString());
         }

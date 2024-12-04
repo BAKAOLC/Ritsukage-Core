@@ -13,7 +13,7 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Math")]
     public static class Math
     {
-        const string LatexApi = "https://latex.codecogs.com/png.image?";
+        private const string LatexApi = "https://latex.codecogs.com/png.image?";
 
         [Command("solve")]
         [CommandDescription("求解表达式")]
@@ -52,7 +52,9 @@ namespace Ritsukage.QQ.Commands
                                     sb.AppendLine().Append("= " + ((double)expr.EvalNumerical()).ToString());
                             }
                             else if (expr.EvaluableBoolean)
+                            {
                                 sb.AppendLine().Append("= " + expr.EvalBoolean().ToString());
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -75,17 +77,16 @@ namespace Ritsukage.QQ.Commands
                             else
                                 eq = eq[..index];
                         }
+
                         return eq.ToEntity().Evaled;
                     }));
                     sb.AppendLine("> Expression:")
                         .Append(equation.ToString());
                     if (needSolveEntity != null && needSolveEntity.Any())
-                    {
                         sb.AppendLine()
                             .AppendLine($"> Solve: {string.Join(" ", needSolveEntity)}")
                             .AppendLine("> Result:")
                             .Append(equation.Solve(needSolveEntity.ToArray()));
-                    }
                 }
                 else
                 {
@@ -113,6 +114,7 @@ namespace Ritsukage.QQ.Commands
                 sb.Append(ex.Message);
                 ConsoleLog.Error(nameof(Math), ex.GetFormatString());
             }
+
             await e.ReplyToOriginal(sb.ToString());
         }
 
@@ -166,10 +168,14 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        static string InnerToLatexString(string exprString)
-            => exprString.Latexise().ToString();
+        private static string InnerToLatexString(string exprString)
+        {
+            return exprString.Latexise().ToString();
+        }
 
-        static async Task<string> InnerToLatexPic(string latexString)
-            => await DownloadManager.Download(LatexApi + latexString);
+        private static async Task<string> InnerToLatexPic(string latexString)
+        {
+            return await DownloadManager.Download(LatexApi + latexString);
+        }
     }
 }

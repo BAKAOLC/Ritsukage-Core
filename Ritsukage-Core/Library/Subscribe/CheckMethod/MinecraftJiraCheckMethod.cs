@@ -10,13 +10,13 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
 {
     public class MinecraftJiraCheckMethod : Base.SubscribeCheckMethod
     {
-        const string type = "minecraft jira";
+        private const string type = "minecraft jira";
 
-        const string DateFormat = "yyyy-MM-dd HH:mm";
+        private const string DateFormat = "yyyy-MM-dd HH:mm";
 
         public override async Task<CheckResult.Base.SubscribeCheckResult> Check()
         {
-            bool update = false;
+            var update = false;
             var now = DateTime.Now;
             var to = now.Date.AddHours(now.Hour);
             var from = to.AddHours(-1);
@@ -30,6 +30,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 ConsoleLog.Error("Minecraft Jira Checker", ConsoleLog.ErrorLogBuilder(e));
                 return new MinecraftJiraCheckResult();
             }
+
             var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == "java");
             if (record != null && record.Status != from.ToString(DateFormat))
             {
@@ -44,19 +45,18 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 {
                     Type = type,
                     Target = "java",
-                    Status = from.ToString(DateFormat)
+                    Status = from.ToString(DateFormat),
                 });
             }
+
             if (update && issues != null && issues.Length > 0)
-            {
                 return new MinecraftJiraCheckResult()
                 {
                     Updated = true,
                     From = from,
                     To = to,
-                    Data = issues
+                    Data = issues,
                 };
-            }
             else
                 return new MinecraftJiraCheckResult();
         }

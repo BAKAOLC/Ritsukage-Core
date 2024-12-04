@@ -13,13 +13,15 @@ namespace Ritsukage.Library.Subscribe.Listener
 {
     public class EarthQuakeListener : Base.SubscribeListener
     {
-        const string type = "earth quake";
-        const string target = "cn";
+        private const string type = "earth quake";
+        private const string target = "cn";
 
-        readonly EarthQuakeCheckMethod Checker = new();
+        private readonly EarthQuakeCheckMethod Checker = new();
 
         public override async void RefreshListener()
-            => await Task.CompletedTask;
+        {
+            await Task.CompletedTask;
+        }
 
         public override async void Listen()
         {
@@ -49,54 +51,49 @@ namespace Ritsukage.Library.Subscribe.Listener
                         if (Program.Config.QQ)
                         {
                             var bots = Program.QQServer.GetBotList();
-                            var qqgroups = records.Where(x => x.Platform == "qq group")?.Select(x => x.Listener)?.ToArray();
+                            var qqgroups = records.Where(x => x.Platform == "qq group")?.Select(x => x.Listener)
+                                ?.ToArray();
                             if (qqgroups != null && qqgroups.Length > 0)
-                            {
                                 foreach (var qqgroup in qqgroups)
-                                {
                                     if (long.TryParse(qqgroup, out var group))
                                     {
                                         ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                         foreach (var bot in bots)
-                                        {
                                             _ = Task.Factory.StartNew(async () =>
                                             {
                                                 var api = Program.QQServer.GetSoraApi(bot);
                                                 if (await api.CheckHasGroup(group))
                                                 {
-                                                    ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
+                                                    ConsoleLog.Debug("Subscribe",
+                                                        $"Boardcast updated info for group {group} with bot {bot}");
                                                     await api.SendGroupMessage(group, msg);
                                                 }
                                             });
-                                        }
                                     }
-                                }
-                            }
                         }
-                        if (Program.Config.Discord && Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
+
+                        if (Program.Config.Discord &&
+                            Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
                         {
-                            var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)?.ToArray();
+                            var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)
+                                ?.ToArray();
                             if (channels != null && channels.Length > 0)
-                            {
                                 foreach (var id in channels)
-                                {
                                     if (ulong.TryParse(id, out var cid))
-                                    {
                                         _ = Task.Factory.StartNew(async () =>
                                         {
-                                            ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
+                                            ConsoleLog.Debug("Subscribe",
+                                                $"Boardcast updated info to discord channel {cid}");
                                             try
                                             {
-                                                var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                                var channel =
+                                                    (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
                                                 await channel?.SendMessageAsync(msg);
                                             }
                                             catch
                                             {
                                             }
                                         });
-                                    }
-                                }
-                            }
                         }
                     }
                 }

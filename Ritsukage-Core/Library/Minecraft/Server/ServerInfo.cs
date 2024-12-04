@@ -86,9 +86,9 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <summary>
         /// 获取与特定格式代码相关联的颜色代码
         /// </summary>
-        public static Dictionary<char, string> MinecraftColors
-        {
-            get => new Dictionary<char, string>() {
+        public static Dictionary<char, string> MinecraftColors =>
+            new()
+            {
                 { '0', "#000000" },
                 { '1', "#0000AA" },
                 { '2', "#00AA00" },
@@ -104,16 +104,15 @@ namespace Ritsukage.Library.Minecraft.Server
                 { 'c', "#FF5555" },
                 { 'd', "#FF55FF" },
                 { 'e', "#FFFF55" },
-                { 'f', "#FFFFFF" }
+                { 'f', "#FFFFFF" },
             };
-        }
 
         public enum StateType
         {
             GOOD,
             NO_RESPONSE,
             BAD_CONNECT,
-            EXCEPTION
+            EXCEPTION,
         }
 
         public ServerInfo(string ip, ushort port)
@@ -134,15 +133,16 @@ namespace Ritsukage.Library.Minecraft.Server
 
                 try
                 {
-                    tcp = new TcpClient(ServerAddress, ServerPort);
+                    tcp = new(ServerAddress, ServerPort);
                 }
                 catch (SocketException)
                 {
                     var client = new LookupClient();
-                    var result = client.Query("_minecraft._tcp." + ServerAddress, QueryType.SRV).Answers.OfType<SrvRecord>().FirstOrDefault();
+                    var result = client.Query("_minecraft._tcp." + ServerAddress, QueryType.SRV).Answers
+                        .OfType<SrvRecord>().FirstOrDefault();
                     if (result != null)
                     {
-                        tcp = new TcpClient(result.Target, result.Port);
+                        tcp = new(result.Target, result.Port);
                         ServerAddress = result.Target;
                         ServerPort = result.Port;
                     }
@@ -157,60 +157,61 @@ namespace Ritsukage.Library.Minecraft.Server
                 {
                     tcp.ReceiveBufferSize = 1024 * 1024;
 
-                    byte[] packet_id = ProtocolHandler.GetVarInt(0);
-                    byte[] protocol_version = ProtocolHandler.GetVarInt(-1);
-                    byte[] server_adress_val = Encoding.UTF8.GetBytes(this.ServerAddress);
-                    byte[] server_adress_len = ProtocolHandler.GetVarInt(server_adress_val.Length);
-                    byte[] server_port = BitConverter.GetBytes((ushort)this.ServerPort); Array.Reverse(server_port);
-                    byte[] next_state = ProtocolHandler.GetVarInt(1);
-                    byte[] packet2 = ProtocolHandler.ConcatBytes(packet_id, protocol_version, server_adress_len, server_adress_val, server_port, next_state);
-                    byte[] tosend = ProtocolHandler.ConcatBytes(ProtocolHandler.GetVarInt(packet2.Length), packet2);
+                    var packet_id = ProtocolHandler.GetVarInt(0);
+                    var protocol_version = ProtocolHandler.GetVarInt(-1);
+                    var server_adress_val = Encoding.UTF8.GetBytes(ServerAddress);
+                    var server_adress_len = ProtocolHandler.GetVarInt(server_adress_val.Length);
+                    var server_port = BitConverter.GetBytes((ushort)ServerPort);
+                    Array.Reverse(server_port);
+                    var next_state = ProtocolHandler.GetVarInt(1);
+                    var packet2 = ProtocolHandler.ConcatBytes(packet_id, protocol_version, server_adress_len,
+                        server_adress_val, server_port, next_state);
+                    var tosend = ProtocolHandler.ConcatBytes(ProtocolHandler.GetVarInt(packet2.Length), packet2);
 
-                    byte[] status_request = ProtocolHandler.GetVarInt(0);
-                    byte[] request_packet = ProtocolHandler.ConcatBytes(ProtocolHandler.GetVarInt(status_request.Length), status_request);
+                    var status_request = ProtocolHandler.GetVarInt(0);
+                    var request_packet = ProtocolHandler.ConcatBytes(ProtocolHandler.GetVarInt(status_request.Length),
+                        status_request);
 
                     tcp.Client.Send(tosend, SocketFlags.None);
 
                     tcp.Client.Send(request_packet, SocketFlags.None);
-                    ProtocolHandler handler = new ProtocolHandler(tcp);
-                    int packetLength = handler.ReadNextVarIntRAW();
+                    var handler = new ProtocolHandler(tcp);
+                    var packetLength = handler.ReadNextVarIntRAW();
                     if (packetLength > 0)
                     {
-                        List<byte> packetData = new List<byte>(handler.ReadDataRAW(packetLength));
+                        var packetData = new List<byte>(handler.ReadDataRAW(packetLength));
                         if (ProtocolHandler.ReadNextVarInt(packetData) == 0x00) //Read Packet ID
                         {
-                            string result = ProtocolHandler.ReadNextString(packetData); //Get the Json data
+                            var result = ProtocolHandler.ReadNextString(packetData); //Get the Json data
                             JsonResult = result;
                             SetInfoFromJsonText(result);
                         }
                     }
 
-                    byte[] ping_id = ProtocolHandler.GetVarInt(1);
-                    byte[] ping_content = BitConverter.GetBytes((long)233);
-                    byte[] ping_packet = ProtocolHandler.ConcatBytes(ping_id, ping_content);
-                    byte[] ping_tosend = ProtocolHandler.ConcatBytes(ProtocolHandler.GetVarInt(ping_packet.Length), ping_packet);
+                    var ping_id = ProtocolHandler.GetVarInt(1);
+                    var ping_content = BitConverter.GetBytes((long)233);
+                    var ping_packet = ProtocolHandler.ConcatBytes(ping_id, ping_content);
+                    var ping_tosend =
+                        ProtocolHandler.ConcatBytes(ProtocolHandler.GetVarInt(ping_packet.Length), ping_packet);
 
                     try
                     {
                         tcp.ReceiveTimeout = 1000;
 
-                        Stopwatch pingWatcher = new Stopwatch();
+                        var pingWatcher = new Stopwatch();
 
                         pingWatcher.Start();
                         tcp.Client.Send(ping_tosend, SocketFlags.None);
 
-                        int pingLenghth = handler.ReadNextVarIntRAW();
+                        var pingLenghth = handler.ReadNextVarIntRAW();
                         pingWatcher.Stop();
                         if (pingLenghth > 0)
                         {
-                            List<byte> packetData = new List<byte>(handler.ReadDataRAW(pingLenghth));
+                            var packetData = new List<byte>(handler.ReadDataRAW(pingLenghth));
                             if (ProtocolHandler.ReadNextVarInt(packetData) == 0x01) //Read Packet ID
                             {
                                 long content = ProtocolHandler.ReadNextByte(packetData); //Get the Json data
-                                if (content == 233)
-                                {
-                                    Ping = pingWatcher.ElapsedMilliseconds;
-                                }
+                                if (content == 233) Ping = pingWatcher.ElapsedMilliseconds;
                             }
                         }
                     }
@@ -218,12 +219,12 @@ namespace Ritsukage.Library.Minecraft.Server
                     {
                         Ping = 0;
                     }
-
                 }
                 catch (SocketException)
                 {
                     State = StateType.NO_RESPONSE;
                 }
+
                 tcp.Close();
             }
             catch (SocketException)
@@ -237,7 +238,9 @@ namespace Ritsukage.Library.Minecraft.Server
         }
 
         public async Task StartGetServerInfoAsync()
-            => await Task.Factory.StartNew(StartGetServerInfo);
+        {
+            await Task.Factory.StartNew(StartGetServerInfo);
+        }
 
         private void SetInfoFromJsonText(string JsonText)
         {
@@ -246,89 +249,75 @@ namespace Ritsukage.Library.Minecraft.Server
                 JsonText = ClearColor(JsonText);
                 if (!string.IsNullOrEmpty(JsonText) && JsonText.StartsWith("{") && JsonText.EndsWith("}"))
                 {
-                    JObject jsonData = JObject.Parse(JsonText);
+                    var jsonData = JObject.Parse(JsonText);
 
                     if (jsonData.ContainsKey("version"))
                     {
-                        JObject versionData = (JObject)jsonData["version"];
+                        var versionData = (JObject)jsonData["version"];
                         GameVersion = versionData["name"].ToString();
                         ProtocolVersion = int.Parse(versionData["protocol"].ToString());
                     }
 
                     if (jsonData.ContainsKey("players"))
                     {
-                        JObject playerData = (JObject)jsonData["players"];
+                        var playerData = (JObject)jsonData["players"];
                         MaxPlayerCount = int.Parse(playerData["max"].ToString());
                         CurrentPlayerCount = int.Parse(playerData["online"].ToString());
                         if (playerData.ContainsKey("sample"))
                         {
-                            OnlinePlayersName = new List<string>();
+                            OnlinePlayersName = new();
                             foreach (JObject name in playerData["sample"])
-                            {
                                 if (name.ContainsKey("name"))
                                 {
-                                    string playername = name["name"].ToString();
+                                    var playername = name["name"].ToString();
                                     OnlinePlayersName.Add(playername);
                                 }
-                            }
                         }
                     }
 
                     if (jsonData.ContainsKey("description"))
                     {
-                        JToken descriptionData = jsonData["description"];
+                        var descriptionData = jsonData["description"];
                         if (descriptionData.Type == JTokenType.String)
                         {
                             MOTD = descriptionData.ToString();
                         }
                         else if (descriptionData.Type == JTokenType.Object)
                         {
-                            JObject descriptionDataObj = (JObject)descriptionData;
+                            var descriptionDataObj = (JObject)descriptionData;
                             if (descriptionDataObj.ContainsKey("extra"))
-                            {
                                 foreach (var item in descriptionDataObj["extra"])
                                 {
-                                    string text = item["text"].ToString();
-                                    if (!string.IsNullOrWhiteSpace(text))
-                                    {
-                                        MOTD += text;
-                                    }
+                                    var text = item["text"].ToString();
+                                    if (!string.IsNullOrWhiteSpace(text)) MOTD += text;
                                 }
-                            }
                             else if (descriptionDataObj.ContainsKey("text"))
-                            {
                                 MOTD = descriptionDataObj["text"].ToString();
-                            }
                         }
                     }
 
                     // Check for forge on the server.
                     if (jsonData.ContainsKey("modinfo") && jsonData["modinfo"].Type == JTokenType.Object)
                     {
-                        JObject modData = (JObject)jsonData["modinfo"];
+                        var modData = (JObject)jsonData["modinfo"];
                         if (modData.ContainsKey("type") && modData["type"].ToString() == "FML")
                         {
-                            ForgeInfo = new ForgeInfo(modData);
-                            if (!ForgeInfo.Mods.Any())
-                            {
-                                ForgeInfo = null;
-                            }
+                            ForgeInfo = new(modData);
+                            if (!ForgeInfo.Mods.Any()) ForgeInfo = null;
                         }
                     }
 
                     if (jsonData.ContainsKey("favicon"))
-                    {
                         try
                         {
-                            string datastring = jsonData["favicon"].ToString();
-                            byte[] arr = Convert.FromBase64String(datastring.Replace("data:image/png;base64,", ""));
+                            var datastring = jsonData["favicon"].ToString();
+                            var arr = Convert.FromBase64String(datastring.Replace("data:image/png;base64,", ""));
                             IconData = arr;
                         }
                         catch
                         {
                             IconData = null;
                         }
-                    }
 
                     State = StateType.GOOD;
                 }
@@ -339,7 +328,7 @@ namespace Ritsukage.Library.Minecraft.Server
             }
         }
 
-        static string ClearColor(string str)
+        private static string ClearColor(string str)
         {
             str = str.Replace(@"\n", "");
             while (str.Contains('§'))

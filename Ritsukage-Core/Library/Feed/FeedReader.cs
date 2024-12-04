@@ -10,7 +10,7 @@ namespace Ritsukage.Library.Feed
 {
     public class FeedReader
     {
-        readonly string[] Source;
+        private readonly string[] Source;
 
         public FeedReader(params string[] source)
         {
@@ -23,7 +23,6 @@ namespace Ritsukage.Library.Feed
             {
                 FeedData rss = null;
                 for (var i = 0; i < Source.Length; i++)
-                {
                     try
                     {
                         var data = Utils.HttpGET(Source[i]);
@@ -39,7 +38,7 @@ namespace Ritsukage.Library.Feed
                         ConsoleLog.Error("Feed", "Target Url: ".CreateStringBuilder()
                             .AppendLine(Source[i]).Append(ConsoleLog.ErrorLogBuilder(ex, true)).ToString());
                     }
-                }
+
                 return rss;
             });
         }

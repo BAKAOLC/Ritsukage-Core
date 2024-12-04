@@ -13,6 +13,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => string.Join(Environment.NewLine, Desc);
+        {
+            return string.Join(Environment.NewLine, Desc);
+        }
     }
 }

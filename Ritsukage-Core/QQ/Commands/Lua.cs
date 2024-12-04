@@ -9,17 +9,23 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Utils")]
     public static class Lua
     {
-        class LuaStdOutput
+        private class LuaStdOutput
         {
-            readonly StringBuilder sb = new();
-            bool first = true;
+            private readonly StringBuilder sb = new();
+            private bool first = true;
 
-            public LuaStdOutput() { }
-            public LuaStdOutput(LuaEnv lua) => RegisterToLuaEnv(lua);
+            public LuaStdOutput()
+            {
+            }
+
+            public LuaStdOutput(LuaEnv lua)
+            {
+                RegisterToLuaEnv(lua);
+            }
 
             public void Print(params object[] args)
             {
-                for (int i = 0; i < args.Length; i++)
+                for (var i = 0; i < args.Length; i++)
                     args[i] = args[i]?.ToString() ?? "nil";
                 if (first)
                     first = false;
@@ -35,10 +41,13 @@ namespace Ritsukage.QQ.Commands
             }
 
             public override string ToString()
-                => sb.ToString();
+            {
+                return sb.ToString();
+            }
         }
 
-        static async void Process(SoraMessage e, LuaEnv lua, string code, int limitWorkTime = 10, int limitOutputLength = 0)
+        private static async void Process(SoraMessage e, LuaEnv lua, string code, int limitWorkTime = 10,
+            int limitOutputLength = 0)
         {
             string errormsg = null;
             LuaStdOutput std = new(lua);
@@ -60,6 +69,7 @@ namespace Ritsukage.QQ.Commands
                         errormsg = ex.Message + ex.StackTrace;
                     }
                 }
+
                 try
                 {
                     var result = luaFunction?.Call();
@@ -89,6 +99,7 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal($"代码执行已超过{limitWorkTime}秒，任务已强制结束");
                     break;
             }
+
             luaTask?.Dispose();
         }
 
@@ -115,7 +126,8 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        [Command("slua"), OnlyForSuperUser]
+        [Command("slua")]
+        [OnlyForSuperUser]
         [CommandDescription("执行lua代码")]
         [ParameterDescription(1, "代码")]
         public static void Admin(SoraMessage e, string code)

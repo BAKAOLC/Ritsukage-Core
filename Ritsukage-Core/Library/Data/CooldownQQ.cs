@@ -3,22 +3,21 @@ using System;
 
 namespace Ritsukage.Library.Data
 {
-    [Table("CooldownQQ"), AutoInitTable]
+    [Table("CooldownQQ")]
+    [AutoInitTable]
     public class CooldownQQ : DataTable
     {
-        [Column("ID"), PrimaryKey, AutoIncrement]
+        [Column("ID")]
+        [PrimaryKey]
+        [AutoIncrement]
         public int Id { get; set; }
 
-        [Column("IsGroup")]
-        public bool IsGroup { get; set; }
+        [Column("IsGroup")] public bool IsGroup { get; set; }
 
-        [Column("QQ"), Indexed]
-        public long QQ { get; set; }
+        [Column("QQ")] [Indexed] public long QQ { get; set; }
 
-        [Column("Tag")]
-        public string Tag { get; set; }
+        [Column("Tag")] public string Tag { get; set; }
 
-        [Column("LastUsed")]
-        public DateTime LastUsed { get; set; }
+        [Column("LastUsed")] public DateTime LastUsed { get; set; }
     }
 }

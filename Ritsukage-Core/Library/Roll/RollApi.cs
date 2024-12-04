@@ -5,12 +5,13 @@ namespace Ritsukage.Library.Roll
 {
     public static class RollApi
     {
-        const string host = "https://www.mxnzp.com/api";
+        private const string host = "https://www.mxnzp.com/api";
 
-        static string app_id;
-        static string app_secret;
+        private static string app_id;
+        private static string app_secret;
 
-        static bool _init = false;
+        private static bool _init = false;
+
         public static void Init(string id, string secret)
         {
             if (_init) return;
@@ -22,7 +23,7 @@ namespace Ritsukage.Library.Roll
         public static ApiData Get(string api)
         {
             if (!_init) return new("{\"code\":0,\"msg\":\"Api未初始化\"}");
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(host + api);
+            var request = (HttpWebRequest)WebRequest.Create(host + api);
             Utils.SetHttpHeaders(request, "pc");
             request.Headers.Add("app_id", app_id);
             request.Headers.Add("app_secret", app_secret);

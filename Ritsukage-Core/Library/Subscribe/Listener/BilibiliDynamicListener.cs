@@ -20,9 +20,9 @@ namespace Ritsukage.Library.Subscribe.Listener
 {
     public class BilibiliDynamicListener : Base.SubscribeListener
     {
-        const string type = "bilibili dynamic";
+        private const string type = "bilibili dynamic";
 
-        readonly List<BilibiliDynamicCheckMethod> Checker = new();
+        private readonly List<BilibiliDynamicCheckMethod> Checker = new();
 
         public override async void RefreshListener()
         {
@@ -32,22 +32,17 @@ namespace Ritsukage.Library.Subscribe.Listener
                 Checker.Clear();
                 return;
             }
+
             foreach (var c in Checker.ToArray())
-            {
                 if (!list.Where(x => x.Target == c.UserId.ToString()).Any())
                     Checker.Remove(c);
-            }
             foreach (var l in list)
-            {
                 if (!Checker.Where(x => l.Target == x.UserId.ToString()).Any())
-                {
                     if (int.TryParse(l.Target, out var id))
                     {
                         ConsoleLog.Debug("Subscribe", $"Start subscribe listener: {type} {id}");
                         Checker.Add(new(id));
                     }
-                }
-            }
         }
 
         public override async void Listen()
@@ -67,7 +62,9 @@ namespace Ritsukage.Library.Subscribe.Listener
             if (result.Updated && result is BilibiliDynamicCheckResult b)
             {
                 ConsoleLog.Debug("Subscribe", $"Boardcast updated info for {type} {b.User.Id}");
-                var records = await Database.GetArrayAsync<SubscribeList>(x => x.Type == type && x.Target == b.User.Id.ToString());
+                var records =
+                    await Database.GetArrayAsync<SubscribeList>(x =>
+                        x.Type == type && x.Target == b.User.Id.ToString());
                 if (records != null && records.Length > 0)
                 {
                     if (Program.Config.QQ)
@@ -76,63 +73,54 @@ namespace Ritsukage.Library.Subscribe.Listener
                         var bots = Program.QQServer.GetBotList();
                         var qqgroups = records.Where(x => x.Platform == "qq group")?.Select(x => x.Listener)?.ToArray();
                         if (qqgroups != null && qqgroups.Length > 0)
-                        {
                             foreach (var qqgroup in qqgroups)
-                            {
                                 if (long.TryParse(qqgroup, out var group))
                                 {
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                     foreach (var bot in bots)
-                                    {
                                         _ = Task.Factory.StartNew(async () =>
                                         {
                                             var api = Program.QQServer.GetSoraApi(bot);
                                             if (await api.CheckHasGroup(group))
                                             {
-                                                ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
+                                                ConsoleLog.Debug("Subscribe",
+                                                    $"Boardcast updated info for group {group} with bot {bot}");
                                                 foreach (var m in qqmsg)
                                                     await api.SendGroupMessage(group, SoraMessage.BuildMessageBody(m));
                                             }
                                         });
-                                    }
                                 }
-                            }
-                        }
                     }
-                    if (Program.Config.Discord && Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
+
+                    if (Program.Config.Discord &&
+                        Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
                     {
                         var dcmsg = await GetDiscordMessageChain(b);
-                        var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)?.ToArray();
+                        var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)
+                            ?.ToArray();
                         if (channels != null && channels.Length > 0)
-                        {
                             foreach (var id in channels)
-                            {
                                 if (ulong.TryParse(id, out var cid))
-                                {
                                     _ = Task.Factory.StartNew(async () =>
-                                      {
-                                          ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
-                                          try
-                                          {
-                                              var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
-                                              foreach (var m in dcmsg)
-                                              {
-                                                  await channel?.SendMessageAsync(m);
-                                              }
-                                          }
-                                          catch
-                                          {
-                                          }
-                                      });
-                                }
-                            }
-                        }
+                                    {
+                                        ConsoleLog.Debug("Subscribe",
+                                            $"Boardcast updated info to discord channel {cid}");
+                                        try
+                                        {
+                                            var channel =
+                                                (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                            foreach (var m in dcmsg) await channel?.SendMessageAsync(m);
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    });
                     }
                 }
             }
         }
 
-        static async Task<object[][]> GetQQMessageChain(BilibiliDynamicCheckResult result)
+        private static async Task<object[][]> GetQQMessageChain(BilibiliDynamicCheckResult result)
         {
             List<object[]> records = new();
             foreach (var dynamic in result.Dynamics)
@@ -140,16 +128,21 @@ namespace Ritsukage.Library.Subscribe.Listener
                 ArrayList msg = new();
                 foreach (var pic in dynamic.Pictures)
                 {
-                    var img = await DownloadManager.Download(pic, enableAria2Download: true, enableSimpleDownload: true);
+                    var img = await DownloadManager.Download(pic, enableAria2Download: true,
+                        enableSimpleDownload: true);
                     if (string.IsNullOrEmpty(img))
+                    {
                         msg.Add("[图像下载失败]");
+                    }
                     else
                     {
                         GraphicUtils.LimitGraphicScale(img, 2048, 2048);
                         msg.Add(SoraSegment.Image(img));
                     }
+
                     msg.Add(Environment.NewLine);
                 }
+
                 msg.Add(dynamic.BaseToString());
                 records.Add(msg.ToArray());
                 var np = await dynamic.GetNinePicture();
@@ -162,12 +155,14 @@ namespace Ritsukage.Library.Subscribe.Listener
                     output.Dispose();
                     records.Add(new object[] { SoraSegment.Image(name) });
                 }
+
                 await Task.Yield();
             }
+
             return records.ToArray();
         }
 
-        static async Task<string[]> GetDiscordMessageChain(BilibiliDynamicCheckResult result)
+        private static async Task<string[]> GetDiscordMessageChain(BilibiliDynamicCheckResult result)
         {
             List<string> records = new();
             foreach (var dynamic in result.Dynamics.OrderBy(x => x.Id))
@@ -175,6 +170,7 @@ namespace Ritsukage.Library.Subscribe.Listener
                 records.Add(dynamic.ToString());
                 await Task.Yield();
             }
+
             return records.ToArray();
         }
     }

@@ -5,7 +5,7 @@ namespace Ritsukage.Library.FFXIV.Data
 {
     public static class Weather
     {
-        static readonly Dictionary<int, string> Data = new()
+        private static readonly Dictionary<int, string> Data = new()
         {
             { 0, string.Empty },
             { 1, "碧空" },
@@ -187,9 +187,13 @@ namespace Ritsukage.Library.FFXIV.Data
         };
 
         public static string GetWeatherName(int id)
-            => Data.GetValueOrDefault(id, string.Empty);
+        {
+            return Data.GetValueOrDefault(id, string.Empty);
+        }
 
         public static int GetWeatherID(string name)
-            => Data.FirstOrDefault(x => x.Value == name).Key;
+        {
+            return Data.FirstOrDefault(x => x.Value == name).Key;
+        }
     }
 }

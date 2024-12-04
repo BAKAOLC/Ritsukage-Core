@@ -7,7 +7,8 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Utils")]
     public static class HistoryToday
     {
-        [Command("历史上的今天", "historytoday"), NeedCoins(3), ExecutesCooldown("historytoday", 120, true)]
+        [Command("历史上的今天", "historytoday")]
+        [ExecutesCooldown("historytoday", 120, true)]
         [CommandDescription("获取历史上的今天信息", "API接口来自 https://www.mxnzp.com")]
         public static async void Normal(SoraMessage e)
         {
@@ -25,8 +26,10 @@ namespace Ritsukage.QQ.Commands
                         .Append(bin).ToString());
                 }
                 else
+                {
                     await e.Reply(sb.ToString());
-                await e.RemoveCoins(3);
+                }
+
                 await e.UpdateGroupCooldown("historytoday");
             }
             catch

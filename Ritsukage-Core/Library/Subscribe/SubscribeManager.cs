@@ -8,11 +8,12 @@ namespace Ritsukage.Library.Subscribe
 {
     public static class SubscribeManager
     {
-        const int RefreshDelay = 20 * 1000;
+        private const int RefreshDelay = 20 * 1000;
 
-        static readonly Dictionary<SubscribeListener, int> Listeners = new();
+        private static readonly Dictionary<SubscribeListener, int> Listeners = new();
 
-        static bool _init = false;
+        private static bool _init = false;
+
         public static void Init()
         {
             if (_init) return;
@@ -21,34 +22,36 @@ namespace Ritsukage.Library.Subscribe
             //Listeners.Add(new BilibiliDynamicListener(), 8 * 60 * 1000);
             //Listeners.Add(new MinecraftVersionListener(), 60 * 1000);
             //Listeners.Add(new MinecraftJiraListener(), 20 * 60 * 1000);
-            Listeners.Add(new EarthQuakeListener(), 5 * 60 * 1000);
+            //Listeners.Add(new EarthQuakeListener(), 5 * 60 * 1000);
             CreateRefreshThread();
             CreateListenerThread();
         }
 
-        static void CreateRefreshThread()
-            => new Thread(() =>
+        private static void CreateRefreshThread()
+        {
+            new Thread(() =>
             {
                 Thread.Sleep(5 * 1000);
                 while (true)
                 {
                     foreach (var listener in Listeners)
-                    {
                         //ConsoleLog.Debug("Subscribe", "Refresh subscribe listener: " + listener.Key.GetType().FullName);
                         listener.Key.RefreshListener();
-                    }
                     Thread.Sleep(RefreshDelay);
                 }
             })
             {
-                IsBackground = true
+                IsBackground = true,
             }.Start();
+        }
 
-        static int __index = 0;
-        static void CreateListenerThread(SubscribeListener listener, int delay = 60000)
+        private static int __index = 0;
+
+        private static void CreateListenerThread(SubscribeListener listener, int delay = 60000)
         {
-            ConsoleLog.Debug("Subscribe", $"Register subscribe listener: {listener.GetType().FullName} with {delay} ms delay");
-            int startDelay = (++__index) * 10 * 1000;
+            ConsoleLog.Debug("Subscribe",
+                $"Register subscribe listener: {listener.GetType().FullName} with {delay} ms delay");
+            var startDelay = ++__index * 10 * 1000;
             new Thread(() =>
             {
                 Thread.Sleep(startDelay);
@@ -60,11 +63,11 @@ namespace Ritsukage.Library.Subscribe
                 }
             })
             {
-                IsBackground = true
+                IsBackground = true,
             }.Start();
         }
 
-        static void CreateListenerThread()
+        private static void CreateListenerThread()
         {
             ConsoleLog.Debug("Subscribe", "Start loading...");
             foreach (var listener in Listeners)

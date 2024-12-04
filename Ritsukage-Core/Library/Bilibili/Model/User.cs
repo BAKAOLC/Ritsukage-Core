@@ -9,51 +9,72 @@ namespace Ritsukage.Library.Bilibili.Model
     public class User
     {
         #region 属性
+
         /// <summary>
         /// UID
         /// </summary>
         public int Id;
+
         /// <summary>
         /// 昵称
         /// </summary>
         public string Name;
+
         /// <summary>
         /// 性别
         /// </summary>
         public string Sex;
+
         /// <summary>
         /// 头像链接
         /// </summary>
         public string FaceUrl;
+
         /// <summary>
         /// 签名
         /// </summary>
         public string Sign;
+
         /// <summary>
         /// 等级
         /// </summary>
         public int Level;
+
         /// <summary>
         /// 生日
         /// </summary>
         public string Birthday;
+
         /// <summary>
         /// 关注人数
         /// </summary>
         public int Following;
+
         /// <summary>
         /// 粉丝数
         /// </summary>
         public int Follower;
 
-        public string Url { get => "https://space.bilibili.com/" + Id; }
+        public string Url => "https://space.bilibili.com/" + Id;
+
         #endregion
 
         #region 方法
-        public int GetLiveRoomId() => GetLiveRoomId(Id);
-        public LiveRoom GetLiveRoom() => LiveRoom.Get(GetLiveRoomId());
 
-        public Dynamic[] GetDynamicList(ulong offset = 0) => Dynamic.GetDynamicList(Id, offset);
+        public int GetLiveRoomId()
+        {
+            return GetLiveRoomId(Id);
+        }
+
+        public LiveRoom GetLiveRoom()
+        {
+            return LiveRoom.Get(GetLiveRoomId());
+        }
+
+        public Dynamic[] GetDynamicList(ulong offset = 0)
+        {
+            return Dynamic.GetDynamicList(Id, offset);
+        }
 
         public string BaseToString()
         {
@@ -65,27 +86,32 @@ namespace Ritsukage.Library.Bilibili.Model
                 .Append(Url)
                 .ToString();
         }
+
         public override string ToString()
-            => new StringBuilder()
-            .AppendLine(FaceUrl)
-            .Append(BaseToString())
-            .ToString();
+        {
+            return new StringBuilder()
+                .AppendLine(FaceUrl)
+                .Append(BaseToString())
+                .ToString();
+        }
 
         #endregion
 
         #region 构造
+
         public static User Get(int id)
         {
             //var info = Hibi.HibiBilibili.GetUserInfo(id);
-            var info = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
-            if (((int)info["code"]) != 0)
-                throw new Exception((string)info["message"]);
+            var info = JObject.Parse(
+                Utils.HttpGET("https://api.bilibili.com/x/web-interface/card?jsonp=jsonp&photo=1&mid=" + id));
+            if ((int)info["code"] != 0)
+                throw new((string)info["message"]);
             /*
             ConsoleLog.Debug("Bilibili",
                 new StringBuilder("[User Info Parser] Parser: ")
                 .AppendLine().Append(info["data"].ToString()).ToString());
             */
-            return new User()
+            return new()
             {
                 Id = (int)info["data"]["card"]["mid"],
                 Name = (string)info["data"]["card"]["name"],
@@ -98,16 +124,20 @@ namespace Ritsukage.Library.Bilibili.Model
                 Follower = (int)info["data"]["card"]["fans"],
             };
         }
+
         #endregion
 
         #region 静态方法
+
         public static int GetLiveRoomId(int id)
         {
-            var info = JObject.Parse(Utils.HttpGET("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + id));
+            var info = JObject.Parse(
+                Utils.HttpGET("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + id));
             if ((int)info["code"] != 0)
-                throw new Exception((string)info["message"]);
+                throw new((string)info["message"]);
             return (int)info["data"]["roomid"];
         }
+
         #endregion
     }
 
@@ -122,12 +152,15 @@ namespace Ritsukage.Library.Bilibili.Model
 
         public MyUserInfo(string cookie = "")
         {
-            var data = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/space/myinfo?jsonp=jsonp", "", 20000, cookie));
+            var data = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/space/myinfo?jsonp=jsonp", "", 20000,
+                cookie));
             if ((int)data["code"] != 0)
-                throw new Exception((string)data["message"]);
+                throw new((string)data["message"]);
             var data2 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/nav", "", 20000, cookie));
-            var data3 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/member/web/account", "", 20000, cookie));
-            var data4 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/nav/stat", "", 20000, cookie));
+            var data3 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/member/web/account", "", 20000,
+                cookie));
+            var data4 = JObject.Parse(Utils.HttpGET("https://api.bilibili.com/x/web-interface/nav/stat", "", 20000,
+                cookie));
             Id = (int)data["data"]["mid"];
             Name = (string)data["data"]["name"];
             Sex = (string)data["data"]["sex"];
@@ -151,9 +184,9 @@ namespace Ritsukage.Library.Bilibili.Model
         {
             var birth = string.IsNullOrWhiteSpace(Birth) ? "保密" : Birth;
             return FaceUrl + "\n"
-                + $"{Name} (UID:{Id}) Lv{Level}({Exp}/{ExpNext})" + "\n"
-                + $"性别：{Sex}  生日：{birth}  关注：{Following}  粉丝：{Follower}" + "\n"
-                + Sign + "\n" + Url;
+                           + $"{Name} (UID:{Id}) Lv{Level}({Exp}/{ExpNext})" + "\n"
+                           + $"性别：{Sex}  生日：{birth}  关注：{Following}  粉丝：{Follower}" + "\n"
+                           + Sign + "\n" + Url;
         }
     }
 }

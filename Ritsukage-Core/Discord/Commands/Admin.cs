@@ -15,7 +15,8 @@ namespace Ritsukage.Discord.Commands
             var user = Context.Guild.GetUser(Context.User.Id);
             if (user.GuildPermissions.Administrator || user.GuildPermissions.ManageRoles)
             {
-                var data = await Database.FindAsync<DiscordGuildSetting>(x => x.Guild == Convert.ToInt64(Context.Guild.Id));
+                var data = await Database.FindAsync<DiscordGuildSetting>(x =>
+                    x.Guild == Convert.ToInt64(Context.Guild.Id));
                 if (data != null)
                 {
                     data.FirstCommingRole = Convert.ToInt64(id);
@@ -32,10 +33,11 @@ namespace Ritsukage.Discord.Commands
                             await ReplyAsync(":x: 因未知原因导致设置失败，请稍后重试");
                     });
                 }
+
                 data = new()
                 {
                     Guild = Convert.ToInt64(Context.Guild.Id),
-                    FirstCommingRole = Convert.ToInt64(id)
+                    FirstCommingRole = Convert.ToInt64(id),
                 };
                 await Database.InsertAsync(data).ContinueWith(async x =>
                 {

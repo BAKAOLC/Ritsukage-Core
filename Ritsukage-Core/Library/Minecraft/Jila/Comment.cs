@@ -25,15 +25,20 @@ namespace Ritsukage.Library.Minecraft.Jila
                     return "";
             });
         }
+
         public Comment(string id, string author, string datetime, string message)
-            : this(id, author, Convert.ToDateTime(datetime), message) { }
+            : this(id, author, Convert.ToDateTime(datetime), message)
+        {
+        }
 
         public override string ToString()
-            => new StringBuilder()
-            .AppendLine($"Author: {Author}")
-            .AppendLine(Message)
-            .Append(CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"))
-            .ToString();
+        {
+            return new StringBuilder()
+                .AppendLine($"Author: {Author}")
+                .AppendLine(Message)
+                .Append(CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"))
+                .ToString();
+        }
 
         [GeneratedRegex("<[^>]+>")]
         private static partial Regex GetHtmlTagRegex();

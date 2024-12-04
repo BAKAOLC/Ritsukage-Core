@@ -17,13 +17,13 @@ namespace Ritsukage.QQ.Events
                 Trigger(args);
         }
 
-        const int DelayTime = 10;
-        static readonly object _lock = new();
-        static readonly Dictionary<long, Dictionary<string, DateTime>> Delay = new();
+        private const int DelayTime = 10;
+        private static readonly object _lock = new();
+        private static readonly Dictionary<long, Dictionary<string, DateTime>> Delay = new();
 
-        const string MoJira = "https://bugs.mojang.com/browse/";
+        private const string MoJira = "https://bugs.mojang.com/browse/";
 
-        static async void Trigger(GroupMessageEventArgs args)
+        private static async void Trigger(GroupMessageEventArgs args)
         {
             Dictionary<string, DateTime> record;
             lock (_lock)
@@ -31,12 +31,12 @@ namespace Ritsukage.QQ.Events
                 if (!Delay.TryGetValue(args.SourceGroup.Id, out record))
                     Delay.Add(args.SourceGroup.Id, record = new());
             }
+
             var msg = args.Message.RawText;
             if (msg.StartsWith(MoJira))
                 msg = msg[MoJira.Length..];
             var m = GetMOJIRAIDRegex().Match(msg);
             if (m.Success)
-            {
                 if (!record.ContainsKey(m.Value) || (DateTime.Now - record[m.Value]).TotalSeconds >= DelayTime)
                 {
                     record[m.Value] = DateTime.Now;
@@ -48,7 +48,6 @@ namespace Ritsukage.QQ.Events
                     {
                     }
                 }
-            }
         }
 
         [GeneratedRegex("^MC(PE)?-\\d+$")]

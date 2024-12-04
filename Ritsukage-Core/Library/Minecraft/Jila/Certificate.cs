@@ -16,7 +16,8 @@ namespace Ritsukage.Library.Minecraft.Jila
 
         public static Certificate Login(string username, string password)
         {
-            string content = $"os_username={Utils.UrlEncode(username)}&os_password={Utils.UrlEncode(password)}&os_cookie=true&os_destination=&user_role=&atl_token=&login=Log+In";
+            var content =
+                $"os_username={Utils.UrlEncode(username)}&os_password={Utils.UrlEncode(password)}&os_cookie=true&os_destination=&user_role=&atl_token=&login=Log+In";
             HttpWebRequest request = null;
             try
             {
@@ -28,11 +29,11 @@ namespace Ritsukage.Library.Minecraft.Jila
                 request.Method = "POST";
                 request.ContentType = "application/x-www-form-urlencoded";
                 request.ContentLength = content.Length;
-                byte[] byteResquest = Encoding.UTF8.GetBytes(content);
-                using Stream stream = request.GetRequestStream();
+                var byteResquest = Encoding.UTF8.GetBytes(content);
+                using var stream = request.GetRequestStream();
                 stream.Write(byteResquest, 0, byteResquest.Length);
                 stream.Close();
-                using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                using var response = (HttpWebResponse)request.GetResponse();
                 var cookie = response.Headers["set-cookie"];
                 var date = DateTime.Now.AddSeconds(1209600);
                 response.Close();
@@ -49,7 +50,7 @@ namespace Ritsukage.Library.Minecraft.Jila
                 {
                     IsOK = true,
                     Cookie = cookie,
-                    Expires = date
+                    Expires = date,
                 };
             }
             catch (Exception e)
@@ -58,6 +59,7 @@ namespace Ritsukage.Library.Minecraft.Jila
                 ConsoleLog.Error("Mojang Jira", new StringBuilder().AppendLine("Login failed").Append("Target Url: ")
                     .AppendLine("https://bugs.mojang.com/login.jsp").Append(ConsoleLog.ErrorLogBuilder(e, true)));
             }
+
             return new();
         }
     }

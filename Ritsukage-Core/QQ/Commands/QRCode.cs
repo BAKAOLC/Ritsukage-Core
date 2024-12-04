@@ -7,7 +7,7 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Utils")]
     public static class QRCode
     {
-        [Command("qrcode"), NeedCoins(2)]
+        [Command("qrcode")]
         [CommandDescription("生成QRcode")]
         [ParameterDescription(1, "内容")]
         public static async void Generate(SoraMessage e, string content)
@@ -15,7 +15,6 @@ namespace Ritsukage.QQ.Commands
             var qr = QRCodeTool.Generate(content);
             var path = qr.ToBase64File();
             await e.ReplyToOriginal(SoraSegment.Image(path));
-            await e.RemoveCoins(2);
         }
     }
 }

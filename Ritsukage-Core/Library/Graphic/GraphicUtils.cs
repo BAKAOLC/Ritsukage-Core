@@ -14,9 +14,9 @@ namespace Ritsukage.Library.Graphic
 {
     public static class GraphicUtils
     {
-        public static readonly Rgba32 TransparentColor = new(0, 0, 0, 0);
+        public static readonly Rgba32 TransparentColor = default;
 
-        static readonly ImageFormatManager ImageFormatManager;
+        private static readonly ImageFormatManager ImageFormatManager;
 
         public static class ImageFormat
         {
@@ -46,12 +46,12 @@ namespace Ritsukage.Library.Graphic
         {
             public static IImageEncoder Bmp => new BmpEncoder
             {
-                SupportTransparency = true
+                SupportTransparency = true,
             };
 
             public static IImageEncoder Gif => new GifEncoder
             {
-                ColorTableMode = GifColorTableMode.Local
+                ColorTableMode = GifColorTableMode.Local,
             };
 
             public static IImageEncoder Jpeg => new JpegEncoder();
@@ -61,7 +61,7 @@ namespace Ritsukage.Library.Graphic
 
         static GraphicUtils()
         {
-            ImageFormatManager = new ImageFormatManager();
+            ImageFormatManager = new();
             ImageFormatManager.AddImageFormat(ImageFormat.Bmp);
             ImageFormatManager.SetDecoder(ImageFormat.Bmp, ImageDecoder.Bmp);
             ImageFormatManager.SetEncoder(ImageFormat.Bmp, ImageEncoder.Bmp);
@@ -77,16 +77,24 @@ namespace Ritsukage.Library.Graphic
         }
 
         public static IImageDecoder FindDecoder(IImageFormat format)
-            => ImageFormatManager.GetDecoder(format);
+        {
+            return ImageFormatManager.GetDecoder(format);
+        }
 
         public static IImageEncoder FindEncoder(IImageFormat format)
-            => ImageFormatManager.GetEncoder(format);
+        {
+            return ImageFormatManager.GetEncoder(format);
+        }
 
         public static bool FindFormatByFileExtension(string extension, out IImageFormat format)
-            => ImageFormatManager.TryFindFormatByFileExtension(extension, out format);
+        {
+            return ImageFormatManager.TryFindFormatByFileExtension(extension, out format);
+        }
 
         public static bool FindFormatByMimeType(string mimeType, out IImageFormat format)
-            => ImageFormatManager.TryFindFormatByMimeType(mimeType, out format);
+        {
+            return ImageFormatManager.TryFindFormatByMimeType(mimeType, out format);
+        }
 
         public static Image<Rgba32> LoadImage(byte[] bytes, out IImageFormat format)
         {
@@ -95,10 +103,14 @@ namespace Ritsukage.Library.Graphic
         }
 
         public static Image<Rgba32> LoadImage(byte[] bytes, IImageDecoder decoder)
-            => LoadImage(new MemoryStream(bytes), decoder);
+        {
+            return LoadImage(new MemoryStream(bytes), decoder);
+        }
 
         public static Image<Rgba32> LoadImage(byte[] bytes)
-            => LoadImage(bytes, out _);
+        {
+            return LoadImage(bytes, out _);
+        }
 
         public static Image<Rgba32> LoadImage(Stream stream, out IImageFormat format)
         {
@@ -107,10 +119,14 @@ namespace Ritsukage.Library.Graphic
         }
 
         public static Image<Rgba32> LoadImage(Stream stream, IImageDecoder decoder)
-            => decoder.Decode<Rgba32>(new(), stream);
+        {
+            return decoder.Decode<Rgba32>(new(), stream);
+        }
 
         public static Image<Rgba32> LoadImage(Stream stream)
-            => LoadImage(stream, out _);
+        {
+            return LoadImage(stream, out _);
+        }
 
         public static Image<Rgba32> LoadImage(string path, out IImageFormat format)
         {
@@ -119,10 +135,14 @@ namespace Ritsukage.Library.Graphic
         }
 
         public static Image<Rgba32> LoadImage(string path, IImageDecoder decoder)
-            => LoadImage(File.ReadAllBytes(path), decoder);
+        {
+            return LoadImage(File.ReadAllBytes(path), decoder);
+        }
 
         public static Image<Rgba32> LoadImage(string path)
-            => LoadImage(path, out _);
+        {
+            return LoadImage(path, out _);
+        }
 
         public static async void SaveImage(Image<Rgba32> image, IImageFormat format, string path)
         {
@@ -137,12 +157,12 @@ namespace Ritsukage.Library.Graphic
             }
         }
 
-        public static bool LimitGraphicScale(string path, int maxWidth, int maxHeight)
+        public static bool LimitGraphicScale(string path, int maxWidth, int maxHeight, int maxFileSize = 0)
         {
             try
             {
-                var image = LoadImage(path, out IImageFormat format);
-                bool flag = false;
+                var image = LoadImage(path, out var format);
+                var flag = false;
                 var width = image.Width;
                 var height = image.Height;
                 if (width > maxWidth)
@@ -152,6 +172,7 @@ namespace Ritsukage.Library.Graphic
                     width = Convert.ToInt32(Math.Floor(width * rate));
                     height = Convert.ToInt32(Math.Floor(height * rate));
                 }
+
                 if (height > maxHeight)
                 {
                     flag = true;
@@ -159,26 +180,43 @@ namespace Ritsukage.Library.Graphic
                     width = Convert.ToInt32(Math.Floor(width * rate));
                     height = Convert.ToInt32(Math.Floor(height * rate));
                 }
+
                 if (flag)
                 {
                     image.Mutate(x => x.Resize(width, height));
                     SaveImage(image, format, path);
+                }
+
+                if (maxFileSize > 0)
+                {
+                    var info = new FileInfo(path);
+                    if (info.Length > maxFileSize)
+                    {
+                        var rate = (double)maxFileSize / info.Length;
+                        width = Convert.ToInt32(Math.Floor(width * rate));
+                        height = Convert.ToInt32(Math.Floor(height * rate));
+                        image.Mutate(x => x.Resize(width, height));
+                        SaveImage(image, format, path);
+                    }
                 }
             }
             catch
             {
                 return false;
             }
+
             return true;
         }
 
         public static bool LimitGraphicScale(string path, int maxScale)
-            => LimitGraphicScale(path, maxScale, maxScale);
+        {
+            return LimitGraphicScale(path, maxScale, maxScale);
+        }
 
-        static FileStream GetFileStream(string path)
+        private static FileStream GetFileStream(string path)
         {
             FileStream stream = null;
-            bool flag = false;
+            var flag = false;
             SpinWait.SpinUntil(() =>
             {
                 try
@@ -192,6 +230,7 @@ namespace Ritsukage.Library.Graphic
                 {
                     flag = true;
                 }
+
                 return flag || stream != null;
             });
             return stream;

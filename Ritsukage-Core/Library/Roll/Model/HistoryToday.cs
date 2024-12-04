@@ -15,7 +15,9 @@ namespace Ritsukage.Library.Roll.Model
         }
 
         public override string ToString()
-            => Date + "  " + Title;
+        {
+            return Date + "  " + Title;
+        }
 
         public static HistoryToday[] Get()
         {
@@ -25,14 +27,16 @@ namespace Ritsukage.Library.Roll.Model
                 var dataArray = (JArray)data.Data;
                 var e = new HistoryToday[dataArray.Count];
                 for (var i = 0; i < dataArray.Count; i++)
-                    e[i] = new HistoryToday(dataArray[i]);
+                    e[i] = new(dataArray[i]);
                 return e;
             }
+
             return null;
         }
 
-        static HistoryToday[] _recent;
-        static DateTime _recentDate;
+        private static HistoryToday[] _recent;
+        private static DateTime _recentDate;
+
         public static HistoryToday[] Today()
         {
             if (_recentDate.Date == DateTime.Today.Date)
@@ -43,7 +47,8 @@ namespace Ritsukage.Library.Roll.Model
                 _recentDate = DateTime.Today.Date;
                 return _recent = data;
             }
-            throw new Exception("历史上的今天获取失败");
+
+            throw new("历史上的今天获取失败");
         }
     }
 }

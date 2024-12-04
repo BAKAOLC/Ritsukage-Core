@@ -16,11 +16,11 @@ namespace Ritsukage.Library.OCRSpace.Attribute
 
     public static class DescriptionAttributeExtension
     {
-        static readonly Type DescriptionAttribute = typeof(DescriptionAttribute);
+        private static readonly Type DescriptionAttribute = typeof(DescriptionAttribute);
 
         public static string GetDescription(this object target)
         {
-            FieldInfo field = target.GetType().GetField(target.ToString());
+            var field = target.GetType().GetField(target.ToString());
             if (field.IsDefined(DescriptionAttribute))
                 return field.GetCustomAttribute<DescriptionAttribute>().Description;
             return target.ToString();

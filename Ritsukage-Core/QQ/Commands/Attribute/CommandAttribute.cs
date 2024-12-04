@@ -14,6 +14,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"Command";
+        {
+            return $"Command";
+        }
     }
 }

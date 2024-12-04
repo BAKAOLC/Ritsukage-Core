@@ -9,7 +9,6 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Help")]
     public static class Help
     {
-
         [Command("帮助", "Help")]
         [CommandDescription("获取指定指令的帮助")]
         public static async void GetHelp(SoraMessage e)
@@ -27,7 +26,9 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("提供的参数非法捏");
                 return;
             }
-            if (Attribute.GetCustomAttributes(typeof(Help).GetMethod("GetHelpForCommand"), true).Where(a => a is CommandAttribute).FirstOrDefault() is not CommandAttribute self_attr) return;
+
+            if (Attribute.GetCustomAttributes(typeof(Help).GetMethod("GetHelpForCommand"), true)
+                    .Where(a => a is CommandAttribute).FirstOrDefault() is not CommandAttribute self_attr) return;
             var header = self_attr.StartHeader;
             var lc = command_str.ToLower();
             var matches = CommandManager.Commands
@@ -35,10 +36,10 @@ namespace Ritsukage.QQ.Commands
                 .Select(x => x.Value.Where(y => y.Key.Contains(lc)).OrderBy(y => y.Key).Select(y => y.Value));
             List<Command> commands = new();
             foreach (var x in matches)
-                foreach (var y in x)
-                    foreach (var command in y.OrderByDescending(x => x.ArgTypes.Length))
-                        if (await command.CheckPermission(e.Event))
-                            commands.Add(command);
+            foreach (var y in x)
+            foreach (var command in y.OrderByDescending(x => x.ArgTypes.Length))
+                if (await command.CheckPermission(e.Event))
+                    commands.Add(command);
             if (commands.Any())
             {
                 var methods = commands.Select(x => x.Method);
@@ -48,7 +49,7 @@ namespace Ritsukage.QQ.Commands
                     var attrs = method.GetCustomAttribute<CommandAttribute>();
                     var ps = method.GetParameters();
                     var ts = new string[ps.Length];
-                    for (int i = 0; i < ps.Length; ++i)
+                    for (var i = 0; i < ps.Length; ++i)
                         ts[i] = $"{ps[i].Name}:{ps[i].ParameterType.Name}";
                     var name = attrs.Name;
                     if (name.Length == 0)
@@ -66,11 +67,14 @@ namespace Ritsukage.QQ.Commands
                         var pd = pds.Where(x => x.Index == pm.Position).FirstOrDefault();
                         sb.Append("    ");
                         if (pd == null)
-                            sb.AppendLine($"Parameter#{pm.Position} {pm.Name}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}");
+                            sb.AppendLine(
+                                $"Parameter#{pm.Position} {pm.Name}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}");
                         else
-                            sb.AppendLine($"{pd}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}{(string.IsNullOrWhiteSpace(pd.Desc) ? string.Empty : (" " + pd.Desc))}");
+                            sb.AppendLine(
+                                $"{pd}:{pm.ParameterType.Name}{(pm.HasDefaultValue ? $"={(pm.DefaultValue.GetType() == typeof(string) ? $"\"{((string)pm.DefaultValue).Replace("\\", "\\\\").Replace("\"", "\\\"")}\"" : pm.DefaultValue)}" : string.Empty)}{(string.IsNullOrWhiteSpace(pd.Desc) ? string.Empty : " " + pd.Desc)}");
                     }
                 }
+
                 sb.Append($"=== 共找到有权使用的 {methods.Count()} 个方法 ===");
                 await e.ReplyToOriginal(sb.ToString());
             }

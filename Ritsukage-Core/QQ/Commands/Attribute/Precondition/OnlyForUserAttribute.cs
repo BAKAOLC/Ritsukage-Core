@@ -24,6 +24,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"<Only for user: {string.Join(", ", Users)}>";
+        {
+            return $"<Only for user: {string.Join(", ", Users)}>";
+        }
     }
 }

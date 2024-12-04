@@ -20,8 +20,10 @@ namespace Ritsukage.Discord.Commands
                 }
             }
             catch
-            { }
-                await ReplyAsync($"{origin} 未能成功获取到猜测内容");
+            {
+            }
+
+            await ReplyAsync($"{origin} 未能成功获取到猜测内容");
         }
     }
 }

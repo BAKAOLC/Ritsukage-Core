@@ -16,7 +16,7 @@ namespace Ritsukage.Library.Netease.CloudMusic
             var api = new BaseApi();
             (success, json) = await api.RequestAsync(Providers.Search, new()
             {
-                { "keywords", key }
+                { "keywords", key },
             });
             if (!success)
                 return null;
@@ -28,7 +28,9 @@ namespace Ritsukage.Library.Netease.CloudMusic
                 return result.ToArray();
             }
             catch
-            { }
+            {
+            }
+
             return null;
         }
 
@@ -39,7 +41,7 @@ namespace Ritsukage.Library.Netease.CloudMusic
             var api = new BaseApi();
             (success, json) = await api.RequestAsync(Providers.SongDetail, new()
             {
-                { "ids", id.ToString() }
+                { "ids", id.ToString() },
             });
             if (!success)
                 return null;
@@ -54,7 +56,7 @@ namespace Ritsukage.Library.Netease.CloudMusic
             (success, json) = await api.RequestAsync(Providers.SongUrl, new()
             {
                 { "id", id.ToString() },
-                { "br", br.ToString() }
+                { "br", br.ToString() },
             });
             if (!success)
                 return new();

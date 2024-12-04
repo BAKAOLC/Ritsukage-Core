@@ -6,10 +6,14 @@ namespace Ritsukage.Tools
     public static class EncodingConvert
     {
         public static string Convert(Encoding srcEncoding, Encoding dstEncoding, string text)
-            => dstEncoding.GetString(Encoding.Convert(srcEncoding, dstEncoding, srcEncoding.GetBytes(text)));
+        {
+            return dstEncoding.GetString(Encoding.Convert(srcEncoding, dstEncoding, srcEncoding.GetBytes(text)));
+        }
 
         public static byte[] Convert(Encoding srcEncoding, Encoding dstEncoding, byte[] bytes)
-            => Encoding.Convert(srcEncoding, dstEncoding, bytes);
+        {
+            return Encoding.Convert(srcEncoding, dstEncoding, bytes);
+        }
 
         public static byte[] Convert(Encoding srcEncoding, Encoding dstEncoding, Stream stream)
         {
@@ -48,39 +52,63 @@ namespace Ritsukage.Tools
         }
 
         public static string UTF8ToGB18030(string text)
-            => Convert(Encoding.UTF8, Encoding.GetEncoding("gb18030"), text);
+        {
+            return Convert(Encoding.UTF8, Encoding.GetEncoding("gb18030"), text);
+        }
 
         public static byte[] UTF8ToGB18030(byte[] bytes)
-            => Convert(Encoding.UTF8, Encoding.GetEncoding("gb18030"), bytes);
+        {
+            return Convert(Encoding.UTF8, Encoding.GetEncoding("gb18030"), bytes);
+        }
 
         public static byte[] UTF8ToGB18030(Stream stream)
-            => Convert(Encoding.UTF8, Encoding.GetEncoding("gb18030"), stream);
+        {
+            return Convert(Encoding.UTF8, Encoding.GetEncoding("gb18030"), stream);
+        }
 
         public static string UTF8ToGB2312(string text)
-            => Convert(Encoding.UTF8, Encoding.GetEncoding("gb2312"), text);
+        {
+            return Convert(Encoding.UTF8, Encoding.GetEncoding("gb2312"), text);
+        }
 
         public static byte[] UTF8ToGB2312(byte[] bytes)
-            => Convert(Encoding.UTF8, Encoding.GetEncoding("gb2312"), bytes);
+        {
+            return Convert(Encoding.UTF8, Encoding.GetEncoding("gb2312"), bytes);
+        }
 
         public static byte[] UTF8ToGB2312(Stream stream)
-            => Convert(Encoding.UTF8, Encoding.GetEncoding("gb2312"), stream);
+        {
+            return Convert(Encoding.UTF8, Encoding.GetEncoding("gb2312"), stream);
+        }
 
         public static string GB18030ToUTF8(string text)
-            => Convert(Encoding.GetEncoding("gb18030"), Encoding.UTF8, text);
+        {
+            return Convert(Encoding.GetEncoding("gb18030"), Encoding.UTF8, text);
+        }
 
         public static byte[] GB18030ToUTF8(byte[] bytes)
-            => Convert(Encoding.GetEncoding("gb18030"), Encoding.UTF8, bytes);
+        {
+            return Convert(Encoding.GetEncoding("gb18030"), Encoding.UTF8, bytes);
+        }
 
         public static byte[] GB18030ToUTF8(Stream stream)
-            => Convert(Encoding.GetEncoding("gb18030"), Encoding.UTF8, stream);
+        {
+            return Convert(Encoding.GetEncoding("gb18030"), Encoding.UTF8, stream);
+        }
 
         public static string GB2312ToUTF8(string text)
-            => Convert(Encoding.GetEncoding("gb2312"), Encoding.UTF8, text);
+        {
+            return Convert(Encoding.GetEncoding("gb2312"), Encoding.UTF8, text);
+        }
 
         public static byte[] GB2312ToUTF8(byte[] bytes)
-            => Convert(Encoding.GetEncoding("gb2312"), Encoding.UTF8, bytes);
+        {
+            return Convert(Encoding.GetEncoding("gb2312"), Encoding.UTF8, bytes);
+        }
 
         public static byte[] GB2312ToUTF8(Stream stream)
-            => Convert(Encoding.GetEncoding("gb2312"), Encoding.UTF8, stream);
+        {
+            return Convert(Encoding.GetEncoding("gb2312"), Encoding.UTF8, stream);
+        }
     }
 }

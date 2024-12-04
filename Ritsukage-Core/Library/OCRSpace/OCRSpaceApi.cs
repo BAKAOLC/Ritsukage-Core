@@ -12,17 +12,17 @@ namespace Ritsukage.Library.OCRSpace
 {
     public class OCRSpaceApi
     {
-        const string ApiPath = "/parse/image";
+        private const string ApiPath = "/parse/image";
 
         public ApiHost ApiHost;
 
         public OCREngine OCREngine;
 
-        string ApiUrl => ApiHost.GetDescription() + ApiPath;
+        private string ApiUrl => ApiHost.GetDescription() + ApiPath;
 
-        int OCREngineType => (int)OCREngine;
+        private int OCREngineType => (int)OCREngine;
 
-        readonly string ApiKey;
+        private readonly string ApiKey;
 
         public OCRSpaceApi(string key, ApiHost apiHost = ApiHost.Free, OCREngine engine = OCREngine.Default)
         {
@@ -31,14 +31,14 @@ namespace Ritsukage.Library.OCRSpace
             OCREngine = engine;
         }
 
-        async Task<Response> InnerDoOCR(MultipartFormDataContent form, int timeOut = 60000)
+        private async Task<Response> InnerDoOCR(MultipartFormDataContent form, int timeOut = 60000)
         {
             HttpClient httpClient = new()
             {
-                Timeout = TimeSpan.FromMilliseconds(timeOut)
+                Timeout = TimeSpan.FromMilliseconds(timeOut),
             };
-            HttpResponseMessage response = await httpClient.PostAsync(ApiUrl, form);
-            string strContent = await response.Content.ReadAsStringAsync();
+            var response = await httpClient.PostAsync(ApiUrl, form);
+            var strContent = await response.Content.ReadAsStringAsync();
             ConsoleLog.Debug(nameof(OCRSpaceApi), strContent);
             return JsonConvert.DeserializeObject<Response>(strContent);
         }
@@ -54,7 +54,7 @@ namespace Ritsukage.Library.OCRSpace
                 { new StringContent(OCREngineType.ToString()), "ocrengine" },
                 { new StringContent("true"), "scale" },
                 { new StringContent("true"), "istable" },
-                { new StreamContent(stream), fileType.ToString(), "file" + fileType.GetDescription() }
+                { new StreamContent(stream), fileType.ToString(), "file" + fileType.GetDescription() },
             };
             if (language != Language.Default)
                 form.Add(new StringContent(language.ToString()), "language");

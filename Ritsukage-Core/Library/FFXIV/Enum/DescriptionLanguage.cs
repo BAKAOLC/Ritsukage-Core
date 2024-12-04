@@ -7,16 +7,16 @@ namespace Ritsukage.Library.FFXIV.Enum
     public enum DescriptionLanguage
     {
         English,
-        Chinese
+        Chinese,
     }
 
     public static class DescriptionAttributeExtension
     {
-        static readonly Type DescriptionAttribute = typeof(DescriptionAttribute);
+        private static readonly Type DescriptionAttribute = typeof(DescriptionAttribute);
 
         public static string GetDescription(this DescriptionLanguage language, object target)
         {
-            FieldInfo field = target.GetType().GetField(target.ToString());
+            var field = target.GetType().GetField(target.ToString());
             if (field.IsDefined(DescriptionAttribute))
                 return language switch
                 {

@@ -36,13 +36,13 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <param name="data">The modinfo JSON tag.</param>
         internal ForgeInfo(JToken data)
         {
-            Mods = new List<ForgeMod>();
-            foreach (JToken mod in data["modList"])
+            Mods = new();
+            foreach (var mod in data["modList"])
             {
-                string modid = mod["modid"].ToString();
-                string version = mod["version"].ToString();
+                var modid = mod["modid"].ToString();
+                var version = mod["version"].ToString();
 
-                Mods.Add(new ForgeMod(modid, version));
+                Mods.Add(new(modid, version));
             }
         }
     }

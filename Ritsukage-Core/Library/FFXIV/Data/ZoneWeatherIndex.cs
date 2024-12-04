@@ -5,7 +5,7 @@ namespace Ritsukage.Library.FFXIV.Data
 {
     public static class ZoneWeatherIndex
     {
-        static readonly Dictionary<int, int> Data = new()
+        private static readonly Dictionary<int, int> Data = new()
         {
             { 0, 0 },
             { 28, 14 },
@@ -416,6 +416,8 @@ namespace Ritsukage.Library.FFXIV.Data
         };
 
         public static int GetZoneWeatherIndex(int zoneID)
-            => Data.GetValueOrDefault(zoneID, 0);
+        {
+            return Data.GetValueOrDefault(zoneID, 0);
+        }
     }
 }

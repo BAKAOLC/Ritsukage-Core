@@ -24,7 +24,10 @@ namespace Ritsukage.Library.Minecraft.Changelog
             Markdown = new ReverseMarkdown.Converter().Convert(Html);
         }
 
-        public override string ToString() => Utils.RemoveEmptyLine(Markdown)
-            .Replace(Environment.NewLine, "  " + Environment.NewLine);
+        public override string ToString()
+        {
+            return Utils.RemoveEmptyLine(Markdown)
+                .Replace(Environment.NewLine, "  " + Environment.NewLine);
+        }
     }
 }

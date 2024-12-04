@@ -11,7 +11,7 @@ namespace Ritsukage.QQ.Events
 {
     public static class EventManager
     {
-        struct EventMethod
+        private struct EventMethod
         {
             public MethodInfo Method { get; init; }
 
@@ -27,7 +27,8 @@ namespace Ritsukage.QQ.Events
             }
         }
 
-        static bool _init = false;
+        private static bool _init = false;
+
         public static void Init()
         {
             if (_init) return;
@@ -39,11 +40,9 @@ namespace Ritsukage.QQ.Events
 
         public static void Trigger(object sender, BaseSoraEventArgs args, bool fromSelf = false)
         {
-            Type type = args.GetType();
+            var type = args.GetType();
             if (Events.TryGetValue(type, out var list))
-            {
                 foreach (var e in list.Where(x => fromSelf ? x.HandleSelf : x.HandleOthers).ToArray())
-                {
                     Task.Run(() =>
                     {
                         try
@@ -59,8 +58,6 @@ namespace Ritsukage.QQ.Events
                                 .Append($"Exception\t: {ex.GetFormatString(true)}"));
                         }
                     });
-                }
-            }
         }
 
         public static void RegisterAllEvents(Type type)
@@ -75,7 +72,7 @@ namespace Ritsukage.QQ.Events
                     else
                         Events.Add(attrs.Handled, new()
                         {
-                            { new(method, attrs.HandleSelf, attrs.HandleOthers) }
+                            { new(method, attrs.HandleSelf, attrs.HandleOthers) },
                         });
                     ConsoleLog.Debug("Events", new StringBuilder().AppendLine("Register Event")
                         .AppendLine($"Event\t\t: {attrs.Handled}")
@@ -89,13 +86,16 @@ namespace Ritsukage.QQ.Events
         public static void RegisterAllEvents()
         {
             ConsoleLog.Debug("Events", "Start loading...");
-            Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
-            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is EventGroupAttribute).Any()).ToArray();
+            var types = Assembly.GetEntryAssembly().GetExportedTypes();
+            var cosType = types
+                .Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is EventGroupAttribute).Any())
+                .ToArray();
             foreach (var group in cosType)
             {
                 ConsoleLog.Debug("Events", $"Register events group: {group.FullName}");
                 RegisterAllEvents(group);
             }
+
             ConsoleLog.Debug("Events", "Finish.");
         }
     }

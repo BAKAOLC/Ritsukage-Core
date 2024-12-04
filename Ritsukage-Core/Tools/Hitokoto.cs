@@ -7,10 +7,10 @@ namespace Ritsukage.Tools
 {
     public static class Hitokoto
     {
-        const string API = "https://v1.hitokoto.cn/";
-        const string API2 = "http://api.lkblog.net/ws/api.php";
+        private const string API = "https://v1.hitokoto.cn/";
+        private const string API2 = "http://api.lkblog.net/ws/api.php";
 
-        static readonly Dictionary<string, (string, string)> MessageFrom = new()
+        private static readonly Dictionary<string, (string, string)> MessageFrom = new()
         {
             { "a", ("Anime", "动画") },
             { "b", ("Comic", "漫画") },
@@ -33,7 +33,7 @@ namespace Ritsukage.Tools
                 SourceEN = MessageFrom[(string)data["type"]].Item1,
                 SourceCN = MessageFrom[(string)data["type"]].Item2,
                 Reviewer = (int)data["reviewer"],
-                CreatedAt = Utils.GetDateTime((long)data["created_at"])
+                CreatedAt = Utils.GetDateTime((long)data["created_at"]),
             };
         }
 
@@ -56,9 +56,11 @@ namespace Ritsukage.Tools
         public DateTime CreatedAt { get; init; }
 
         public override string ToString()
-            => new StringBuilder()
-            .AppendLine($"『{Message}』")
-            .Append($"—— {FromWho}「{From}」")
-            .ToString();
+        {
+            return new StringBuilder()
+                .AppendLine($"『{Message}』")
+                .Append($"—— {FromWho}「{From}」")
+                .ToString();
+        }
     }
 }

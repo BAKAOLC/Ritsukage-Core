@@ -52,8 +52,8 @@ namespace Ritsukage.QQ.Commands
         public static async void CurrencyList(SoraMessage e)
         {
             await e.Reply("#货币类型如下："
-                + Environment.NewLine
-                + string.Join(Environment.NewLine, Forex.GetForexList().Select(x => $"{x.Key} {x.Value}")));
+                          + Environment.NewLine
+                          + string.Join(Environment.NewLine, Forex.GetForexList().Select(x => $"{x.Key} {x.Value}")));
         }
     }
 }

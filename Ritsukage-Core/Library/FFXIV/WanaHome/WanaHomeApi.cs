@@ -15,7 +15,7 @@ namespace Ritsukage.Library.FFXIV.WanaHome
 
         public const string API_GetHouseState = API_HOST + "house/";
 
-        static JToken Get(string api, Dictionary<string, object> param = null)
+        private static JToken Get(string api, Dictionary<string, object> param = null)
         {
             if (param != null && param.Count > 0)
                 api += "?" + Utils.ToUrlParameter(param);
@@ -34,12 +34,12 @@ namespace Ritsukage.Library.FFXIV.WanaHome
             });
             if (data == null) return null;
             if ((int)data["code"] != 200)
-                throw new Exception((string)data["msg"]);
+                throw new((string)data["msg"]);
             var onSale = new List<House>();
             foreach (var _house in (JArray)data["onsale"])
             {
                 var time = (int)_house["start_sell"];
-                onSale.Add(new House()
+                onSale.Add(new()
                 {
                     Server = (Server)(int)_house["server"],
                     Territory = (Territory)(int)_house["territory_id"],
@@ -51,11 +51,12 @@ namespace Ritsukage.Library.FFXIV.WanaHome
                     Owner = (string)_house["owner"],
                 });
             }
+
             var changes = new List<Changes>();
             foreach (var _change in (JArray)data["changes"])
             {
                 var _house = _change["house"];
-                changes.Add(new Changes()
+                changes.Add(new()
                 {
                     Server = (Server)(int)_house["server"],
                     Territory = (Territory)(int)_house["territory_id"],
@@ -67,18 +68,19 @@ namespace Ritsukage.Library.FFXIV.WanaHome
                         "sold" => EventType.Sold,
                         "start_selling" => EventType.StartSelling,
                         "price_reduce" => EventType.PriceReduce,
-                        _ => EventType.Unknown
+                        _ => EventType.Unknown,
                     },
                     Param1 = (string)_change["param1"],
                     Param2 = (string)_change["param2"],
                     Time = DateTimeOffset.FromUnixTimeSeconds((int)_change["record_time"]),
                 });
             }
-            return new TerritoryState()
+
+            return new()
             {
                 OnSale = onSale,
                 Changes = changes,
-                LastUpdate = DateTimeOffset.FromUnixTimeSeconds((int)data["last_update"])
+                LastUpdate = DateTimeOffset.FromUnixTimeSeconds((int)data["last_update"]),
             };
         }
 
@@ -93,7 +95,7 @@ namespace Ritsukage.Library.FFXIV.WanaHome
             });
             if (data == null) return null;
             if ((int)data["code"] != 200)
-                throw new Exception((string)data["msg"]);
+                throw new((string)data["msg"]);
             var _house = data["data"];
             var time = (int)_house["start_sell"];
             var house = new House()
@@ -111,7 +113,7 @@ namespace Ritsukage.Library.FFXIV.WanaHome
             foreach (var _change in (JArray)data["changes"])
             {
                 _house = data["house"];
-                changes.Add(new Changes()
+                changes.Add(new()
                 {
                     Server = (Server)(int)_house["server"],
                     Territory = (Territory)(int)_house["territory_id"],
@@ -123,42 +125,39 @@ namespace Ritsukage.Library.FFXIV.WanaHome
                         "sold" => EventType.Sold,
                         "start_selling" => EventType.StartSelling,
                         "price_reduce" => EventType.PriceReduce,
-                        _ => EventType.Unknown
+                        _ => EventType.Unknown,
                     },
                     Param1 = (string)_change["param1"],
                     Param2 = (string)_change["param2"],
                     Time = DateTimeOffset.FromUnixTimeSeconds((int)_change["record_time"]),
                 });
             }
-            return new HouseState() { Data = house, Changes = changes };
+
+            return new() { Data = house, Changes = changes };
         }
 
-        static readonly object _lock = new();
-        static Dictionary<string, Server> ServerKeyMaps;
+        private static readonly object _lock = new();
+        private static Dictionary<string, Server> ServerKeyMaps;
+
         public static Server MatchServer(string name)
         {
             lock (_lock)
             {
                 if (ServerKeyMaps == null)
                 {
-                    ServerKeyMaps = new Dictionary<string, Server>();
+                    ServerKeyMaps = new();
                     foreach (var server in typeof(Server).GetEnumValues() as Server[])
-                    {
                         ServerKeyMaps.Add(server.ToString(), server);
-                    }
                 }
             }
+
             foreach (var server in ServerKeyMaps)
-            {
                 if (server.Key.Contains(name))
-                {
                     return server.Value;
-                }
-            }
             return Server.Unknown;
         }
 
-        static readonly Dictionary<Territory, string[]> TerritoryKeyMaps = new Dictionary<Territory, string[]>()
+        private static readonly Dictionary<Territory, string[]> TerritoryKeyMaps = new()
         {
             { Territory.白银乡, new string[] { "白银乡", "黄金港" } },
             { Territory.海雾村, new string[] { "海雾村", "海都" } },
@@ -166,16 +165,13 @@ namespace Ritsukage.Library.FFXIV.WanaHome
             { Territory.薰衣草苗园, new string[] { "薰衣草苗园", "森都" } },
             { Territory.穹顶皓天, new string[] { "穹顶皓天", "天穹街", "魔都", "伊修加德" } },
         };
+
         public static Territory MatchTerritory(string name)
         {
             foreach (var territory in TerritoryKeyMaps)
-            {
-                foreach (var key in territory.Value)
-                    if (name == key)
-                    {
-                        return territory.Key;
-                    }
-            }
+            foreach (var key in territory.Value)
+                if (name == key)
+                    return territory.Key;
             return Territory.Unknown;
         }
     }

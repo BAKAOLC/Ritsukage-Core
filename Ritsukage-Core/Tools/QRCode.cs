@@ -9,7 +9,7 @@ namespace Ritsukage.Tools
         public static Image<Rgba32> Generate(string content, int scale = 5)
         {
             QRCodeGenerator qrGenerator = new();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
+            var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
             PngByteQRCode qrCode = new(qrCodeData);
             return Image.Load<Rgba32>(qrCode.GetGraphic(scale));
         }

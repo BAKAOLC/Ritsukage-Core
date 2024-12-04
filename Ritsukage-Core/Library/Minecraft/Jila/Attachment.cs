@@ -19,12 +19,17 @@ namespace Ritsukage.Library.Minecraft.Jila
             Author = author;
             CreatedTime = datetime;
         }
+
         public Attachment(string id, string name, int size, string author, string datetime)
-            : this(id, name, size, author, Convert.ToDateTime(datetime)) { }
+            : this(id, name, size, author, Convert.ToDateTime(datetime))
+        {
+        }
 
         public string Url => $"https://bugs.mojang.com/secure/attachment/{Id}/{Utils.UrlEncode(Name)}";
 
         public override string ToString()
-            => $"[Id:{Id},File:{Name},Size:{Size}]";
+        {
+            return $"[Id:{Id},File:{Name},Size:{Size}]";
+        }
     }
 }

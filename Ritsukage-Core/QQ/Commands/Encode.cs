@@ -28,9 +28,9 @@ namespace Ritsukage.QQ.Commands
         [CommandDescription("将字符串编码为md5")]
         public static async void MD5Convert(SoraMessage e, string text)
         {
-            MD5 md5 = MD5.Create();
-            byte[] byteOld = Encoding.UTF8.GetBytes(e.Message.GetText()[4..]);
-            byte[] byteNew = md5.ComputeHash(byteOld);
+            var md5 = MD5.Create();
+            var byteOld = Encoding.UTF8.GetBytes(e.Message.GetText()[4..]);
+            var byteNew = md5.ComputeHash(byteOld);
             await e.ReplyToOriginal("[MD5]" + string.Join(string.Empty, byteNew.Select(x => x.ToString("X2"))));
         }
     }

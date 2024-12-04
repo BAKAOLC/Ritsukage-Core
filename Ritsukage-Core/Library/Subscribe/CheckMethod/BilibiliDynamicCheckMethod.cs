@@ -10,7 +10,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
 {
     public class BilibiliDynamicCheckMethod : Base.SubscribeCheckMethod
     {
-        const string type = "bilibili dynamic";
+        private const string type = "bilibili dynamic";
 
         public int UserId { get; init; }
 
@@ -33,9 +33,10 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
                 return new BilibiliDynamicCheckResult();
             }
-            var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == UserId.ToString());
+
+            var record =
+                await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == UserId.ToString());
             if (record != null)
-            {
                 if (ulong.TryParse(record.Status, out var recordId))
                 {
                     if (dynamics[0].Id > recordId)
@@ -46,24 +47,25 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                         {
                             Updated = true,
                             User = user,
-                            Dynamics = dynamics.TakeWhile(x => x.Id > recordId).ToArray()
+                            Dynamics = dynamics.TakeWhile(x => x.Id > recordId).ToArray(),
                         };
                     }
+
                     return new BilibiliDynamicCheckResult();
                 }
-            }
-            Dynamic dy = dynamics[0];
+
+            var dy = dynamics[0];
             await Database.InsertAsync(new SubscribeStatusRecord()
             {
                 Type = type,
                 Target = UserId.ToString(),
-                Status = dy.Id.ToString()
+                Status = dy.Id.ToString(),
             });
             return new BilibiliDynamicCheckResult()
             {
                 Updated = true,
                 User = user,
-                Dynamics = new[] { dy }
+                Dynamics = new[] { dy },
             };
         }
     }

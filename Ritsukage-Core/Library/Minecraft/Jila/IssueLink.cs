@@ -13,17 +13,19 @@ namespace Ritsukage.Library.Minecraft.Jila
         public override string ToString()
         {
             var sb = new StringBuilder();
-            bool flag = false;
+            var flag = false;
             if (!string.IsNullOrWhiteSpace(InwardDescription) && Inwardlinks != null && Inwardlinks.Length > 0)
             {
                 flag = true;
                 sb.Append($"{InwardDescription} {string.Join(", ", Inwardlinks)}");
             }
+
             if (!string.IsNullOrWhiteSpace(OutwardDescription) && Outwardlinks != null && Outwardlinks.Length > 0)
             {
                 if (flag) sb.AppendLine();
                 sb.Append($"{OutwardDescription} {string.Join(", ", Outwardlinks)}");
             }
+
             return sb.ToString();
         }
     }

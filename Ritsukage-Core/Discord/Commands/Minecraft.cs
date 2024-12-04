@@ -13,21 +13,22 @@ namespace Ritsukage.Discord.Commands
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "discord channel"
-                && x.Type == "minecraft version"
-                && x.Target == "java"
-                && x.Listener == Context.Channel.Id.ToString());
+                    => x.Platform == "discord channel"
+                       && x.Type == "minecraft version"
+                       && x.Target == "java"
+                       && x.Listener == Context.Channel.Id.ToString());
             if (data != null)
             {
                 await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "discord channel",
                 Type = "minecraft version",
                 Target = "java",
-                Listener = Context.Channel.Id.ToString()
+                Listener = Context.Channel.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -47,15 +48,16 @@ namespace Ritsukage.Discord.Commands
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "discord channel"
-                && x.Type == "minecraft version"
-                && x.Target == "java"
-                && x.Listener == Context.Channel.Id.ToString());
+                    => x.Platform == "discord channel"
+                       && x.Type == "minecraft version"
+                       && x.Target == "java"
+                       && x.Listener == Context.Channel.Id.ToString());
             if (data == null)
             {
                 await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)

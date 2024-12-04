@@ -5,7 +5,7 @@ namespace Ritsukage.Library.FFXIV.Data
 {
     public static class Zone
     {
-        static readonly SortedList<int, string> Data = new()
+        private static readonly SortedList<int, string> Data = new()
         {
             { 4015, "万相森国" },
             { 3769, "万魔殿正门" },
@@ -397,12 +397,18 @@ namespace Ritsukage.Library.FFXIV.Data
         };
 
         public static KeyValuePair<int, string>[] SearchZoneID(string zone)
-            => Data.Where(x => x.Value.Contains(zone))?.ToArray();
+        {
+            return Data.Where(x => x.Value.Contains(zone))?.ToArray();
+        }
 
         public static int GetZoneID(string zone)
-            => SearchZoneID(zone)?.FirstOrDefault().Key ?? 0;
+        {
+            return SearchZoneID(zone)?.FirstOrDefault().Key ?? 0;
+        }
 
         public static string GetZoneName(int zoneID)
-            => Data.GetValueOrDefault(zoneID, string.Empty);
+        {
+            return Data.GetValueOrDefault(zoneID, string.Empty);
+        }
     }
 }

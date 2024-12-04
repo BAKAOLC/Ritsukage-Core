@@ -6,9 +6,9 @@ namespace Ritsukage.Library.Hibi
 {
     public class HibiApi
     {
-        static readonly string[] Host =
+        private static readonly string[] Host =
         {
-            "https://api.obfs.dev"
+            "https://api.obfs.dev",
         };
 
         public static JToken Get(string path, Dictionary<string, object> param = null)
@@ -21,6 +21,7 @@ namespace Ritsukage.Library.Hibi
                 if (!string.IsNullOrWhiteSpace(result))
                     return JToken.Parse(result);
             }
+
             return null;
         }
     }

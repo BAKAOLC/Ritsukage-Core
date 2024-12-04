@@ -41,7 +41,9 @@ namespace Ritsukage.Library.Roll.Model
         }
 
         public override string ToString()
-            => $"{ResidueDay()} {Name}" + (ForLunar ? "  [农历]" : string.Empty);
+        {
+            return $"{ResidueDay()} {Name}" + (ForLunar ? "  [农历]" : string.Empty);
+        }
 
         public static Holiday[] Get()
         {
@@ -51,14 +53,16 @@ namespace Ritsukage.Library.Roll.Model
                 var dataArray = (JArray)data.Data;
                 var e = new Holiday[dataArray.Count];
                 for (var i = 0; i < dataArray.Count; i++)
-                    e[i] = new Holiday(dataArray[i]);
+                    e[i] = new(dataArray[i]);
                 return e;
             }
+
             return null;
         }
 
-        static Holiday[] _recent;
-        static DateTime _recentDate;
+        private static Holiday[] _recent;
+        private static DateTime _recentDate;
+
         public static Holiday[] Recent()
         {
             if (_recentDate.Date == DateTime.Today.Date)
@@ -68,7 +72,7 @@ namespace Ritsukage.Library.Roll.Model
             {
                 _recentDate = DateTime.Today.Date;
                 var today = data.Where(x => x.ResidueDays == 0).ToList();
-                int recentDay = data.Where(x => x.ResidueDays > 0).ToArray()[0].ResidueDays;
+                var recentDay = data.Where(x => x.ResidueDays > 0).ToArray()[0].ResidueDays;
                 var recent = data.Where(x => x.ResidueDays == recentDay).ToList();
                 _recent = today.Concat(recent).ToArray();
                 recentDay = data.Where(x => x.ResidueDays > recentDay).ToArray()[0].ResidueDays;
@@ -76,7 +80,8 @@ namespace Ritsukage.Library.Roll.Model
                 _recent = _recent.Concat(recent).ToArray();
                 return _recent;
             }
-            throw new Exception("最近节日获取失败");
+
+            throw new("最近节日获取失败");
         }
 
         [GeneratedRegex("^(?<year>\\d+)年(?<month>\\d+)月(?<day>\\d+)日$")]

@@ -6,7 +6,8 @@ using static Ritsukage.Library.Data.TipMessage;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup("Tip Message"), CanWorkIn(WorkIn.Group)]
+    [CommandGroup("Tip Message")]
+    [CanWorkIn(WorkIn.Group)]
     public static class TipMessage
     {
         [Command("tip")]
@@ -15,7 +16,8 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(2, "提示文本")]
         [ParameterDescription(3, "提示间隔")]
         [ParameterDescription(4, "结束时间")]
-        public static async void AddTip(SoraMessage e, DateTime time, string message, TimeSpan interval, DateTime endTime)
+        public static async void AddTip(SoraMessage e, DateTime time, string message, TimeSpan interval,
+            DateTime endTime)
         {
             var now = DateTime.Now;
             if (time < now)
@@ -33,6 +35,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("提示间隔不可以短于 1 分钟");
                 return;
             }
+
             try
             {
                 await TipMessageService.AddTipMessage(TipTargetType.QQGroup,
@@ -62,6 +65,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("提示时间不可设置为 5 分钟内的目标");
                 return;
             }
+
             try
             {
                 await TipMessageService.AddTipMessage(TipTargetType.QQGroup, e.SourceGroup, time, message);
@@ -87,18 +91,25 @@ namespace Ritsukage.QQ.Commands
                     if (tip.Duplicate)
                     {
                         sb.AppendLine($"下一次提醒时间：{tip.TipTime:yyyy-MM-dd HH:mm:ss}");
-                        sb.AppendLine($"提醒间隔：{tip.Interval.Days}天{tip.Interval.Hours}时{tip.Interval.Minutes}分{tip.Interval.Seconds}秒");
+                        sb.AppendLine(
+                            $"提醒间隔：{tip.Interval.Days}天{tip.Interval.Hours}时{tip.Interval.Minutes}分{tip.Interval.Seconds}秒");
                         sb.AppendLine($"提醒结束于：{tip.EndTime:yyyy-MM-dd HH:mm:ss}");
                     }
                     else
+                    {
                         sb.AppendLine($"提醒时间：{tip.TipTime:yyyy-MM-dd HH:mm:ss}");
+                    }
+
                     sb.AppendLine("提醒内容：");
                     sb.Append(tip.Message);
                 }
+
                 await e.Reply(sb.ToString());
             }
             else
+            {
                 await e.Reply("本群目前不存在提示信息");
+            }
         }
 
         [Command("tipremove")]
@@ -113,6 +124,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("操作成功");
                 return;
             }
+
             await e.ReplyToOriginal($"不存在ID为 {id} 的提示消息");
         }
     }

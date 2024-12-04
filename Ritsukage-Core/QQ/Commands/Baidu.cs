@@ -24,6 +24,7 @@ namespace Ritsukage.QQ.Commands
                         await Task.Delay(1000);
                         result = BaiduTranslate.GetTranslateResult(text, result.OriginalLanguage?.Id ?? "zh", "en");
                     }
+
                     if (result.Success)
                     {
                         await e.ReplyToOriginal(new StringBuilder()
@@ -32,6 +33,7 @@ namespace Ritsukage.QQ.Commands
                         return;
                     }
                 }
+
                 await e.ReplyToOriginal(new StringBuilder().Append("翻译失败，")
                     .AppendLine(result.Info).Append(result.TipMessage).ToString());
             }

@@ -11,7 +11,10 @@ namespace Ritsukage.QQ.Commands
     {
         [Command]
         [CommandDescription("检查bot延迟", "返回消息从qq端接收到bot开始处理所花的时间")]
-        public static async void Ping(SoraMessage e) => await e.ReplyToOriginal($"Pong! {(DateTime.Now - e.Time).TotalMilliseconds:F0} ms");
+        public static async void Ping(SoraMessage e)
+        {
+            await e.ReplyToOriginal($"Pong! {(DateTime.Now - e.Time).TotalMilliseconds:F0} ms");
+        }
 
         [Command]
         [CommandDescription("检查bot延迟", "返回消息从qq端接收到bot开始处理所花的时间")]
@@ -33,10 +36,12 @@ namespace Ritsukage.QQ.Commands
         [Command("时间", "time")]
         [CommandDescription("获取bot服务器当前的时间")]
         public static async void Normal(SoraMessage e)
-            => await e.Reply(DateTime.Now.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
+        {
+            await e.Reply(DateTime.Now.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
+        }
 
-        const string ASL_Url = "https://store.steampowered.com/app/1000440/__Abyss_Soul_Lotus/";
-        static readonly DateTime ASL_Finish = new DateTime(2023, 2, 3, 0, 0, 0);
+        private const string ASL_Url = "https://store.steampowered.com/app/1000440/__Abyss_Soul_Lotus/";
+        private static readonly DateTime ASL_Finish = new(2023, 2, 3, 0, 0, 0);
 
         [Command("北欧历")]
         [CommandDescription("获取bot服务器当前的时间所对应的北欧历时间")]
@@ -85,7 +90,8 @@ namespace Ritsukage.QQ.Commands
         public static async void ShouSi(SoraMessage e)
         {
             var date = ShouSiDate.Now;
-            await e.Reply($"当前为寿司历时间：\n{(date.Year == 1 ? "元" : date.Year.ToString("D2"))}年{date.Month:D2}月{date.Day:D2}日 {date.TimeOfDay.Hours:D2}时{date.TimeOfDay.Minutes:D2}分{date.TimeOfDay.Seconds:D2}秒");
+            await e.Reply(
+                $"当前为寿司历时间：\n{(date.Year == 1 ? "元" : date.Year.ToString("D2"))}年{date.Month:D2}月{date.Day:D2}日 {date.TimeOfDay.Hours:D2}时{date.TimeOfDay.Minutes:D2}分{date.TimeOfDay.Seconds:D2}秒");
         }
 
         [Command("云绝历")]
@@ -109,6 +115,7 @@ namespace Ritsukage.QQ.Commands
                 target.AddYears(1);
                 day = System.Math.Floor((target - now).TotalDays);
             }
+
             if (day > 3)
                 await e.Reply($"距离高考还有 {day} 天");
             else if (day == 3)
@@ -127,12 +134,16 @@ namespace Ritsukage.QQ.Commands
         [CommandDescription("测试输入的参数是否为有效的日期参数", "当参数无效时bot不会产生任何反应")]
         [ParameterDescription(1, "日期")]
         public static async void DateTimeTest(SoraMessage e, DateTime dt)
-            => await e.Reply(dt.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
+        {
+            await e.Reply(dt.ToString("yyyy年MM月dd日 HH时mm分ss秒"));
+        }
 
         [Command("时间测试")]
         [CommandDescription("测试输入的参数是否为有效的时间参数", "当参数无效时bot不会产生任何反应")]
         [ParameterDescription(1, "时间长度")]
         public static async void TimeSpanTest(SoraMessage e, TimeSpan ts)
-            => await e.Reply(ts.ToString());
+        {
+            await e.Reply(ts.ToString());
+        }
     }
 }

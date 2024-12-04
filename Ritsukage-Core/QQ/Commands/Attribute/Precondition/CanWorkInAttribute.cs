@@ -12,21 +12,26 @@ namespace Ritsukage.QQ.Commands
             CanWork = type;
         }
 
-        public override Task<bool> CheckPermissionsAsync(BaseSoraEventArgs args) => CanWork switch
+        public override Task<bool> CheckPermissionsAsync(BaseSoraEventArgs args)
         {
-            WorkIn.Group => Task.FromResult(args is GroupMessageEventArgs),
-            WorkIn.Private => Task.FromResult(args is PrivateMessageEventArgs),
-            _ => Task.FromResult(true),
-        };
+            return CanWork switch
+            {
+                WorkIn.Group => Task.FromResult(args is GroupMessageEventArgs),
+                WorkIn.Private => Task.FromResult(args is PrivateMessageEventArgs),
+                _ => Task.FromResult(true),
+            };
+        }
 
         public override string ToString()
-            => $"<Can work in: {CanWork}>";
+        {
+            return $"<Can work in: {CanWork}>";
+        }
     }
 
     public enum WorkIn
     {
         Group,
         Private,
-        All
+        All,
     }
 }

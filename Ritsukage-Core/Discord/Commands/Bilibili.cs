@@ -17,11 +17,15 @@ namespace Ritsukage.Discord.Commands
     {
         [Command("bv2av")]
         public async Task BV2AV(string bv)
-            => await ReplyAsync($"[Bilibili][BV→AV] {bv} → {BilibiliAVBVConverter.ToAV(bv)}");
+        {
+            await ReplyAsync($"[Bilibili][BV→AV] {bv} → {BilibiliAVBVConverter.ToAV(bv)}");
+        }
 
         [Command("av2bv")]
         public async Task AV2BV(long av)
-            => await ReplyAsync($"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}");
+        {
+            await ReplyAsync($"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}");
+        }
 
         [Command("获取b站用户信息")]
         public async Task UserInfo(int uid)
@@ -35,6 +39,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (user != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + user.ToString());
             else
@@ -53,6 +58,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (room != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili Live]\n" + room.ToString());
             else
@@ -71,6 +77,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (stream != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili Live]\n" + stream.ToString());
             else
@@ -89,6 +96,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (video != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + video.ToString());
             else
@@ -107,6 +115,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (video != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + video.ToString());
             else
@@ -125,6 +134,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (audio != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + audio.ToString());
             else
@@ -143,6 +153,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (article != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + article.ToString());
             else
@@ -161,6 +172,7 @@ namespace Ritsukage.Discord.Commands
             catch
             {
             }
+
             if (dynamic != null)
                 await msg.ModifyAsync(x => x.Content = "[Bilibili]\n" + dynamic.ToString());
             else
@@ -172,21 +184,22 @@ namespace Ritsukage.Discord.Commands
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "discord channel"
-                && x.Type == "bilibili live"
-                && x.Target == roomid.ToString()
-                && x.Listener == Context.Channel.Id.ToString());
+                    => x.Platform == "discord channel"
+                       && x.Type == "bilibili live"
+                       && x.Target == roomid.ToString()
+                       && x.Listener == Context.Channel.Id.ToString());
             if (data != null)
             {
                 await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "discord channel",
                 Type = "bilibili live",
                 Target = roomid.ToString(),
-                Listener = Context.Channel.Id.ToString()
+                Listener = Context.Channel.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -206,15 +219,16 @@ namespace Ritsukage.Discord.Commands
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "discord channel"
-                && x.Type == "bilibili live"
-                && x.Target == roomid.ToString()
-                && x.Listener == Context.Channel.Id.ToString());
+                    => x.Platform == "discord channel"
+                       && x.Type == "bilibili live"
+                       && x.Target == roomid.ToString()
+                       && x.Listener == Context.Channel.Id.ToString());
             if (data == null)
             {
                 await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -234,21 +248,22 @@ namespace Ritsukage.Discord.Commands
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "discord channel"
-                && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString()
-                && x.Listener == Context.Channel.Id.ToString());
+                    => x.Platform == "discord channel"
+                       && x.Type == "bilibili dynamic"
+                       && x.Target == userid.ToString()
+                       && x.Listener == Context.Channel.Id.ToString());
             if (data != null)
             {
                 await ReplyAsync("本频道已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "discord channel",
                 Type = "bilibili dynamic",
                 Target = userid.ToString(),
-                Listener = Context.Channel.Id.ToString()
+                Listener = Context.Channel.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -268,15 +283,16 @@ namespace Ritsukage.Discord.Commands
         {
             var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "discord channel"
-                && x.Type == "bilibili dynamic"
-                && x.Target == userid.ToString()
-                && x.Listener == Context.Channel.Id.ToString());
+                    => x.Platform == "discord channel"
+                       && x.Type == "bilibili dynamic"
+                       && x.Target == userid.ToString()
+                       && x.Listener == Context.Channel.Id.ToString());
             if (data == null)
             {
                 await ReplyAsync("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -310,16 +326,15 @@ namespace Ritsukage.Discord.Commands
                     dmmsg = await dm.SendMessageAsync("请在5分钟内使用Bilibili客户端扫描二维码进行登录");
                     await msg.ModifyAsync(x => x.Content = "登陆事件已建立，请前往私聊继续操作");
                 },
-                async () =>
-                {
-                    await dmmsg.ModifyAsync(x => x.Content = "已检测到扫描事件，请在Bilibili客户端中确认登录");
-                },
+                async () => { await dmmsg.ModifyAsync(x => x.Content = "已检测到扫描事件，请在Bilibili客户端中确认登录"); },
                 async (cookie) =>
                 {
                     await qr?.DeleteAsync();
-                    if (int.TryParse(cookie.Split(";").Where(x => x.StartsWith("DedeUserID=")).First()[11..], out var id))
+                    if (int.TryParse(cookie.Split(";").Where(x => x.StartsWith("DedeUserID=")).First()[11..],
+                            out var id))
                     {
-                        var data = await Database.FindAsync<UserData>(x => x.Discord == Convert.ToInt64(Context.User.Id) || x.Bilibili == id);
+                        var data = await Database.FindAsync<UserData>(x =>
+                            x.Discord == Convert.ToInt64(Context.User.Id) || x.Bilibili == id);
                         if (data != null)
                         {
                             data.Discord = Convert.ToInt64(Context.User.Id);
@@ -344,7 +359,7 @@ namespace Ritsukage.Discord.Commands
                             {
                                 Discord = Convert.ToInt64(Context.User.Id),
                                 Bilibili = id,
-                                BilibiliCookie = cookie
+                                BilibiliCookie = cookie,
                             };
                             await Database.InsertAsync(data).ContinueWith(async x =>
                             {
@@ -359,10 +374,14 @@ namespace Ritsukage.Discord.Commands
                                     await dmmsg.ModifyAsync(x => x.Content = ":x: 记录数据因未知原因导致更新失败，请稍后重试");
                             });
                         }
+
                         await dmmsg.ModifyAsync(x => x.Content = ":white_check_mark: 登录成功，用户数据已保存");
                     }
                     else
+                    {
                         await dmmsg.ModifyAsync(x => x.Content = ":x: 登录失败：未能匹配到用户UID");
+                    }
+
                     await msg.ModifyAsync(x => x.Content = ":o: 事件已结束");
                 },
                 async (errMsg) =>

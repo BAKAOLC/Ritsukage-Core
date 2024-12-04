@@ -8,7 +8,7 @@ namespace Ritsukage.Library.FFXIV.Data
     {
         public struct WeatherRateList
         {
-            readonly SortedList<int, int> List;
+            private readonly SortedList<int, int> List;
 
             public WeatherRateList(SortedList<int, int> data)
             {
@@ -16,20 +16,34 @@ namespace Ritsukage.Library.FFXIV.Data
             }
 
             public int GetWeather(int rate)
-                => rate < 100 ? (List == null ? 0 : List.FirstOrDefault(x => rate < x.Key).Value) : 0;
+            {
+                return rate < 100 ? List == null ? 0 : List.FirstOrDefault(x => rate < x.Key).Value : 0;
+            }
 
             public bool ContainsValue(int weatherID)
-                => List != null && List.Any(x => x.Value == weatherID);
+            {
+                return List != null && List.Any(x => x.Value == weatherID);
+            }
 
-            public IEnumerable<int> GetWeathers() => List?.Select(x => x.Value);
+            public IEnumerable<int> GetWeathers()
+            {
+                return List?.Select(x => x.Value);
+            }
 
-            public IEnumerable<string> GetWeatherNames() => List?.Select(x => Weather.GetWeatherName(x.Value));
+            public IEnumerable<string> GetWeatherNames()
+            {
+                return List?.Select(x => Weather.GetWeatherName(x.Value));
+            }
 
             public override string ToString()
-                => List == null ? string.Empty : string.Join("\n", List.Select(x => $"(Rate: {x.Key}, Weather:{x.Value})"));
+            {
+                return List == null
+                    ? string.Empty
+                    : string.Join("\n", List.Select(x => $"(Rate: {x.Key}, Weather:{x.Value})"));
+            }
         }
 
-        static readonly Dictionary<int, WeatherRateList> Data = new()
+        private static readonly Dictionary<int, WeatherRateList> Data = new()
         {
             { 0, new(new() { { 100, 2 } }) },
             { 1, new(new() { { 5, 7 }, { 20, 7 }, { 30, 4 }, { 40, 3 }, { 55, 2 }, { 85, 1 }, { 100, 2 } }) },
@@ -182,25 +196,31 @@ namespace Ritsukage.Library.FFXIV.Data
             { 148, new(new() { { 25, 1 }, { 70, 2 }, { 80, 3 }, { 90, 7 }, { 95, 4 }, { 100, 8 } }) },
             { 149, new(new() { { 100, 171 } }) },
             { 150, new(new() { { 100, 77 } }) },
-            { 151, new(new() {  }) },
-            { 152, new(new() {  }) },
-            { 153, new(new() {  }) },
-            { 154, new(new() {  }) },
-            { 155, new(new() {  }) },
-            { 156, new(new() {  }) },
-            { 157, new(new() {  }) },
-            { 158, new(new() {  }) },
-            { 159, new(new() {  }) },
-            { 160, new(new() {  }) },
+            { 151, new(new() { }) },
+            { 152, new(new() { }) },
+            { 153, new(new() { }) },
+            { 154, new(new() { }) },
+            { 155, new(new() { }) },
+            { 156, new(new() { }) },
+            { 157, new(new() { }) },
+            { 158, new(new() { }) },
+            { 159, new(new() { }) },
+            { 160, new(new() { }) },
         };
 
         public static WeatherRateList GetWeatherRateList(int rateID)
-            => Data.GetValueOrDefault(rateID);
+        {
+            return Data.GetValueOrDefault(rateID);
+        }
 
         public static int GetWeather(int rateListID, int rate)
-            => GetWeatherRateList(rateListID).GetWeather(rate);
+        {
+            return GetWeatherRateList(rateListID).GetWeather(rate);
+        }
 
         public static bool HaveWeather(int rateListID, int weatherID)
-            => GetWeatherRateList(rateListID).ContainsValue(weatherID);
+        {
+            return GetWeatherRateList(rateListID).ContainsValue(weatherID);
+        }
     }
 }

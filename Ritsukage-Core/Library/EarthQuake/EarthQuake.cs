@@ -15,18 +15,24 @@ namespace Ritsukage.Library.EarthQuake
         {
             [JsonProperty(PropertyName = "SAVE_TIME", ItemConverterType = typeof(DateTimeConverter))]
             public DateTime 预警时间;
+
             [JsonProperty(PropertyName = "O_TIME", ItemConverterType = typeof(DateTimeConverter))]
             public DateTime 发生时间;
+
             [JsonProperty(PropertyName = "EPI_LAT")]
             public double 纬度;
+
             [JsonProperty(PropertyName = "EPI_LON")]
             public double 经度;
+
             [JsonProperty(PropertyName = "EPI_DEPTH")]
             public double 深度;
-            [JsonProperty(PropertyName = "M")]
-            public double 震级;
+
+            [JsonProperty(PropertyName = "M")] public double 震级;
+
             [JsonProperty(PropertyName = "LOCATION_C")]
             public string 地区;
+
             [JsonProperty(PropertyName = "SYNC_TIME")]
             public string 同步时间;
 
@@ -47,27 +53,24 @@ namespace Ritsukage.Library.EarthQuake
                 return sb.ToString();
             }
 
-            class DateTimeConverter : DateTimeConverterBase
+            private class DateTimeConverter : DateTimeConverterBase
             {
-                public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+                public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
+                    JsonSerializer serializer)
                 {
                     var it = (string)reader.Value;
                     return Convert.ToDateTime(it, new DateTimeFormatInfo()
                     {
-                        FullDateTimePattern = "yyyy-MM-dd HH:mm:ss"
+                        FullDateTimePattern = "yyyy-MM-dd HH:mm:ss",
                     });
                 }
 
                 public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
                 {
                     if (value is DateTime dt)
-                    {
                         writer.WriteValue(dt.ToString("yyyy-MM-dd HH:mm:ss"));
-                    }
                     else
-                    {
                         writer.WriteValue(value);
-                    }
                 }
             }
         }
@@ -79,12 +82,10 @@ namespace Ritsukage.Library.EarthQuake
             if (!string.IsNullOrEmpty(rawData))
             {
                 var data = JObject.Parse(rawData.Substring(1, rawData.Length - 2));
-                foreach (var eq in (JArray)data["shuju"])
-                {
-                    result.Add(eq.ToObject<EarthQuakeData>());
-                }
+                foreach (var eq in (JArray)data["shuju"]) result.Add(eq.ToObject<EarthQuakeData>());
                 return result;
             }
+
             return null;
         }
     }

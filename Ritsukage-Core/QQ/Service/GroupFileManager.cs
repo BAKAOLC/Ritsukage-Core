@@ -13,10 +13,12 @@ using System.Threading.Tasks;
 
 namespace Ritsukage.QQ.Service
 {
-    [EventGroup, Service]
+    [EventGroup]
+    [Service]
     public static class GroupFileManager
     {
         #region 储存结构定义
+
         public class GroupFileFolderBase
         {
             public readonly List<GroupFileFolder> Folders = new();
@@ -56,7 +58,7 @@ namespace Ritsukage.QQ.Service
                     Name = info.Name,
                     CreateTime = info.CreateTime,
                     CreatorUserId = info.CreatorUserId,
-                    CreatorUserName = info.CreatorUserName
+                    CreatorUserName = info.CreatorUserName,
                 };
                 if (folders != null)
                     foreach (var data in folders)
@@ -84,7 +86,8 @@ namespace Ritsukage.QQ.Service
             public GroupFileFolderBase Folder { get; init; }
 
             public static GroupFile ConvertFromInfo(GroupFileInfo info, GroupFileFolderBase folder = null)
-                => new()
+            {
+                return new()
                 {
                     Id = info.Id,
                     Name = info.Name,
@@ -96,23 +99,28 @@ namespace Ritsukage.QQ.Service
                     DownloadCount = info.DownloadCount,
                     UploadUserId = info.UploadUserId,
                     UploadUserName = info.UploadUserName,
-                    Folder = folder
+                    Folder = folder,
                 };
+            }
         }
+
         #endregion
 
         #region 属性
-        static readonly ConcurrentDictionary<long, GroupFileRootFolder> Files = new();
 
-        static readonly object _lock = new object();
+        private static readonly ConcurrentDictionary<long, GroupFileRootFolder> Files = new();
 
-        static readonly List<long> Waiting = new();
-        static readonly List<long> Updating = new();
+        private static readonly object _lock = new();
 
-        static readonly Dictionary<long, SoraApi> ApiRecord = new();
+        private static readonly List<long> Waiting = new();
+        private static readonly List<long> Updating = new();
+
+        private static readonly Dictionary<long, SoraApi> ApiRecord = new();
+
         #endregion
 
         #region 公开方法
+
         public static Task Init()
         {
             new Thread(UpdateThread) { IsBackground = true }.Start();
@@ -128,6 +136,7 @@ namespace Ritsukage.QQ.Service
                 else
                     return root;
             }
+
             return null;
         }
 
@@ -139,21 +148,18 @@ namespace Ritsukage.QQ.Service
             {
                 result = root.Files.FirstOrDefault(predicate);
                 if (result == null)
-                {
                     foreach (var subFolder in root.Folders)
                     {
                         result = FindFile(group, subFolder.Name, predicate);
-                        if (result != null)
-                        {
-                            break;
-                        }
+                        if (result != null) break;
                     }
-                }
             }
+
             return result;
         }
 
-        public static List<GroupFile> FindFiles(long group, string folder = null, Func<GroupFile, bool> predicate = null)
+        public static List<GroupFile> FindFiles(long group, string folder = null,
+            Func<GroupFile, bool> predicate = null)
         {
             List<GroupFile> result = new();
             var root = GetFileList(group, folder);
@@ -171,19 +177,20 @@ namespace Ritsukage.QQ.Service
                             result.Add(file);
                 }
             }
+
             return result;
         }
 
         public static async Task WaitForGroupFileDictionaryUpdated(long group)
         {
-            bool isWaiting = false;
+            var isWaiting = false;
             lock (_lock)
             {
                 if (Waiting.Contains(group))
                     isWaiting = true;
             }
+
             if (isWaiting)
-            {
                 await Task.Run(() =>
                 {
                     while (Updating.Count == 0 || (!Updating.Contains(group) && Waiting.Contains(group)))
@@ -195,7 +202,6 @@ namespace Ritsukage.QQ.Service
                     while (Updating.Contains(group))
                         Thread.Sleep(100);
                 });
-            }
         }
 
         public static async Task RequestUpdateGroupFileList(SoraApi api, long group, bool wait = false)
@@ -208,6 +214,7 @@ namespace Ritsukage.QQ.Service
                     ApiRecord[group] = api;
                 }
             }
+
             if (wait)
                 await WaitForGroupFileDictionaryUpdated(group);
         }
@@ -215,10 +222,13 @@ namespace Ritsukage.QQ.Service
         [Event(typeof(ConnectEventArgs))]
         public static async void OnClientConnect(object sender, ConnectEventArgs args)
         {
-            (var status, var groups) = await args.SoraApi.GetGroupList();
+            var (status, groups) = await args.SoraApi.GetGroupList();
             if (status.RetCode == ApiStatusType.Ok)
                 foreach (var group in groups)
+                {
                     await RequestUpdateGroupFileList(args.SoraApi, group.GroupId);
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
         }
 
         [Event(typeof(FileUploadEventArgs))]
@@ -227,18 +237,18 @@ namespace Ritsukage.QQ.Service
             ConsoleLog.Debug(nameof(GroupFileManager), $"有成员上传新的群文件  {args.FileInfo.Name}  上传者 {args.Sender.Id}");
             await RequestUpdateGroupFileList(args.SoraApi, args.SourceGroup.Id);
         }
+
         #endregion
 
         #region 私有方法
-        static void UpdateThread()
+
+        private static void UpdateThread()
         {
             while (true)
             {
                 Thread.Sleep(1000);
                 if (Waiting.Count != 0)
-                {
                     foreach (var group in Waiting.ToArray())
-                    {
                         if (!Updating.Contains(group))
                         {
                             Waiting.Remove(group);
@@ -251,33 +261,26 @@ namespace Ritsukage.QQ.Service
                                 Updating.Remove(group);
                             });
                         }
-                    }
-                }
             }
         }
 
-        static async Task<bool> InternalUpdateGroupFileList(SoraApi api, long group)
+        private static async Task<bool> InternalUpdateGroupFileList(SoraApi api, long group)
         {
             GroupFileRootFolder root;
             lock (_lock)
             {
-                if (!Files.TryGetValue(group, out root))
-                {
-                    Files.TryAdd(group, root = new GroupFileRootFolder());
-                }
+                if (!Files.TryGetValue(group, out root)) Files.TryAdd(group, root = new());
             }
-            (var status, var files, var folders) = await api.GetGroupRootFiles(group);
+
+            var (status, files, folders) = await api.GetGroupRootFiles(group);
             if (status.RetCode == ApiStatusType.Ok)
             {
                 root.Folders.Clear();
                 root.Files.Clear();
-                foreach (var file in files)
-                {
-                    root.Files.Add(GroupFile.ConvertFromInfo(file, root));
-                }
+                foreach (var file in files) root.Files.Add(GroupFile.ConvertFromInfo(file, root));
                 foreach (var folder in folders)
                 {
-                    (var _status, var _files, var _folders) = await api.GetGroupFilesByFolder(group, folder.Id);
+                    var (_status, _files, _folders) = await api.GetGroupFilesByFolder(group, folder.Id);
                     if (_status.RetCode == ApiStatusType.Ok)
                     {
                         root.Folders.Add(GroupFileFolder.ConvertFromInfo(folder, _folders, _files));
@@ -294,8 +297,10 @@ namespace Ritsukage.QQ.Service
                 ConsoleLog.Error(nameof(GroupFileManager), $"文件列表更新失败: {group}  ErrorCode:{status.RetCode}");
                 return false;
             }
+
             return true;
         }
+
         #endregion
     }
 }

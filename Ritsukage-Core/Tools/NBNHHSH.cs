@@ -5,13 +5,13 @@ namespace Ritsukage.Tools
 {
     public static class NBNHHSH
     {
-        const string API = "https://lab.magiconch.com/api/nbnhhsh/guess";
+        private const string API = "https://lab.magiconch.com/api/nbnhhsh/guess";
 
         public static string[] Get(string origin)
         {
             var result = Utils.HttpPOST(API, new JObject
             {
-                ["text"] = origin
+                ["text"] = origin,
             }.ToString(), 20000, null, null, null, "application/json");
             var data = JArray.Parse(result)[0];
             var trans = (JArray)data["trans"];

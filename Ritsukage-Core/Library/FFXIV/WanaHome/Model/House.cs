@@ -47,6 +47,8 @@ namespace Ritsukage.Library.FFXIV.WanaHome.Model
 
         public string HouseName => $"{Territory} {Ward + 1:D2}-{Id + 1:D2}";
 
-        public string SellTimeSpan => StartSell.HasValue ? $"{DateTimeOffset.Now - StartSell.Value:d\\天hh\\时mm\\分ss\\秒}" : string.Empty;
+        public string SellTimeSpan => StartSell.HasValue
+            ? $"{DateTimeOffset.Now - StartSell.Value:d\\天hh\\时mm\\分ss\\秒}"
+            : string.Empty;
     }
 }

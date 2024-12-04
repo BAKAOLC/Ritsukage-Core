@@ -6,11 +6,13 @@ namespace Ritsukage.Tools
 {
     public static partial class BilibiliAVBVConverter
     {
-        static readonly char[] CharSet = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF".ToCharArray();
-        static readonly Dictionary<char, int> CharValue = new Dictionary<char, int>();
-        static readonly int[] Pos = new int[] { 11, 10, 3, 8, 4, 6, 2, 9, 5, 7 };
-        const long XOR = 177451812;
-        const long ADD = 8728348608;
+        private static readonly char[] CharSet =
+            "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF".ToCharArray();
+
+        private static readonly Dictionary<char, int> CharValue = new();
+        private static readonly int[] Pos = new int[] { 11, 10, 3, 8, 4, 6, 2, 9, 5, 7 };
+        private const long XOR = 177451812;
+        private const long ADD = 8728348608;
 
         public static string ToBV(string av)
         {
@@ -18,6 +20,7 @@ namespace Ritsukage.Tools
                 av = av[2..];
             return ToBV(long.Parse(av));
         }
+
         public static string ToBV(long av)
         {
             if (av <= 0)
@@ -38,10 +41,8 @@ namespace Ritsukage.Tools
             lock (CharValue)
             {
                 if (CharValue.Count == 0)
-                {
                     for (var i = 0; i < CharSet.Length; i++)
                         CharValue[CharSet[i]] = i;
-                }
             }
 
             if (!GetBVCheckRegex1().IsMatch(bv))
@@ -56,7 +57,7 @@ namespace Ritsukage.Tools
             long av = 0;
             for (var i = 0; i <= 5; ++i)
                 av += CharValue[chars[Pos[i]]] * (long)Math.Pow(58, i);
-            av = av - ADD ^ XOR;
+            av = (av - ADD) ^ XOR;
 
             if (av <= 0)
                 throw new($"得出错误的转换结果({av})");
@@ -64,8 +65,10 @@ namespace Ritsukage.Tools
             return av;
         }
 
-        [GeneratedRegex("^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
+        [GeneratedRegex(
+            "^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
         private static partial Regex GetBVCheckRegex1();
+
         [GeneratedRegex("^1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
         private static partial Regex GetBVCheckRegex2();
     }

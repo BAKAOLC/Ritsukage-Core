@@ -6,16 +6,18 @@ namespace Ritsukage.Library.Graphic
 {
     public static class MimeMapping
     {
-        static readonly Hashtable _mimeMappingTable;
+        private static readonly Hashtable _mimeMappingTable;
 
-        static void AddMimeMapping(string extension, string mimeType)
-            => _mimeMappingTable.Add(extension, mimeType);
+        private static void AddMimeMapping(string extension, string mimeType)
+        {
+            _mimeMappingTable.Add(extension, mimeType);
+        }
 
         public static string GetMimeMapping(string fileName)
         {
             fileName = Path.GetFileName(fileName);
             string text = null;
-            int num = fileName.LastIndexOf('.');
+            var num = fileName.LastIndexOf('.');
             if (num >= 0)
                 text = (string)_mimeMappingTable[fileName[num..]];
             if (string.IsNullOrWhiteSpace(text))
@@ -25,7 +27,7 @@ namespace Ritsukage.Library.Graphic
 
         static MimeMapping()
         {
-            _mimeMappingTable = new Hashtable(190, StringComparer.CurrentCultureIgnoreCase);
+            _mimeMappingTable = new(190, StringComparer.CurrentCultureIgnoreCase);
             AddMimeMapping(".323", "text/h323");
             AddMimeMapping(".asx", "video/x-ms-asf");
             AddMimeMapping(".acx", "application/internet-property-stream");

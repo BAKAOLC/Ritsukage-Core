@@ -13,10 +13,11 @@ namespace Ritsukage.Library.Feed
     {
         public MinecraftVersion()
             : base("https://rsshub.app/minecraft/version",
-                  "https://rsshub-indol-omega.vercel.app/minecraft/version")
-        { }
+                "https://rsshub-indol-omega.vercel.app/minecraft/version")
+        {
+        }
 
-        const string MojangMeta = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+        private const string MojangMeta = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
         public override Task<FeedData> Read()
         {
@@ -29,7 +30,8 @@ namespace Ritsukage.Library.Feed
                 sb.AppendLine("<channel>");
                 sb.AppendLine("<title><![CDATA[ Minecraft Java版游戏更新 ]]></title>");
                 sb.AppendLine("<link>https://www.minecraft.net/</link>");
-                sb.AppendLine("<description><![CDATA[ Minecraft Java版游戏更新 - Made with love by Ritsukage-Core]]></description>");
+                sb.AppendLine(
+                    "<description><![CDATA[ Minecraft Java版游戏更新 - Made with love by Ritsukage-Core]]></description>");
                 sb.AppendLine("<generator>Ritsukage-Core</generator>");
                 sb.AppendLine("<language>zh-cn</language>");
                 sb.AppendLine($"<lastBuildDate>{DateTime.Now:R}T</lastBuildDate>");
@@ -56,11 +58,13 @@ namespace Ritsukage.Library.Feed
                             sb.AppendLine($"<description><![CDATA[ {v} 过时的测试版更新 ]]></description>");
                             break;
                     }
+
                     sb.AppendLine($"<pubDate>{Convert.ToDateTime((string)version["releaseTime"]):R}</pubDate>");
                     sb.AppendLine($"<guid isPermaLink=\"false\">{(string)version["url"]}</guid>");
                     sb.AppendLine("<link>https://www.minecraft.net/</link>");
                     sb.AppendLine("</item>");
                 }
+
                 sb.AppendLine("</channel>");
                 sb.Append("</rss>");
                 rss = Reader.ReadFromString(sb.ToString());
@@ -71,6 +75,7 @@ namespace Ritsukage.Library.Feed
                     .CreateStringBuilder().AppendLine(MojangMeta)
                     .Append(ex.GetFormatString()).ToString());
             }
+
             if (rss == null)
                 return base.Read();
             else

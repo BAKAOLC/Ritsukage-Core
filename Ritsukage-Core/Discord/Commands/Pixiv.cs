@@ -15,27 +15,30 @@ namespace Ritsukage.Discord.Commands
 {
     public class Pixiv : ModuleBase<SocketCommandContext>
     {
-        static readonly string TitleContent = "``Pixiv ID: {0} 基础数据已获取，开始获取图像内容……``";
-        static readonly string InfoContent = "``Current: {0} / {1} Successed: {2}  Failed: {3}``";
+        private static readonly string TitleContent = "``Pixiv ID: {0} 基础数据已获取，开始获取图像内容……``";
+        private static readonly string InfoContent = "``Current: {0} / {1} Successed: {2}  Failed: {3}``";
 
-        static async Task UpdateMessage(IUserMessage message, string text)
+        private static async Task UpdateMessage(IUserMessage message, string text)
         {
             try
             {
                 await message.ModifyAsync(x => x.Content = text);
             }
             catch
-            { }
+            {
+            }
         }
 
-        static async Task UpdateInfo(IUserMessage message, params object[] args)
-            => await UpdateMessage(message, string.Format(InfoContent, args));
-
-        static readonly Queue<int> SendImageTaskQueue = new();
-
-        async Task SendImage(Illust detail, IUserMessage message = null)
+        private static async Task UpdateInfo(IUserMessage message, params object[] args)
         {
-            int id = detail.Id;
+            await UpdateMessage(message, string.Format(InfoContent, args));
+        }
+
+        private static readonly Queue<int> SendImageTaskQueue = new();
+
+        private async Task SendImage(Illust detail, IUserMessage message = null)
+        {
+            var id = detail.Id;
             SendImageTaskQueue.Enqueue(id);
             await Task.Run(async () =>
             {
@@ -49,9 +52,9 @@ namespace Ritsukage.Discord.Commands
                 else
                     await UpdateMessage(message, string.Format(TitleContent, id));
                 var info = await ReplyAsync("``== loading ==``");
-                int total = detail.Images.Length;
+                var total = detail.Images.Length;
                 int successed = 0, failed = 0;
-                int current = -1;
+                var current = -1;
                 await UpdateInfo(info, current + 1, total, successed, failed);
                 if (detail.IsUgoira)
                 {
@@ -59,7 +62,9 @@ namespace Ritsukage.Discord.Commands
                     await UpdateInfo(info, current + 1, total, successed, failed);
                     var ugoira = await detail.GetUgoira();
                     if (ugoira == null)
+                    {
                         await UpdateInfo(message, $"动图数据(pid: {id})获取失败");
+                    }
                     else
                     {
                         var img = await ugoira.LimitGifScale(350, 350);
@@ -77,7 +82,7 @@ namespace Ritsukage.Discord.Commands
                 }
                 else
                 {
-                    string[] streams = new string[total];
+                    var streams = new string[total];
                     foreach (var img in detail.Images)
                     {
                         current++;
@@ -92,7 +97,8 @@ namespace Ritsukage.Discord.Commands
                                 cache = await DownloadManager.Download(url, enableAria2Download: true);
                                 if (string.IsNullOrEmpty(cache))
                                 {
-                                    cache = await DownloadManager.Download(img.Original, detail.Url, enableAria2Download: true);
+                                    cache = await DownloadManager.Download(img.Original, detail.Url,
+                                        enableAria2Download: true);
                                     if (string.IsNullOrEmpty(cache))
                                     {
                                         failed++;
@@ -102,12 +108,14 @@ namespace Ritsukage.Discord.Commands
                                 }
                             }
                         }
-                        GraphicUtils.LimitGraphicScale(cache, 2500, 2500);
+
+                        GraphicUtils.LimitGraphicScale(cache, 2000, 2000, 8388608);
                         streams[current] = cache;
                         successed++;
                         await UpdateInfo(info, current + 1, total, successed, failed);
                     }
-                    for (int i = 0; i < total; i++)
+
+                    for (var i = 0; i < total; i++)
                     {
                         Stream stream = null;
                         try
@@ -118,10 +126,10 @@ namespace Ritsukage.Discord.Commands
                         {
                             ConsoleLog.Error("Discord Pixiv", ex.GetFormatString());
                         }
+
                         if (stream == null)
                             await ReplyAsync($"[图像 pixiv-{id}_p{i}.png 下载失败]");
                         else
-                        {
                             try
                             {
                                 await Context.Channel.SendFileAsync(stream, $"pixiv-{id}_p{i}.png");
@@ -130,22 +138,26 @@ namespace Ritsukage.Discord.Commands
                             {
                                 await Context.Channel.SendMessageAsync($"图像发送失败 pid:{id} p{i} \n {ex.Message}");
                             }
-                        }
+
                         await Task.Delay(1000);
                     }
                 }
+
                 try
                 {
                     await info.DeleteAsync();
                 }
                 catch
-                { }
+                {
+                }
+
                 try
                 {
                     await message.DeleteAsync();
                 }
                 catch
-                { }
+                {
+                }
             });
             SendImageTaskQueue.Dequeue();
         }
@@ -160,7 +172,9 @@ namespace Ritsukage.Discord.Commands
                 {
                     var detail = await Illust.Get(id);
                     if (detail == null)
+                    {
                         await message.ModifyAsync(x => x.Content = $"数据(pid:{id})获取失败，请稍后再试");
+                    }
                     else
                     {
                         var sb = new StringBuilder()
@@ -169,7 +183,8 @@ namespace Ritsukage.Discord.Commands
                             .AppendLine(detail.Caption)
                             .AppendLine($"Tags: {string.Join(" | ", detail.Tags)}")
                             .AppendLine($"Publish Date: {detail.CreateDate:yyyy-MM-dd HH:mm:ss}")
-                            .AppendLine($"Bookmarks: {detail.TotalBookmarks} Comments:{detail.TotalComments} Views:{detail.TotalView}")
+                            .AppendLine(
+                                $"Bookmarks: {detail.TotalBookmarks} Comments:{detail.TotalComments} Views:{detail.TotalView}")
                             .Append(detail.Url);
                         await message.ModifyAsync(x => x.Content = sb.ToString());
                         await SendImage(detail);
@@ -194,9 +209,7 @@ namespace Ritsukage.Discord.Commands
                     if (detail == null)
                         await message.ModifyAsync(x => x.Content = $"数据(pid:{id})获取失败，请稍后再试");
                     else
-                    {
                         await SendImage(detail, message);
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -205,7 +218,7 @@ namespace Ritsukage.Discord.Commands
             }
         }
 
-        static Stream CopyFile(string path)
+        private static Stream CopyFile(string path)
         {
             var stream = new MemoryStream();
             using var file = File.OpenRead(path);

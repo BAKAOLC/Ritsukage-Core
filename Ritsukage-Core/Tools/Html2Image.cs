@@ -14,6 +14,8 @@ namespace Ritsukage.Tools
         }
 
         public static Image<Rgba32> FromUrl(string url)
-            => FromHtmlString(Utils.HttpGET(url));
+        {
+            return FromHtmlString(Utils.HttpGET(url));
+        }
     }
 }

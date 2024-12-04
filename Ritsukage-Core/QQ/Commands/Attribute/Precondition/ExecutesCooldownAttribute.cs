@@ -31,12 +31,18 @@ namespace Ritsukage.QQ.Commands
                 return await CooldownService.CheckCooldown("qq", user, Tag, Seconds, false);
             }
             else if (args is GroupMessageEventArgs a)
+            {
                 return await CooldownService.CheckCooldown("qq", a.SourceGroup.Id, Tag, Seconds, true);
+            }
             else
+            {
                 return true;
+            }
         }
 
         public override string ToString()
-            => $"<Executes cooldown: {Seconds} seconds {(IsGroup ? "for group" : "for user")} with tag {Tag}>";
+        {
+            return $"<Executes cooldown: {Seconds} seconds {(IsGroup ? "for group" : "for user")} with tag {Tag}>";
+        }
     }
 }

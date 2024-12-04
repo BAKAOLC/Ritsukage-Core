@@ -23,25 +23,34 @@ namespace Ritsukage.Library.Service
                 Message = message,
                 Duplicate = duplicate,
                 Interval = interval,
-                EndTime = endTime
+                EndTime = endTime,
             }.InsertAsync();
         }
 
         public static async Task AddTipMessage(TipMessage.TipTargetType type, long id, DateTime time, string message)
-            => await AddTipMessage(type, id, time, message, false, TimeSpan.Zero, time);
+        {
+            await AddTipMessage(type, id, time, message, false, TimeSpan.Zero, time);
+        }
 
         public static async Task<TipMessage> GetTipMessageById(int id)
-            => await Database.FindAsync<TipMessage>(x => x.Id == id);
+        {
+            return await Database.FindAsync<TipMessage>(x => x.Id == id);
+        }
 
         public static async Task<TipMessage[]> GetTipMessages(TipMessage.TipTargetType type, long targetID)
-            => await Database.GetArrayAsync<TipMessage>(x => x.TargetType == type && x.TargetID == targetID);
+        {
+            return await Database.GetArrayAsync<TipMessage>(x => x.TargetType == type && x.TargetID == targetID);
+        }
 
         public static async Task<TipMessage[]> GetTipMessages(TipMessage.TipTargetType type, DateTime now)
-            => await Database.GetArrayAsync<TipMessage>(x => x.TargetType == type && x.TipTime <= now);
+        {
+            return await Database.GetArrayAsync<TipMessage>(x => x.TargetType == type && x.TipTime <= now);
+        }
 
         public static async Task RefreshTipMessages(DateTime now)
         {
-            var needUpdate = await Database.GetArrayAsync<TipMessage>(x => x.TipTime <= now && x.Duplicate && x.EndTime > now);
+            var needUpdate =
+                await Database.GetArrayAsync<TipMessage>(x => x.TipTime <= now && x.Duplicate && x.EndTime > now);
             foreach (var target in needUpdate)
             {
                 while (target.TipTime <= now)
@@ -53,6 +62,7 @@ namespace Ritsukage.Library.Service
                         target.TipTime -= target.Interval;
                 }
             }
+
             await Database.UpdateAllAsync(needUpdate);
             await Database.DeleteAll<TipMessage>(x => x.TipTime <= now);
         }

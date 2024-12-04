@@ -20,7 +20,7 @@ namespace Ritsukage.Library.Minecraft.Server
 
         public void Receive(byte[] buffer, int start, int offset, SocketFlags f)
         {
-            int read = 0;
+            var read = 0;
             while (read < offset)
                 read += C.Client.Receive(buffer, start + read, offset - read, f);
         }
@@ -33,7 +33,7 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>The data read from the cache as an array</returns>
         private static byte[] ReadData(int offset, List<byte> cache)
         {
-            byte[] result = cache.Take(offset).ToArray();
+            var result = cache.Take(offset).ToArray();
             cache.RemoveRange(0, offset);
             return result;
         }
@@ -46,15 +46,16 @@ namespace Ritsukage.Library.Minecraft.Server
         public byte[] ReadDataRAW(int offset)
         {
             if (offset > 0)
-            {
                 try
                 {
-                    byte[] cache = new byte[offset];
+                    var cache = new byte[offset];
                     Receive(cache, 0, offset, SocketFlags.None);
                     return cache;
                 }
-                catch (OutOfMemoryException) { }
-            }
+                catch (OutOfMemoryException)
+                {
+                }
+
             return Array.Empty<byte>();
         }
 
@@ -64,17 +65,18 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>The integer</returns>
         public int ReadNextVarIntRAW()
         {
-            int i = 0;
-            int j = 0;
-            byte[] tmp = new byte[1];
+            var i = 0;
+            var j = 0;
+            var tmp = new byte[1];
             while (true)
             {
                 Receive(tmp, 0, 1, SocketFlags.None);
                 int k = tmp[0];
-                i |= (k & 0x7F) << j++ * 7;
+                i |= (k & 0x7F) << (j++ * 7);
                 if (j > 5) throw new OverflowException("VarInt too big");
                 if ((k & 0x80) != 128) break;
             }
+
             return i;
         }
 
@@ -84,7 +86,7 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>The byte that was read</returns>
         public static byte ReadNextByte(List<byte> cache)
         {
-            byte result = cache[0];
+            var result = cache[0];
             cache.RemoveAt(0);
             return result;
         }
@@ -96,15 +98,16 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>The integer</returns>
         public static int ReadNextVarInt(List<byte> cache)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             while (true)
             {
                 int k = ReadNextByte(cache);
-                i |= (k & 0x7F) << j++ * 7;
+                i |= (k & 0x7F) << (j++ * 7);
                 if (j > 5) throw new OverflowException("VarInt too big");
                 if ((k & 0x80) != 128) break;
             }
+
             return i;
         }
 
@@ -115,11 +118,9 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>The string</returns>
         public static string ReadNextString(List<byte> cache)
         {
-            int length = ReadNextVarInt(cache);
+            var length = ReadNextVarInt(cache);
             if (length > 0)
-            {
                 return Encoding.UTF8.GetString(ReadData(length, cache));
-            }
             else return "";
         }
 
@@ -130,12 +131,13 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>Byte array for this integer</returns>
         public static byte[] GetVarInt(int paramInt)
         {
-            List<byte> bytes = new List<byte>();
+            var bytes = new List<byte>();
             while ((paramInt & -128) != 0)
             {
-                bytes.Add((byte)(paramInt & 127 | 128));
-                paramInt = (int)(((uint)paramInt) >> 7);
+                bytes.Add((byte)((paramInt & 127) | 128));
+                paramInt = (int)((uint)paramInt >> 7);
             }
+
             bytes.Add((byte)paramInt);
             return bytes.ToArray();
         }
@@ -147,8 +149,8 @@ namespace Ritsukage.Library.Minecraft.Server
         /// <returns>Array containing all the data</returns>
         public static byte[] ConcatBytes(params byte[][] bytes)
         {
-            List<byte> result = new List<byte>();
-            foreach (byte[] array in bytes)
+            var result = new List<byte>();
+            foreach (var array in bytes)
                 result.AddRange(array);
             return result.ToArray();
         }

@@ -14,9 +14,14 @@ namespace Ritsukage.Library.Netease.CloudMusic.Model
             Name = name;
             Pic = pic;
         }
-        public BaseAlbum(JToken data) : this((long)data["id"], (string)data["name"], (string)data["picUrl"]) { }
+
+        public BaseAlbum(JToken data) : this((long)data["id"], (string)data["name"], (string)data["picUrl"])
+        {
+        }
 
         public string GetPicUrl(int width, int height)
-            => Pic + $"?param={width}y{height}";
+        {
+            return Pic + $"?param={width}y{height}";
+        }
     }
 }

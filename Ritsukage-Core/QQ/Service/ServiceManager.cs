@@ -10,7 +10,8 @@ namespace Ritsukage.QQ.Service
 {
     public static class ServiceManager
     {
-        static bool _init = false;
+        private static bool _init = false;
+
         public static void Init()
         {
             if (_init) return;
@@ -21,14 +22,16 @@ namespace Ritsukage.QQ.Service
         public static void RegisterAllServices()
         {
             ConsoleLog.Debug("QQ Service", "Start loading...");
-            Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
-            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is ServiceAttribute).Any()).ToArray();
+            var types = Assembly.GetEntryAssembly().GetExportedTypes();
+            var cosType = types
+                .Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is ServiceAttribute).Any()).ToArray();
             foreach (var group in cosType)
             {
                 ConsoleLog.Debug("QQ Service", $"Register service group: {group.FullName}");
                 var method = group.GetMethod("Init");
                 method?.Invoke(null, null);
             }
+
             ConsoleLog.Debug("QQ Service", "Finish.");
         }
     }

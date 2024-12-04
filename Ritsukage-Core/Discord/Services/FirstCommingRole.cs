@@ -10,7 +10,7 @@ namespace Ritsukage.Discord.Services
     [Service]
     public class FirstCommingRole
     {
-        readonly DiscordSocketClient _discord;
+        private readonly DiscordSocketClient _discord;
 
         public FirstCommingRole(IServiceProvider services)
         {
@@ -18,7 +18,7 @@ namespace Ritsukage.Discord.Services
             _discord.UserJoined += UserJoined;
         }
 
-        async Task UserJoined(SocketGuildUser user)
+        private async Task UserJoined(SocketGuildUser user)
         {
             var data = await Database.FindAsync<DiscordGuildSetting>(x => x.Guild == Convert.ToInt64(user.Guild.Id));
             if (data != null && data.FirstCommingRole > 0 && !user.IsBot && !user.IsWebhook)

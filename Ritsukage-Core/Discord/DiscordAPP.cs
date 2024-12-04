@@ -19,7 +19,7 @@ namespace Ritsukage.Discord
         public IServiceProvider Service { get; private set; }
         public CommandService Command { get; private set; }
 
-        readonly string _token;
+        private readonly string _token;
 
         public DiscordAPP(string token)
         {
@@ -33,7 +33,10 @@ namespace Ritsukage.Discord
             _ = Service.GetRequiredService<CommandHandling>().InitializeAsync();
         }
 
-        public void Start() => Task.Run(RunThread);
+        public void Start()
+        {
+            Task.Run(RunThread);
+        }
 
         public void Stop()
         {
@@ -41,9 +44,9 @@ namespace Ritsukage.Discord
             Client?.Dispose();
         }
 
-        async void RunThread()
+        private async void RunThread()
         {
-            bool repeat = true;
+            var repeat = true;
             while (repeat)
             {
                 try
@@ -58,20 +61,21 @@ namespace Ritsukage.Discord
                     repeat = true;
                     ConsoleLog.Error("Discord", ConsoleLog.ErrorLogBuilder(e));
                 }
+
                 ConsoleLog.Info("Discord", "已断开连接，五秒后将重新登陆");
                 Thread.Sleep(5000);
             }
         }
 
-        static IServiceProvider ConfigureServices()
+        private static IServiceProvider ConfigureServices()
         {
-            var discordSocketClient = new DiscordSocketClient(new DiscordSocketConfig()
+            var discordSocketClient = new DiscordSocketClient(new()
             {
                 GatewayIntents = GatewayIntents.All,
 #if DEBUG
                     LogLevel = LogSeverity.Debug
 #else
-                LogLevel = LogSeverity.Info
+                LogLevel = LogSeverity.Info,
 #endif
             });
             var interactionService = new InteractionService(discordSocketClient, new()
@@ -79,7 +83,7 @@ namespace Ritsukage.Discord
 #if DEBUG
                     LogLevel = LogSeverity.Debug
 #else
-                LogLevel = LogSeverity.Info
+                LogLevel = LogSeverity.Info,
 #endif
             });
             var map = new ServiceCollection()
@@ -95,8 +99,10 @@ namespace Ritsukage.Discord
                 }))
                 .AddSingleton(interactionService)
                 .AddSingleton<Tools.Rand>();
-            Type[] types = Assembly.GetEntryAssembly().GetExportedTypes();
-            Type[] cosType = types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is ServiceAttribute).Any())?.ToArray() ?? Array.Empty<Type>();
+            var types = Assembly.GetEntryAssembly().GetExportedTypes();
+            var cosType =
+                types.Where(t => Attribute.GetCustomAttributes(t, true).Where(a => a is ServiceAttribute).Any())
+                    ?.ToArray() ?? Array.Empty<Type>();
             foreach (var service in cosType)
                 map.AddSingleton(service);
             var provider = map.BuildServiceProvider();
@@ -105,7 +111,7 @@ namespace Ritsukage.Discord
             return provider;
         }
 
-        Task LogClientAsync(LogMessage msg)
+        private Task LogClientAsync(LogMessage msg)
         {
             switch (msg.Severity)
             {
@@ -127,17 +133,19 @@ namespace Ritsukage.Discord
                     break;
                 default:
                     break;
-            };
+            }
+
+            ;
             return Task.CompletedTask;
         }
 
-        Task ReadyAsync()
+        private Task ReadyAsync()
         {
             ConsoleLog.Info("Discord", "连接成功，BOT账户：" + Client.CurrentUser);
             return Task.CompletedTask;
         }
 
-        Task MessageReceivedAsync(SocketMessage msg)
+        private Task MessageReceivedAsync(SocketMessage msg)
         {
             if (msg is SocketUserMessage sum)
             {
@@ -149,6 +157,7 @@ namespace Ritsukage.Discord
             {
                 ConsoleLog.Info("Discord", "系统消息: " + ssm.ToString());
             }
+
             return Task.CompletedTask;
         }
     }

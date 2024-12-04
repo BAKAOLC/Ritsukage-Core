@@ -24,7 +24,7 @@ namespace Ritsukage.Library.FFXIV.Struct
 
         public static EorzeaTime Now => new(DateTime.UtcNow);
 
-        double ET;
+        private double ET;
 
         public double TotalYears
         {
@@ -118,32 +118,62 @@ namespace Ritsukage.Library.FFXIV.Struct
 
         public EorzeaTime(DateTimeOffset time)
             : this(time.ToUnixTimeSeconds())
-        { }
+        {
+        }
 
         public EorzeaTime(DateTime time)
             : this((DateTimeOffset)time)
-        { }
+        {
+        }
 
         public override string ToString()
-            => $"Eorzer Time: {Year}/{Month:D2}/{Day:D2} {Hour:D2}:{Minute:D2}";
+        {
+            return $"Eorzer Time: {Year}/{Month:D2}/{Day:D2} {Hour:D2}:{Minute:D2}";
+        }
 
         public static EorzeaTime operator +(EorzeaTime et, TimeSpan ts)
-            => new(et.UnixTime + ts.TotalSeconds);
+        {
+            return new(et.UnixTime + ts.TotalSeconds);
+        }
+
         public static TimeSpan operator -(EorzeaTime et1, EorzeaTime et2)
-            => TimeSpan.FromSeconds((et1.ET - et2.ET) / EORZEA_TIME_CONST);
+        {
+            return TimeSpan.FromSeconds((et1.ET - et2.ET) / EORZEA_TIME_CONST);
+        }
+
         public static EorzeaTime operator -(EorzeaTime et, TimeSpan ts)
-            => new(et.UnixTime - ts.TotalSeconds);
+        {
+            return new(et.UnixTime - ts.TotalSeconds);
+        }
+
         public static bool operator ==(EorzeaTime et1, EorzeaTime et2)
-            => et1.ET == et2.ET;
+        {
+            return et1.ET == et2.ET;
+        }
+
         public static bool operator !=(EorzeaTime et1, EorzeaTime et2)
-            => !(et1 == et2);
+        {
+            return !(et1 == et2);
+        }
+
         public static bool operator <(EorzeaTime et1, EorzeaTime et2)
-            => et1.ET < et2.ET;
+        {
+            return et1.ET < et2.ET;
+        }
+
         public static bool operator >(EorzeaTime et1, EorzeaTime et2)
-            => et1.ET > et2.ET;
+        {
+            return et1.ET > et2.ET;
+        }
+
         public static bool operator <=(EorzeaTime et1, EorzeaTime et2)
-            => et1.ET <= et2.ET;
+        {
+            return et1.ET <= et2.ET;
+        }
+
         public static bool operator >=(EorzeaTime et1, EorzeaTime et2)
-            => et1.ET >= et2.ET;
+        {
+            return et1.ET >= et2.ET;
+        }
     }
 }

@@ -15,7 +15,10 @@ namespace Ritsukage.Library.Roll.Model
             Name = name;
         }
 
-        public override string ToString() => Name;
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
     public struct Logistics
@@ -29,10 +32,8 @@ namespace Ritsukage.Library.Roll.Model
         {
             var sb = new StringBuilder(ToString()).AppendLine().Append("详细信息：");
             if (Data != null)
-            {
                 foreach (var data in Data)
                     sb.AppendLine().Append(data.ToString());
-            }
             return sb.ToString();
         }
 
@@ -45,7 +46,7 @@ namespace Ritsukage.Library.Roll.Model
                 {
                     LogisticsStatus.OnWay => "投递中",
                     LogisticsStatus.Received => "已签收",
-                    _ => "问题邮件"
+                    _ => "问题邮件",
                 });
             return sb.ToString();
         }
@@ -60,10 +61,11 @@ namespace Ritsukage.Library.Roll.Model
                 {
                     var e = new LogisticsType[dataArray.Count];
                     for (var i = 0; i < dataArray.Count; i++)
-                        e[i] = new LogisticsType((int)dataArray[i]["logisticsTypeId"], (string)dataArray[i]["logisticsTypeName"]);
+                        e[i] = new((int)dataArray[i]["logisticsTypeId"], (string)dataArray[i]["logisticsTypeName"]);
                     return e;
                 }
             }
+
             return Array.Empty<LogisticsType>();
         }
 
@@ -81,25 +83,27 @@ namespace Ritsukage.Library.Roll.Model
                     {
                         var e = new LogisticsData[dataArray.Count];
                         for (var i = 0; i < dataArray.Count; i++)
-                            e[i] = new LogisticsData((string)dataArray[i]["time"], (string)dataArray[i]["desc"]);
+                            e[i] = new((string)dataArray[i]["time"], (string)dataArray[i]["desc"]);
                         _data = e;
                     }
-                    LogisticsStatus status = (string)data["status"] switch
+
+                    var status = (string)data["status"] switch
                     {
                         "在途中" => LogisticsStatus.OnWay,
                         "签收" => LogisticsStatus.Received,
-                        _ => LogisticsStatus.Problem
+                        _ => LogisticsStatus.Problem,
                     };
                     return new()
                     {
                         Id = (string)data["logisticsNo"],
                         Type = (string)data["logisticsType"],
                         Status = status,
-                        Data = _data
+                        Data = _data,
                     };
                 }
             }
-            throw new Exception("未能成功获取快递信息");
+
+            throw new("未能成功获取快递信息");
         }
     }
 
@@ -115,13 +119,15 @@ namespace Ritsukage.Library.Roll.Model
         }
 
         public override string ToString()
-            => Time + "  " + Desc;
+        {
+            return Time + "  " + Desc;
+        }
     }
 
     public enum LogisticsStatus
     {
         OnWay,
         Received,
-        Problem
+        Problem,
     }
 }

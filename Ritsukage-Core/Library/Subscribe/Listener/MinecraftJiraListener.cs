@@ -14,15 +14,19 @@ namespace Ritsukage.Library.Subscribe.Listener
 {
     public class MinecraftJiraListener : Base.SubscribeListener
     {
-        const string type = "minecraft jira";
+        private const string type = "minecraft jira";
 
-        readonly MinecraftJiraCheckMethod Checker = new();
+        private readonly MinecraftJiraCheckMethod Checker = new();
 
         public override async void RefreshListener()
-            => await Task.CompletedTask;
+        {
+            await Task.CompletedTask;
+        }
 
         public override async void Listen()
-            => Broadcast(await Checker.Check());
+        {
+            Broadcast(await Checker.Check());
+        }
 
         public override async void Broadcast(CheckResult.Base.SubscribeCheckResult result)
         {
@@ -38,63 +42,59 @@ namespace Ritsukage.Library.Subscribe.Listener
                         var bots = Program.QQServer.GetBotList();
                         var qqgroups = records.Where(x => x.Platform == "qq group")?.Select(x => x.Listener)?.ToArray();
                         if (qqgroups != null && qqgroups.Length > 0)
-                        {
                             foreach (var qqgroup in qqgroups)
-                            {
                                 if (long.TryParse(qqgroup, out var group))
                                 {
                                     ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group}");
                                     foreach (var bot in bots)
-                                    {
                                         _ = Task.Factory.StartNew(async () =>
-                                          {
-                                              var api = Program.QQServer.GetSoraApi(bot);
-                                              if (await api.CheckHasGroup(group))
-                                              {
-                                                  ConsoleLog.Debug("Subscribe", $"Boardcast updated info for group {group} with bot {bot}");
-                                                  await api.SendGroupMessage(group, msg);
-                                              }
-                                          });
-                                    }
+                                        {
+                                            var api = Program.QQServer.GetSoraApi(bot);
+                                            if (await api.CheckHasGroup(group))
+                                            {
+                                                ConsoleLog.Debug("Subscribe",
+                                                    $"Boardcast updated info for group {group} with bot {bot}");
+                                                await api.SendGroupMessage(group, msg);
+                                            }
+                                        });
                                 }
-                            }
-                        }
                     }
-                    if (Program.Config.Discord && Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
+
+                    if (Program.Config.Discord &&
+                        Program.DiscordServer.Client.ConnectionState == ConnectionState.Connected)
                     {
-                        var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)?.ToArray();
+                        var channels = records.Where(x => x.Platform == "discord channel")?.Select(x => x.Listener)
+                            ?.ToArray();
                         if (channels != null && channels.Length > 0)
-                        {
                             foreach (var id in channels)
-                            {
                                 if (ulong.TryParse(id, out var cid))
-                                {
                                     _ = Task.Factory.StartNew(async () =>
                                     {
-                                        ConsoleLog.Debug("Subscribe", $"Boardcast updated info to discord channel {cid}");
+                                        ConsoleLog.Debug("Subscribe",
+                                            $"Boardcast updated info to discord channel {cid}");
                                         try
                                         {
-                                            var channel = (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
+                                            var channel =
+                                                (SocketTextChannel)Program.DiscordServer.Client.GetChannel(cid);
                                             await channel?.SendMessageAsync(msg);
                                         }
                                         catch
                                         {
                                         }
                                     });
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
 
-        static string GetString(MinecraftJiraCheckResult result)
-            => new StringBuilder()
-            .AppendLine("[Minecraft Jira]")
-            .AppendLine("哇哦，Bugjang杀死了这些虫子:")
-            .AppendLine(string.Join(Environment.NewLine, result.Data.Select(x => x.Title)))
-            .Append($"统计时间: {result.From:yyyy-MM-dd HH:mm} ~ {result.To:yyyy-MM-dd HH:mm}")
-            .ToString();
+        private static string GetString(MinecraftJiraCheckResult result)
+        {
+            return new StringBuilder()
+                .AppendLine("[Minecraft Jira]")
+                .AppendLine("哇哦，Bugjang杀死了这些虫子:")
+                .AppendLine(string.Join(Environment.NewLine, result.Data.Select(x => x.Title)))
+                .Append($"统计时间: {result.From:yyyy-MM-dd HH:mm} ~ {result.To:yyyy-MM-dd HH:mm}")
+                .ToString();
+        }
     }
 }

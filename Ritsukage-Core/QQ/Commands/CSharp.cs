@@ -8,15 +8,16 @@ using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup("Utils"), OnlyForSuperUser]
+    [CommandGroup("Utils")]
+    [OnlyForSuperUser]
     public static class CSharp
     {
-        static readonly ScriptOptions Options = BuildScriptOptions();
+        private static readonly ScriptOptions Options = BuildScriptOptions();
 
         [Command("csharp")]
         [CommandDescription("执行C#代码")]
         [ParameterDescription(1, "代码")]
-        public async static void Admin(SoraMessage e, string code)
+        public static async void Admin(SoraMessage e, string code)
         {
             code = SoraMessage.Escape(e.Message.RawText[8..]);
             try
@@ -30,19 +31,19 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        static ScriptOptions BuildScriptOptions()
+        private static ScriptOptions BuildScriptOptions()
         {
             var list = new List<Assembly>
             {
-                Assembly.GetAssembly(typeof(CSharp))
+                Assembly.GetAssembly(typeof(CSharp)),
             };
             GetReferanceAssemblies(Assembly.GetExecutingAssembly(), list);
             return ScriptOptions.Default
-            .WithFileEncoding(Encoding.UTF8)
-            .WithReferences(list);
+                .WithFileEncoding(Encoding.UTF8)
+                .WithReferences(list);
         }
 
-        static void GetReferanceAssemblies(Assembly assembly, List<Assembly> list = null)
+        private static void GetReferanceAssemblies(Assembly assembly, List<Assembly> list = null)
         {
             foreach (var a in assembly.GetReferencedAssemblies())
             {
@@ -52,7 +53,9 @@ namespace Ritsukage.QQ.Commands
                     list.Add(ass);
                     GetReferanceAssemblies(ass, list);
                 }
-            };
+            }
+
+            ;
         }
     }
 }

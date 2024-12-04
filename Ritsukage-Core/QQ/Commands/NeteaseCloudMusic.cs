@@ -27,32 +27,34 @@ namespace Ritsukage.QQ.Commands
         {
             var detail = await CloudMusicApi.GetSongDetail(id);
             if (detail == null)
+            {
                 await e.ReplyToOriginal("曲目信息获取失败");
+            }
             else
             {
                 var url = await CloudMusicApi.GetSongUrl(id, 128000);
                 if (url.Id == detail.Id && url.Id == id)
                 {
                     await e.Reply(SoraSegment.Image(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512),
-                        enableAria2Download: true, enableSimpleDownload: true)),
+                            enableAria2Download: true, enableSimpleDownload: true)),
                         new StringBuilder().AppendLine()
-                        .AppendLine("♬ " + detail.Name)
-                        .AppendLine("✎ " + string.Join(" / ", detail.Artists))
-                        .AppendLine(detail.Url)
-                        .Append("√ 曲目链接已解析，正在下载中……")
-                        .ToString());
+                            .AppendLine("♬ " + detail.Name)
+                            .AppendLine("✎ " + string.Join(" / ", detail.Artists))
+                            .AppendLine(detail.Url)
+                            .Append("√ 曲目链接已解析，正在下载中……")
+                            .ToString());
                     await e.Reply(SoraSegment.Record(url.Url));
                 }
                 else
                 {
                     await e.Reply(SoraSegment.Image(await DownloadManager.Download(detail.Album.GetPicUrl(512, 512),
-                        enableAria2Download: true, enableSimpleDownload: true)),
+                            enableAria2Download: true, enableSimpleDownload: true)),
                         new StringBuilder().AppendLine()
-                        .AppendLine("♬ " + detail.Name)
-                        .AppendLine("✎ " + string.Join(" / ", detail.Artists))
-                        .AppendLine(detail.Url)
-                        .Append("× 解析曲目链接失败")
-                        .ToString());
+                            .AppendLine("♬ " + detail.Name)
+                            .AppendLine("✎ " + string.Join(" / ", detail.Artists))
+                            .AppendLine(detail.Url)
+                            .Append("× 解析曲目链接失败")
+                            .ToString());
                 }
             }
         }

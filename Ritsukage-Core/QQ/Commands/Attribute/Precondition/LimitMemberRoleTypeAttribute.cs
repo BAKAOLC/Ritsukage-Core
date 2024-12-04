@@ -22,6 +22,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"<Limit member role type: {Role}>";
+        {
+            return $"<Limit member role type: {Role}>";
+        }
     }
 }

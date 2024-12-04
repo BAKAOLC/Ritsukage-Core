@@ -21,7 +21,9 @@ namespace Ritsukage.QQ.Commands
                 }
             }
             catch
-            { }
+            {
+            }
+
             await e.ReplyToOriginal($"{origin} 未能成功获取到猜测内容");
         }
     }

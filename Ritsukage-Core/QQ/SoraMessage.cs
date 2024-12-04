@@ -23,8 +23,8 @@ namespace Ritsukage.QQ
             public static List<SoraSegment> ToSoraSegment(string msg)
             {
                 List<SoraSegment> codes = new();
-                int n = 0;
-                int i = msg.IndexOf("[", n);
+                var n = 0;
+                var i = msg.IndexOf("[", n);
                 while (i < msg.Length && i >= n)
                 {
                     var e = msg.IndexOf("]", i);
@@ -44,6 +44,7 @@ namespace Ritsukage.QQ
                                     param[x[0]] = Escape(x[1]);
                                 }
                             }
+
                             switch (m.Groups["type"].Value)
                             {
                                 case "text":
@@ -68,12 +69,16 @@ namespace Ritsukage.QQ
                                         codes.Add(SoraSegment.At(long.Parse(param["qq"])));
                                     break;
                                 case "share":
-                                    codes.Add(SoraSegment.Share(param["url"], param["title"], param["content"], param["image"]));
+                                    codes.Add(SoraSegment.Share(param["url"], param["title"], param["content"],
+                                        param["image"]));
                                     break;
                             }
                         }
                         else
+                        {
                             codes.Add(SoraSegment.Text(Escape(msg[i..(e + 1)])));
+                        }
+
                         i = msg.IndexOf("[", n = e + 1);
                     }
                     else
@@ -82,6 +87,7 @@ namespace Ritsukage.QQ
                         i = msg.IndexOf("[", n = i + 1);
                     }
                 }
+
                 codes.Add(SoraSegment.Text(Escape(msg[n..])));
                 return codes;
             }
@@ -90,7 +96,6 @@ namespace Ritsukage.QQ
             {
                 var sb = new StringBuilder();
                 foreach (var code in codes)
-                {
                     switch (code.MessageType)
                     {
                         case SegmentType.Text:
@@ -109,11 +114,12 @@ namespace Ritsukage.QQ
                             sb.Append($"[CQ:at,qq={((AtSegment)code.Data).Target}]");
                             break;
                         case SegmentType.Share:
-                            ShareSegment s = (ShareSegment)code.Data;
-                            sb.Append($"[CQ:share,url={Encode(s.Url)},title={Encode(s.Title)},content={Encode(s.Content)},image={Encode(s.ImageUrl)}]");
+                            var s = (ShareSegment)code.Data;
+                            sb.Append(
+                                $"[CQ:share,url={Encode(s.Url)},title={Encode(s.Title)},content={Encode(s.Content)},image={Encode(s.ImageUrl)}]");
                             break;
                     }
-                }
+
                 return sb.ToString();
             }
 
@@ -209,7 +215,9 @@ namespace Ritsukage.QQ
         }
 
         public override string ToString()
-            => Message.ToString();
+        {
+            return Message.ToString();
+        }
 
         public async ValueTask Recall()
         {
@@ -225,7 +233,7 @@ namespace Ritsukage.QQ
                 return await gm.Repeat();
             else if (Event is PrivateMessageEventArgs pm)
                 return await pm.Repeat();
-            return (default(ApiStatus), -1);
+            return (default, -1);
         }
 
         public async ValueTask<(ApiStatus apiStatus, int messageId)> Reply(params object[] msg)
@@ -234,7 +242,7 @@ namespace Ritsukage.QQ
                 return await gm.Reply(BuildMessageBody(msg));
             else if (Event is PrivateMessageEventArgs pm)
                 return await pm.Reply(BuildMessageBody(msg));
-            return (default(ApiStatus), -1);
+            return (default, -1);
         }
 
         public async ValueTask<(ApiStatus apiStatus, int messageId)> ReplyToOriginal(params object[] msg)
@@ -243,65 +251,82 @@ namespace Ritsukage.QQ
                 return await gm.Reply(BuildMessageBody(SoraSegment.Reply(Message.MessageId), msg));
             else if (Event is PrivateMessageEventArgs pm)
                 return await pm.Reply(BuildMessageBody(SoraSegment.Reply(Message.MessageId), msg));
-            return (default(ApiStatus), -1);
+            return (default, -1);
         }
 
         public async ValueTask<(ApiStatus apiStatus, int messageId)> AutoAtReply(params object[] msg)
         {
             if (Event is GroupMessageEventArgs gm)
-            {
                 await gm.Reply(BuildMessageBody(gm.Sender.At(), msg));
-            }
             else if (Event is PrivateMessageEventArgs pm)
                 await pm.Reply(BuildMessageBody(msg));
-            return (default(ApiStatus), -1);
+            return (default, -1);
         }
 
         public async ValueTask<(ApiStatus apiStatus, int messageId)> SendPrivateMessage(params object[] msg)
-            => await Sender.SendPrivateMessage(BuildMessageBody(msg));
+        {
+            return await Sender.SendPrivateMessage(BuildMessageBody(msg));
+        }
 
         public async Task<UserCoins> GetCoins()
-            => await CoinsService.GetUserCoins("qq", Sender.Id);
+        {
+            return await CoinsService.GetUserCoins("qq", Sender.Id);
+        }
 
         public async Task<bool> CheckCoins(long count, bool disableFree = false)
-            => await CoinsService.CheckUserCoins("qq", Sender.Id, count, disableFree);
+        {
+            return await CoinsService.CheckUserCoins("qq", Sender.Id, count, disableFree);
+        }
 
         public async Task<UserCoins> AddCoins(long count)
-            => await CoinsService.AddUserCoins("qq", Sender.Id, count);
+        {
+            return await CoinsService.AddUserCoins("qq", Sender.Id, count);
+        }
 
         public async Task<UserCoins> RemoveCoins(long count, bool disableFree = false)
-            => await CoinsService.RemoveUserCoins("qq", Sender.Id, count, disableFree);
+        {
+            return await CoinsService.RemoveUserCoins("qq", Sender.Id, count, disableFree);
+        }
 
         public async Task<bool> CheckCooldown(string tag, int seconds)
-            => await CooldownService.CheckCooldown("qq", Sender.Id, tag, seconds, false);
+        {
+            return await CooldownService.CheckCooldown("qq", Sender.Id, tag, seconds, false);
+        }
 
         public async Task UpdateCooldown(string tag)
-            => await CooldownService.UpdateCooldown("qq", Sender.Id, tag, false);
+        {
+            await CooldownService.UpdateCooldown("qq", Sender.Id, tag, false);
+        }
 
         public async Task<bool> CheckGroupCooldown(string tag, int seconds)
-            => await CooldownService.CheckCooldown("qq", SourceGroup.Id, tag, seconds, true);
+        {
+            return await CooldownService.CheckCooldown("qq", SourceGroup.Id, tag, seconds, true);
+        }
 
         public async Task UpdateGroupCooldown(string tag)
-            => await CooldownService.UpdateCooldown("qq", SourceGroup.Id, tag, true);
+        {
+            await CooldownService.UpdateCooldown("qq", SourceGroup.Id, tag, true);
+        }
 
-        public static string Escape(string s) => System.Web.HttpUtility.HtmlDecode(s);
+        public static string Escape(string s)
+        {
+            return System.Web.HttpUtility.HtmlDecode(s);
+        }
 
-        public static string Encode(string s) => s.Replace("&", "&amp;").Replace("[", "&#91;").Replace("]", "&#93;").Replace(",", "&#44;");
-
-        public static MessageBody BuildMessageBody(IEnumerable<SoraSegment> segments)
-            => segments.ToMessageBody();
-
-        public static MessageBody BuildMessageBody(IEnumerable<object> segments)
-            => BuildMessageBody(BuildSoraSegment(segments));
+        public static string Encode(string s)
+        {
+            return s.Replace("&", "&amp;").Replace("[", "&#91;").Replace("]", "&#93;").Replace(",", "&#44;");
+        }
 
         public static MessageBody BuildMessageBody(params object[] msg)
-            => BuildMessageBody(BuildSoraSegment(msg));
+        {
+            return BuildSoraSegment(msg).ToMessageBody();
+        }
 
-        static IEnumerable<SoraSegment> InnerBuildSoraSegment(IEnumerable<object> data)
+        private static IEnumerable<SoraSegment> InnerBuildSoraSegment(IEnumerable<object> data)
         {
             var result = new List<SoraSegment>();
             foreach (var obj in data)
-            {
                 if (obj is IEnumerable<SoraSegment> segs)
                     foreach (var o in InnerBuildSoraSegment(segs))
                         result.Add(o);
@@ -312,29 +337,28 @@ namespace Ritsukage.QQ
                     result.Add(seg);
                 else
                     result.Add(SoraSegment.Text(obj.ToString()));
-            }
             return result;
         }
 
-        static IEnumerable<SoraSegment> InnerBuildSoraSegment(IEnumerable<SoraSegment> data)
-            => InnerBuildSoraSegment(data.Cast<object>());
+        private static IEnumerable<SoraSegment> InnerBuildSoraSegment(IEnumerable<SoraSegment> data)
+        {
+            return InnerBuildSoraSegment(data.Cast<object>());
+        }
 
         public static List<SoraSegment> BuildSoraSegment(params object[] msg)
         {
             var result = new List<SoraSegment>();
             foreach (var obj in msg)
-            {
                 if (obj is IEnumerable<SoraSegment> segs)
                     foreach (var o in InnerBuildSoraSegment(segs))
                         result.Add(o);
-                else if(obj is IEnumerable<object> e)
+                else if (obj is IEnumerable<object> e)
                     foreach (var o in InnerBuildSoraSegment(e))
                         result.Add(o);
                 else if (obj is SoraSegment seg)
                     result.Add(seg);
                 else
                     result.Add(SoraSegment.Text(obj.ToString()));
-            }
             return result;
         }
     }

@@ -7,18 +7,18 @@ namespace Ritsukage.Library.Service
 {
     public static class CoinsService
     {
-        const long DailyFreeCoins = 30;
-        const long BaseCoins = 0;
+        private const long DailyFreeCoins = 30;
+        private const long BaseCoins = 0;
 
         public static async Task<UserCoins> GetUserCoins(string type, long userid)
         {
-            DateTime date = DateTime.Now.Date;
-            UserData data = type switch
+            var date = DateTime.Now.Date;
+            var data = type switch
             {
                 "qq" => await Database.FindAsync<UserData>(x => x.QQ == userid),
                 "discord" => await Database.FindAsync<UserData>(x => x.Discord == userid),
                 "bilibili" => await Database.FindAsync<UserData>(x => x.Bilibili == userid),
-                _ => throw new Exception("不支持的用户来源：" + type),
+                _ => throw new("不支持的用户来源：" + type),
             };
             if (data == null)
             {
@@ -26,7 +26,7 @@ namespace Ritsukage.Library.Service
                 {
                     Coins = BaseCoins,
                     FreeCoins = DailyFreeCoins,
-                    FreeCoinsDate = date
+                    FreeCoinsDate = date,
                 };
                 switch (type)
                 {
@@ -40,8 +40,9 @@ namespace Ritsukage.Library.Service
                         data.Bilibili = Convert.ToInt32(userid);
                         break;
                     default:
-                        throw new Exception("不支持的用户来源：" + type);
+                        throw new("不支持的用户来源：" + type);
                 }
+
                 await Database.InsertAsync(data);
             }
             else
@@ -51,8 +52,10 @@ namespace Ritsukage.Library.Service
                     data.FreeCoins = DailyFreeCoins;
                     data.FreeCoinsDate = date;
                 }
+
                 await Database.UpdateAsync(data);
             }
+
             return new() { Coins = data.Coins, FreeCoins = data.FreeCoins };
         }
 
@@ -67,13 +70,13 @@ namespace Ritsukage.Library.Service
 
         public static async Task<UserCoins> AddUserCoins(string type, long userid, long count)
         {
-            DateTime date = DateTime.Now.Date;
-            UserData data = type switch
+            var date = DateTime.Now.Date;
+            var data = type switch
             {
                 "qq" => await Database.FindAsync<UserData>(x => x.QQ == userid),
                 "discord" => await Database.FindAsync<UserData>(x => x.Discord == userid),
                 "bilibili" => await Database.FindAsync<UserData>(x => x.Bilibili == userid),
-                _ => throw new Exception("不支持的用户来源：" + type),
+                _ => throw new("不支持的用户来源：" + type),
             };
             if (data == null)
             {
@@ -81,7 +84,7 @@ namespace Ritsukage.Library.Service
                 {
                     Coins = BaseCoins,
                     FreeCoins = DailyFreeCoins,
-                    FreeCoinsDate = date
+                    FreeCoinsDate = date,
                 };
                 switch (type)
                 {
@@ -95,8 +98,9 @@ namespace Ritsukage.Library.Service
                         data.Bilibili = Convert.ToInt32(userid);
                         break;
                     default:
-                        throw new Exception("不支持的用户来源：" + type);
+                        throw new("不支持的用户来源：" + type);
                 }
+
                 await Database.InsertAsync(data);
             }
             else
@@ -107,20 +111,22 @@ namespace Ritsukage.Library.Service
                     data.FreeCoinsDate = date;
                 }
             }
+
             data.Coins += count;
             await Database.UpdateAsync(data);
             return new() { Coins = data.Coins, FreeCoins = data.FreeCoins };
         }
 
-        public static async Task<UserCoins> RemoveUserCoins(string type, long userid, long count, bool disableFree = false)
+        public static async Task<UserCoins> RemoveUserCoins(string type, long userid, long count,
+            bool disableFree = false)
         {
-            DateTime date = DateTime.Now.Date;
-            UserData data = type switch
+            var date = DateTime.Now.Date;
+            var data = type switch
             {
                 "qq" => await Database.FindAsync<UserData>(x => x.QQ == userid),
                 "discord" => await Database.FindAsync<UserData>(x => x.Discord == userid),
                 "bilibili" => await Database.FindAsync<UserData>(x => x.Bilibili == userid),
-                _ => throw new Exception("不支持的用户来源：" + type),
+                _ => throw new("不支持的用户来源：" + type),
             };
             if (data == null)
             {
@@ -128,7 +134,7 @@ namespace Ritsukage.Library.Service
                 {
                     Coins = BaseCoins,
                     FreeCoins = DailyFreeCoins,
-                    FreeCoinsDate = date
+                    FreeCoinsDate = date,
                 };
                 switch (type)
                 {
@@ -142,8 +148,9 @@ namespace Ritsukage.Library.Service
                         data.Bilibili = Convert.ToInt32(userid);
                         break;
                     default:
-                        throw new Exception("不支持的用户来源：" + type);
+                        throw new("不支持的用户来源：" + type);
                 }
+
                 await Database.InsertAsync(data);
             }
             else
@@ -154,18 +161,24 @@ namespace Ritsukage.Library.Service
                     data.FreeCoinsDate = date;
                 }
             }
+
             if (disableFree)
+            {
                 data.Coins -= count;
+            }
             else
             {
                 if (data.FreeCoins >= count)
+                {
                     data.FreeCoins -= count;
+                }
                 else
                 {
-                    data.Coins -= (count - data.FreeCoins);
+                    data.Coins -= count - data.FreeCoins;
                     data.FreeCoins = 0;
                 }
             }
+
             await Database.UpdateAsync(data);
             return new() { Coins = data.Coins, FreeCoins = data.FreeCoins };
         }

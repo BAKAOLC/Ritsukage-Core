@@ -5,13 +5,14 @@ using System.Linq;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup("OCR"), OnlyForSuperUser]
+    [CommandGroup("OCR")]
+    [OnlyForSuperUser]
     public static class OCR
     {
-        static OCRSpaceApi Api;
+        private static OCRSpaceApi Api;
 
-        static readonly ApiHost Host = ApiHost.Asia;
-        static readonly OCREngine Engine = OCREngine.Engine5;
+        private static readonly ApiHost Host = ApiHost.Asia;
+        private static readonly OCREngine Engine = OCREngine.Engine5;
 
         [Command("ocr")]
         [CommandDescription("执行OCR")]
@@ -19,10 +20,7 @@ namespace Ritsukage.QQ.Commands
         {
             if (string.IsNullOrWhiteSpace(Program.Config.OCRSpaceToken))
                 return;
-            if (Api == null)
-            {
-                Api = new(Program.Config.OCRSpaceToken, Host, Engine);
-            }
+            if (Api == null) Api = new(Program.Config.OCRSpaceToken, Host, Engine);
             try
             {
                 var imgs = e.Message.GetAllImage();
@@ -31,12 +29,11 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("未检测到任何图像");
                     return;
                 }
+
                 var response = await Api.DoOCR(imgs.First().Url, Language.chs);
                 if (response.OCRExitCode == OCRExitCode.Success)
-                {
                     await e.ReplyToOriginal("[OCR]", Environment.NewLine,
                         string.Join(Environment.NewLine, response.ParsedResults.Select(x => x.ParsedText)));
-                }
             }
             catch
             {

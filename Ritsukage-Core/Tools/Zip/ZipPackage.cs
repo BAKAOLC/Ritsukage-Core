@@ -8,7 +8,7 @@ namespace Ritsukage.Tools.Zip
 {
     public class ZipPackage : IDisposable
     {
-        ZipFile Zip;
+        private ZipFile Zip;
 
         public string Password
         {
@@ -21,14 +21,14 @@ namespace Ritsukage.Tools.Zip
             set => Zip.SetComment(value);
         }
 
-        public string[] Files => ((IEnumerable<ZipEntry>)Zip).Where(x=>x.IsFile).Select(x => x.Name).ToArray();
+        public string[] Files => ((IEnumerable<ZipEntry>)Zip).Where(x => x.IsFile).Select(x => x.Name).ToArray();
 
         public Stream GetFileStream(string file)
         {
             var entry = Zip.GetEntry(file);
             var stream = new MemoryStream();
-            Stream input = Zip.GetInputStream(entry);
-            byte[] buffer = new byte[2048];
+            var input = Zip.GetInputStream(entry);
+            var buffer = new byte[2048];
             int length;
             while ((length = input.Read(buffer, 0, 2048)) > 0)
                 stream.Write(buffer, 0, length);
@@ -49,10 +49,15 @@ namespace Ritsukage.Tools.Zip
         }
 
         #region 构造
-        ZipPackage() { }
+
+        private ZipPackage()
+        {
+        }
 
         ~ZipPackage()
-            => Dispose();
+        {
+            Dispose();
+        }
 
         public void Dispose()
         {
@@ -64,7 +69,7 @@ namespace Ritsukage.Tools.Zip
         {
             var package = new ZipPackage
             {
-                Zip = new ZipFile(path)
+                Zip = new(path),
             };
             package.Password = password;
             return package;
@@ -74,7 +79,7 @@ namespace Ritsukage.Tools.Zip
         {
             var package = new ZipPackage
             {
-                Zip = new ZipFile(stream)
+                Zip = new(stream),
             };
             package.Password = password;
             return package;
@@ -84,11 +89,12 @@ namespace Ritsukage.Tools.Zip
         {
             var package = new ZipPackage
             {
-                Zip = ZipFile.Create(new MemoryStream())
+                Zip = ZipFile.Create(new MemoryStream()),
             };
             package.Password = password;
             return package;
         }
+
         #endregion
     }
 }

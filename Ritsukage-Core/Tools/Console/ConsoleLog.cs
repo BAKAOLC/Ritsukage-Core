@@ -10,31 +10,44 @@ namespace Ritsukage.Tools.Console
     public static class ConsoleLog
     {
         #region Log等级设置
+
         private static LogLevel Level = LogLevel.Info;
 
         /// <summary>
         /// 设置日志等级
         /// </summary>
         /// <param name="level">LogLevel</param>
-        public static void SetLogLevel(LogLevel level) => Level = level;
+        public static void SetLogLevel(LogLevel level)
+        {
+            Level = level;
+        }
 
         /// <summary>
         /// 禁用log
         /// </summary>
-        public static void SetNoLog() => Level = (LogLevel)5;
+        public static void SetNoLog()
+        {
+            Level = (LogLevel)5;
+        }
+
         #endregion
 
         #region 控制台锁
+
         private static readonly object ConsoleWriterLock = new();
+
         #endregion
 
         #region 格式化错误Log
-        static string FormatException(Exception e)
-            => new StringBuilder()
-            .AppendLine("Error:" + e.GetType().FullName)
-            .AppendLine("Message:" + e.Message)
-            .AppendLine("Stack Trace:")
-            .Append(e.StackTrace).ToString();
+
+        private static string FormatException(Exception e)
+        {
+            return new StringBuilder()
+                .AppendLine("Error:" + e.GetType().FullName)
+                .AppendLine("Message:" + e.Message)
+                .AppendLine("Stack Trace:")
+                .Append(e.StackTrace).ToString();
+        }
 
         /// <summary>
         /// 生成格式化的错误Log文本
@@ -44,26 +57,39 @@ namespace Ritsukage.Tools.Console
         public static string ErrorLogBuilder(Exception e, bool showInnerException)
         {
             var sb = new StringBuilder().AppendLine()
-            .AppendLine("==============ERROR==============")
-            .AppendLine(FormatException(e));
+                .AppendLine("==============ERROR==============")
+                .AppendLine(FormatException(e));
             if (showInnerException)
-            {
                 while (e.InnerException != null)
                 {
                     sb.AppendLine("==============INNER==============")
                         .AppendLine(FormatException(e.InnerException));
                     e = e.InnerException;
                 }
-            }
+
             sb.Append("=================================");
             return sb.ToString();
         }
-        public static string ErrorLogBuilder(Exception e) => ErrorLogBuilder(e, false);
-        public static string GetFormatString(this Exception e, bool showInnerException) => ErrorLogBuilder(e, showInnerException);
-        public static string GetFormatString(this Exception e) => ErrorLogBuilder(e);
+
+        public static string ErrorLogBuilder(Exception e)
+        {
+            return ErrorLogBuilder(e, false);
+        }
+
+        public static string GetFormatString(this Exception e, bool showInnerException)
+        {
+            return ErrorLogBuilder(e, showInnerException);
+        }
+
+        public static string GetFormatString(this Exception e)
+        {
+            return ErrorLogBuilder(e);
+        }
+
         #endregion
 
         #region 格式化控制台Log函数
+
         /// <summary>
         /// 向控制台发送Info信息
         /// </summary>
@@ -166,6 +192,7 @@ namespace Ritsukage.Tools.Console
                 System.Console.ForegroundColor = ConsoleColor.White;
             }
         }
+
         #endregion
     }
 }

@@ -8,25 +8,19 @@ namespace Ritsukage.Discord.Commands
         [Command("快递详情")]
         public async Task Normal(string id)
         {
-            if (await Context.User.CheckCoins(15))
+            await Context.Message.DeleteAsync();
+            var msg = await ReplyAsync("``数据检索中……``");
+            try
             {
-                await Context.Message.DeleteAsync();
-                var msg = await ReplyAsync("``数据检索中……``");
-                try
-                {
-                    var h = Library.Roll.Model.Logistics.Get(id);
-                    var dm = await Context.User.CreateDMChannelAsync();
-                    await dm.SendMessageAsync(h.GetFullString());
-                    await msg.ModifyAsync(x => x.Content = "数据获取成功，请前往私聊查看");
-                    await Context.User.RemoveCoins(15);
-                }
-                catch
-                {
-                    await msg.ModifyAsync(x => x.Content = "数据获取失败，请稍后再试");
-                }
+                var h = Library.Roll.Model.Logistics.Get(id);
+                var dm = await Context.User.CreateDMChannelAsync();
+                await dm.SendMessageAsync(h.GetFullString());
+                await msg.ModifyAsync(x => x.Content = "数据获取成功，请前往私聊查看");
             }
-            else
-                await ReplyAsync("幻币数量不足");
+            catch
+            {
+                await msg.ModifyAsync(x => x.Content = "数据获取失败，请稍后再试");
+            }
         }
     }
 }

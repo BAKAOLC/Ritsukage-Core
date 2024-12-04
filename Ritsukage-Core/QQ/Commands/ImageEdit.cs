@@ -14,10 +14,10 @@ using static Ritsukage.Library.Graphic.GraphicUtils;
 
 namespace Ritsukage.QQ.Commands
 {
-    [CommandGroup("Image Edit"), NeedCoins(5)]
+    [CommandGroup("Image Edit")]
     public static class ImageEdit
     {
-        static async Task<string> GetImageUrl(SoraMessage e)
+        private static async Task<string> GetImageUrl(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
             if (!imglist.Any())
@@ -25,11 +25,12 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;
             }
+
             await e.ReplyToOriginal("请稍后");
             return (await e.SoraApi.GetImage(imglist.First().ImgFile)).url;
         }
 
-        static async Task<string[]> GetImageUrls(SoraMessage e)
+        private static async Task<string[]> GetImageUrls(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
             if (!imglist.Any())
@@ -37,35 +38,37 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("未检测到任何图片");
                 return null;
             }
+
             await e.ReplyToOriginal("请稍后");
             return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
         }
 
-        static async Task<string> DownloadImage(string url)
-            => await DownloadManager.Download(url, enableAria2Download: true);
+        private static async Task<string> DownloadImage(string url)
+        {
+            return await DownloadManager.Download(url, enableAria2Download: true);
+        }
 
-        static async Task SendImage(SoraMessage e, Image<Rgba32> image, IImageFormat format)
+        private static async Task SendImage(SoraMessage e, Image<Rgba32> image, IImageFormat format)
         {
             var file = Path.GetTempFileName();
             SaveImage(image, format, file);
             await e.Reply(SoraSegment.Image(file));
-            await e.RemoveCoins(5);
         }
 
-        static async Task SendImages(SoraMessage e, Image<Rgba32>[] images, IImageFormat format)
+        private static async Task SendImages(SoraMessage e, Image<Rgba32>[] images, IImageFormat format)
         {
-            string[] paths = new string[images.Length];
-            for (int i = 0; i < images.Length; i++)
+            var paths = new string[images.Length];
+            for (var i = 0; i < images.Length; i++)
             {
                 var file = Path.GetTempFileName();
                 SaveImage(images[i], format, file);
                 paths[i] = file;
             }
+
             await e.Reply(paths.Select(x => SoraSegment.Image(x)).ToArray());
-            await e.RemoveCoins(5);
         }
 
-        static async Task Worker(SoraMessage e, Func<Image<Rgba32>, Image<Rgba32>> func)
+        private static async Task Worker(SoraMessage e, Func<Image<Rgba32>, Image<Rgba32>> func)
         {
             try
             {
@@ -73,7 +76,7 @@ namespace Ritsukage.QQ.Commands
                 if (url == null)
                     return;
                 var path = await DownloadImage(url);
-                var image = LoadImage(path, out IImageFormat format);
+                var image = LoadImage(path, out var format);
                 var product = func.Invoke(image);
                 await SendImage(e, product, format);
             }
@@ -88,44 +91,58 @@ namespace Ritsukage.QQ.Commands
         [CommandDescription("修改为左右对称的图像（左侧镜像到右侧）")]
         [ParameterDescription(1, "图像")]
         public static async void WorkMirrorLeft(SoraMessage e)
-            => await Worker(e, MirrorLeft);
+        {
+            await Worker(e, MirrorLeft);
+        }
 
         [Command("镜像右")]
         [CommandDescription("修改为左右对称的图像（右侧镜像到左侧）")]
         [ParameterDescription(1, "图像")]
         public static async void WorkMirrorRight(SoraMessage e)
-            => await Worker(e, MirrorRight);
+        {
+            await Worker(e, MirrorRight);
+        }
 
         [Command("镜像上")]
         [CommandDescription("修改为上下对称的图像（上侧镜像到下侧）")]
         [ParameterDescription(1, "图像")]
         public static async void WorkMirrorTop(SoraMessage e)
-            => await Worker(e, MirrorTop);
+        {
+            await Worker(e, MirrorTop);
+        }
 
         [Command("镜像下")]
         [CommandDescription("修改为上下对称的图像（下侧镜像到上侧）")]
         [ParameterDescription(1, "图像")]
         public static async void WorkMirrorBottom(SoraMessage e)
-            => await Worker(e, MirrorBottom);
+        {
+            await Worker(e, MirrorBottom);
+        }
 
         [Command("反色")]
         [CommandDescription("修改为反色的图像")]
         [ParameterDescription(1, "图像")]
         public static async void WorkReserve(SoraMessage e)
-            => await Worker(e, x => x.ColorReverse());
+        {
+            await Worker(e, x => x.ColorReverse());
+        }
 
         [Command("灰度化")]
         [CommandDescription("修改为灰度化(基于比例混合算法)的图像")]
         [ParameterDescription(1, "图像")]
         public static async void WorkGraying(SoraMessage e)
-            => await Worker(e, x => x.ColorGraying());
+        {
+            await Worker(e, x => x.ColorGraying());
+        }
 
         [Command("外围消除")]
         [CommandDescription("将图像指定范围外的像素修改为透明色")]
         [ParameterDescription(1, "范围(<=0时取图像短轴作为半径范围)")]
         [ParameterDescription(1, "图像")]
         public static async void WorkFillCircleOutRangeColor(SoraMessage e, int size = 0)
-            => await Worker(e, x => FillCircleOutRangeColor(x, size, TransparentColor));
+        {
+            await Worker(e, x => FillCircleOutRangeColor(x, size, TransparentColor));
+        }
 
         [Command("马赛克")]
         [CommandDescription("修改为马赛克处理后的图像")]
@@ -141,7 +158,7 @@ namespace Ritsukage.QQ.Commands
                 if (url == null)
                     return;
                 var path = await DownloadImage(url);
-                var image = LoadImage(path, out IImageFormat format);
+                var image = LoadImage(path, out var format);
                 var product = Mosaic(image, size, px, py);
                 await SendImage(e, product, format);
             }
@@ -157,7 +174,8 @@ namespace Ritsukage.QQ.Commands
         [ParameterDescription(1, "单次旋转周期内图像重复次数")]
         [ParameterDescription(2, "单帧时长（n*0.01s）（提供动图时此参数无效）")]
         [ParameterDescription(3, "图像")]
-        public static async void WorkGenerateRotateImageWithOriginalSize(SoraMessage e, int repeat = 1, int frameDelay = 1)
+        public static async void WorkGenerateRotateImageWithOriginalSize(SoraMessage e, int repeat = 1,
+            int frameDelay = 1)
         {
             try
             {
@@ -243,11 +261,12 @@ namespace Ritsukage.QQ.Commands
                 else if (urls.Length != 9)
                     await e.ReplyToOriginal("需要九张图");
                 var imgs = new Image<Rgba32>[9];
-                for (int i = 0; i < 9; i++)
+                for (var i = 0; i < 9; i++)
                 {
                     var path = await DownloadImage(urls[i]);
                     imgs[i] = LoadImage(path);
                 }
+
                 var product = MergeNinePicture(imgs);
                 if (product != null)
                     await SendImage(e, product, ImageFormat.Default);
@@ -272,14 +291,16 @@ namespace Ritsukage.QQ.Commands
                 if (url == null)
                     return;
                 var path = await DownloadImage(url);
-                var image = LoadImage(path, out IImageFormat format);
+                var image = LoadImage(path, out var format);
                 if (image.Width % 3 == 0 || image.Height % 3 == 0)
                 {
                     var imgs = SplitNinePicture(image);
                     await SendImages(e, imgs, format);
                 }
                 else
+                {
                     await e.ReplyToOriginal("暂不支持拆分非3的倍数宽高的图像");
+                }
             }
             catch (Exception ex)
             {

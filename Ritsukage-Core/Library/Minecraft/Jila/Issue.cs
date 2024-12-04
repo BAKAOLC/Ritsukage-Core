@@ -47,7 +47,9 @@ namespace Ritsukage.Library.Minecraft.Jila
             {
                 var text = s.Value;
                 if (text == "<br/>")
+                {
                     return Environment.NewLine;
+                }
                 else if (text.StartsWith("<img"))
                 {
                     var xml = new XmlDocument();
@@ -59,7 +61,9 @@ namespace Ritsukage.Library.Minecraft.Jila
                         return src;
                 }
                 else
+                {
                     return "";
+                }
             }));
             Summary = data["summary"].InnerText;
             Type = data["type"].InnerText;
@@ -74,7 +78,10 @@ namespace Ritsukage.Library.Minecraft.Jila
                 Labels = lables.ToArray();
             }
             else
+            {
                 Labels = Array.Empty<string>();
+            }
+
             CreatedTime = Convert.ToDateTime(data["created"].InnerText);
             UpdatedTime = Convert.ToDateTime(data["updated"].InnerText);
             if (data["resolved"] != null)
@@ -90,7 +97,6 @@ namespace Ritsukage.Library.Minecraft.Jila
             Votes = int.Parse(data["votes"].InnerText);
             Watches = int.Parse(data["watches"].InnerText);
             foreach (XmlNode node in data.SelectNodes("customfields/customfield"))
-            {
                 switch (node["customfieldname"].InnerText)
                 {
                     case "Category":
@@ -106,26 +112,29 @@ namespace Ritsukage.Library.Minecraft.Jila
                         Platform = node.SelectSingleNode("customfieldvalues/customfieldvalue").InnerText;
                         break;
                 }
-            }
+
             var comments = data.SelectNodes("comments/comment");
             if (comments != null)
             {
                 var c = new List<Comment>();
                 foreach (XmlNode node in comments)
-                    c.Add(new Comment(node.Attributes["id"].Value,
+                    c.Add(new(node.Attributes["id"].Value,
                         node.Attributes["author"].Value,
                         node.Attributes["created"].Value,
                         node.InnerText));
                 Comments = c.ToArray();
             }
             else
+            {
                 Comments = Array.Empty<Comment>();
+            }
+
             var attachments = data.SelectNodes("attachments/attachment");
             if (attachments != null)
             {
                 var c = new List<Attachment>();
                 foreach (XmlNode node in attachments)
-                    c.Add(new Attachment(node.Attributes["id"].Value,
+                    c.Add(new(node.Attributes["id"].Value,
                         node.Attributes["name"].Value,
                         int.Parse(node.Attributes["size"].Value),
                         node.Attributes["author"].Value,
@@ -133,7 +142,10 @@ namespace Ritsukage.Library.Minecraft.Jila
                 Attachments = c.ToArray();
             }
             else
+            {
                 Attachments = Array.Empty<Attachment>();
+            }
+
             var issuelinks = data.SelectNodes("issuelinks/issuelinktype");
             if (issuelinks != null)
             {
@@ -156,20 +168,25 @@ namespace Ritsukage.Library.Minecraft.Jila
                         InwardDescription = inward == null ? "" : node["inwardlinks"].GetAttribute("description"),
                         Inwardlinks = inwards.ToArray(),
                         OutwardDescription = outward == null ? "" : node["outwardlinks"].GetAttribute("description"),
-                        Outwardlinks = outwards.ToArray()
+                        Outwardlinks = outwards.ToArray(),
                     });
                 }
+
                 IssueLinks = c.ToArray();
             }
             else
+            {
                 IssueLinks = Array.Empty<IssueLink>();
+            }
         }
 
         public override string ToString()
-            => Title;
+        {
+            return Title;
+        }
 
-        static readonly object _lock = new();
-        static Certificate Token;
+        private static readonly object _lock = new();
+        private static Certificate Token;
 
         public static Issue GetIssue(string id)
         {
@@ -180,18 +197,20 @@ namespace Ritsukage.Library.Minecraft.Jila
                     ConsoleLog.Debug("Mojang Jira", "Try to login...");
                     Token = Certificate.Login(Program.Config.MoJiraUsername, Program.Config.MoJiraPassword);
                 }
+
                 if (!Token.IsOK || Token.Expires < DateTime.Now)
                 {
                     ConsoleLog.Debug("Mojang Jira", "Login failed.");
                     return null;
                 }
+
                 var url = $"https://bugs.mojang.com/si/jira.issueviews:issue-xml/{id}/{id}.xml";
                 ConsoleLog.Debug("Mojang Jira", $"Getting issue {id} from " + url);
                 var page = Utils.HttpGET(url, "", 20000, Token.Cookie);
                 var xml = new XmlDocument();
                 var xmlreader = XmlReader.Create(new StringReader(page), new()
                 {
-                    IgnoreComments = true
+                    IgnoreComments = true,
                 });
                 xml.Load(xmlreader);
                 var item = xml.DocumentElement.SelectSingleNode("channel/item");
@@ -217,18 +236,21 @@ namespace Ritsukage.Library.Minecraft.Jila
                     ConsoleLog.Debug("Mojang Jira", "Try to login...");
                     Token = Certificate.Login(Program.Config.MoJiraUsername, Program.Config.MoJiraPassword);
                 }
+
                 if (!Token.IsOK || Token.Expires < DateTime.Now)
                 {
                     ConsoleLog.Debug("Mojang Jira", "Login failed.");
                     return Array.Empty<Issue>();
                 }
-                var url = $"https://bugs.mojang.com/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery={Utils.UrlEncode(search)}";
+
+                var url =
+                    $"https://bugs.mojang.com/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery={Utils.UrlEncode(search)}";
                 ConsoleLog.Debug("Mojang Jira", "Getting issues from " + url);
                 var page = Utils.HttpGET(url, "", 20000, Token.Cookie);
                 var xml = new XmlDocument();
                 var xmlreader = XmlReader.Create(new StringReader(page), new()
                 {
-                    IgnoreComments = true
+                    IgnoreComments = true,
                 });
                 xml.Load(xmlreader);
                 List<Issue> issues = new();

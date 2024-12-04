@@ -12,88 +12,110 @@ namespace Ritsukage.Library.Bilibili.Model
     public class Video
     {
         #region 属性
+
         /// <summary>
         /// AV号
         /// </summary>
         public long AV;
+
         /// <summary>
         /// BV号
         /// </summary>
         public string BV;
+
         /// <summary>
         /// 弹幕池CID
         /// </summary>
         public long CID;
+
         /// <summary>
         /// 封面Url
         /// </summary>
         public string PicUrl;
+
         /// <summary>
         /// 标题
         /// </summary>
         public string Title;
+
         /// <summary>
         /// 简介
         /// </summary>
         public string Desc;
+
         /// <summary>
         /// 视频数量
         /// </summary>
         public int Count;
+
         /// <summary>
         /// 视频总长度
         /// </summary>
         public TimeSpan Duration;
+
         /// <summary>
         /// 发布时间
         /// </summary>
         public DateTime PubDate;
+
         /// <summary>
         /// 版权所有
         /// </summary>
         public bool CopyRight;
+
         /// <summary>
         /// 分区ID
         /// </summary>
         public int AreaId;
+
         /// <summary>
         /// 分区名称
         /// </summary>
         public string AreaName;
+
         /// <summary>
         /// 用户ID
         /// </summary>
         public int UserId;
+
         /// <summary>
         /// 用户名称
         /// </summary>
         public string UserName;
+
         /// <summary>
         /// 用户头像Url
         /// </summary>
         public string UserFaceUrl;
+
         /// <summary>
         /// 视频数据统计
         /// </summary>
         public VideoStatistic Statistic;
+
         /// <summary>
         /// 视频分P
         /// </summary>
         public VideoPage[] Pages;
 
-        public string Url { get => "https://www.bilibili.com/video/" + BV; }
+        public string Url => "https://www.bilibili.com/video/" + BV;
+
         #endregion
 
         #region 方法
-        public User GetUserInfo() => User.Get(UserId);
+
+        public User GetUserInfo()
+        {
+            return User.Get(UserId);
+        }
 
         public string BaseToString()
         {
-            int hour = Duration.Days * 24 + Duration.Hours;
-            string hourStr = hour > 0 ? $"{hour}时" : string.Empty;
+            var hour = Duration.Days * 24 + Duration.Hours;
+            var hourStr = hour > 0 ? $"{hour}时" : string.Empty;
             var sb = new StringBuilder();
             sb.AppendLine(Title);
-            sb.AppendLine($"av{AV}  {BV}{(string.IsNullOrEmpty(AreaName) ? "" : ("  分区：" + AreaName))}");
+            sb.AppendLine($"av{AV}  {BV}{(string.IsNullOrEmpty(AreaName) ? "" : "  分区：" + AreaName)}");
             sb.AppendLine($"UP：{UserName}(https://space.bilibili.com/{UserId})");
             if (Pages != null)
                 sb.AppendLine($"视频共{Pages.Length}P 总长度：{hourStr}{Duration.Minutes:D2}分{Duration.Seconds:D2}秒");
@@ -104,30 +126,37 @@ namespace Ritsukage.Library.Bilibili.Model
             sb.Append(Url);
             return sb.ToString();
         }
+
         public override string ToString()
-            => new StringBuilder()
-            .AppendLine(PicUrl)
-            .Append(BaseToString())
-            .ToString();
+        {
+            return new StringBuilder()
+                .AppendLine(PicUrl)
+                .Append(BaseToString())
+                .ToString();
+        }
+
         #endregion
 
         #region 构造
+
         public static Video Get(long av)
         {
             //var info = Hibi.HibiBilibili.GetVideoInfo(av);
             var info = JObject.Parse(Utils.HttpGET("http://api.bilibili.com/x/web-interface/view?aid=" + av));
             if ((int)info["code"] != 0)
-                throw new Exception((string)info["message"]);
+                throw new((string)info["message"]);
             return GetByJson(info["data"]);
         }
+
         public static Video Get(string bv)
         {
             //var info = Hibi.HibiBilibili.GetVideoInfo(BilibiliAVBVConverter.ToAV(bv));
             var info = JObject.Parse(Utils.HttpGET("http://api.bilibili.com/x/web-interface/view?bvid=" + bv));
             if ((int)info["code"] != 0)
-                throw new Exception((string)info["message"]);
+                throw new((string)info["message"]);
             return GetByJson(info["data"]);
         }
+
         public static Video GetByJson(JToken data)
         {
             /*
@@ -148,12 +177,12 @@ namespace Ritsukage.Library.Bilibili.Model
                 CopyRight = (int)data["copyright"] == 1,
                 AreaId = (int)data["tid"],
                 AreaName = (string)data["tname"],
-                Duration = new TimeSpan(0, 0, (int)data["duration"]),
+                Duration = new(0, 0, (int)data["duration"]),
                 UserId = (int)data["owner"]["mid"],
                 UserName = (string)data["owner"]["name"],
                 UserFaceUrl = (string)data["owner"]["face"],
             };
-            video.Statistic = new VideoStatistic()
+            video.Statistic = new()
             {
                 Id = (long)data["stat"]["aid"],
                 View = (int)data["stat"]["view"],
@@ -169,16 +198,18 @@ namespace Ritsukage.Library.Bilibili.Model
             {
                 video.Pages = new VideoPage[videos.Count];
                 for (var i = 0; i < videos.Count; i++)
-                    video.Pages[i] = new VideoPage()
+                    video.Pages[i] = new()
                     {
                         CID = (long)videos[i]["cid"],
                         Index = (int)videos[i]["page"],
                         Name = (string)videos[i]["part"],
-                        Duration = new TimeSpan(0, 0, (int)videos[i]["duration"]),
+                        Duration = new(0, 0, (int)videos[i]["duration"]),
                     };
             }
+
             return video;
         }
+
         #endregion
     }
 
@@ -188,30 +219,37 @@ namespace Ritsukage.Library.Bilibili.Model
         /// 视频ID
         /// </summary>
         public long Id;
+
         /// <summary>
         /// 播放量
         /// </summary>
         public int View;
+
         /// <summary>
         /// 弹幕数
         /// </summary>
         public int Danmaku;
+
         /// <summary>
         /// 评论数
         /// </summary>
         public int Reply;
+
         /// <summary>
         /// 收藏数
         /// </summary>
         public int Favorite;
+
         /// <summary>
         /// 投币数
         /// </summary>
         public int Coin;
+
         /// <summary>
         /// 分享数
         /// </summary>
         public int Share;
+
         /// <summary>
         /// 点赞数
         /// </summary>
@@ -224,14 +262,17 @@ namespace Ritsukage.Library.Bilibili.Model
         /// 弹幕池CID
         /// </summary>
         public long CID;
+
         /// <summary>
         /// 分P编号
         /// </summary>
         public int Index;
+
         /// <summary>
         /// 分P名称
         /// </summary>
         public string Name;
+
         /// <summary>
         /// 视频长度
         /// </summary>
@@ -241,34 +282,45 @@ namespace Ritsukage.Library.Bilibili.Model
     public static partial class VideoExtensions
     {
         public static string PutCoin(string bv, string cookie)
-            => PutCoin(BilibiliAVBVConverter.ToAV(bv), cookie);
+        {
+            return PutCoin(BilibiliAVBVConverter.ToAV(bv), cookie);
+        }
+
         public static string PutCoin(long av, string cookie)
         {
-            string jct = Bilibili.GetJCT(cookie);
-            string param = string.Join("&",
+            var jct = Bilibili.GetJCT(cookie);
+            var param = string.Join("&",
                 "aid=" + av,
                 "multiply=1",
                 "select_like=1",
                 "cross_domain=true",
                 "csrf=" + jct);
-            var data = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/web-interface/coin/add", param, 5000, cookie,
+            var data = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/web-interface/coin/add", param, 5000,
+                cookie,
                 "https://www.bilibili.com/video/av" + av));
             if ((int)data["code"] == 0)
                 return "投币成功";
             else
-                throw new Exception((string)data["message"]);
+                throw new((string)data["message"]);
         }
+
         public static string PutCoin(this Video video, string cookie)
-            => PutCoin(video.AV, cookie);
+        {
+            return PutCoin(video.AV, cookie);
+        }
 
         public static async Task<bool> ShamWatchVideo(string bv, string cookie)
-            => await ShamWatchVideo(BilibiliAVBVConverter.ToAV(bv), cookie);
+        {
+            return await ShamWatchVideo(BilibiliAVBVConverter.ToAV(bv), cookie);
+        }
+
         public static async Task<bool> ShamWatchVideo(long av, string cookie)
         {
             var jct = Bilibili.GetJCT(cookie);
             var cookies = GetCookieItemRegex().Matches(cookie.Replace(" ", string.Empty));
             var uid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID").FirstOrDefault()?.Groups["value"].Value;
-            var sid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID__ckMd5").FirstOrDefault()?.Groups["value"].Value;
+            var sid = cookies.Where(x => x.Groups["key"].Value == "DedeUserID__ckMd5").FirstOrDefault()?.Groups["value"]
+                .Value;
             var video = Video.Get(av);
             var referer = "https://www.bilibili.com/video/av" + av;
             var time = Utils.GetTimeStamp();
@@ -276,19 +328,19 @@ namespace Ritsukage.Library.Bilibili.Model
             {
                 { "aid", video.AV },
                 { "cid", video.CID },
-                { "part", 1},
+                { "part", 1 },
                 { "did", sid },
                 { "mid", uid },
                 { "csrf", jct },
-                { "jsonp", "jsonp"},
+                { "jsonp", "jsonp" },
                 { "ftime", time },
-                { "stime", time }
+                { "stime", time },
             };
             var result = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/report/click/h5",
                 Utils.ToUrlParameter(param), 5000, cookie, referer));
             if ((int)result["code"] == 0)
             {
-                param = new Dictionary<string, object>()
+                param = new()
                 {
                     { "aid", video.AV },
                     { "cid", video.CID },
@@ -300,8 +352,8 @@ namespace Ritsukage.Library.Bilibili.Model
                     { "pause", "false" },
                     { "dt", 7 },
                     { "play_type", 1 },
-                    { "jsonp", "jsonp"},
-                    { "start_ts", Utils.GetTimeStamp() }
+                    { "jsonp", "jsonp" },
+                    { "start_ts", Utils.GetTimeStamp() },
                 };
                 result = JObject.Parse(Utils.HttpPOST("https://api.bilibili.com/x/report/web/heartbeat",
                     Utils.ToUrlParameter(param), 5000, cookie, referer));
@@ -316,10 +368,15 @@ namespace Ritsukage.Library.Bilibili.Model
                     return (int)result["code"] == 0;
                 }
             }
+
             return false;
         }
+
         public static async Task<bool> ShamWatchVideo(this Video video, string cookie)
-            => await ShamWatchVideo(video.AV, cookie);
+        {
+            return await ShamWatchVideo(video.AV, cookie);
+        }
+
         [GeneratedRegex("(?<key>[^=]+)=(?<value>[^;]+)")]
         private static partial Regex GetCookieItemRegex();
     }

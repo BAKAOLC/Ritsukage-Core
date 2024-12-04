@@ -12,9 +12,14 @@ namespace Ritsukage.Library.Netease.CloudMusic.Model
             Id = id;
             Name = name;
         }
-        public BaseArtist(JToken data) : this((long)data["id"], (string)data["name"]) { }
+
+        public BaseArtist(JToken data) : this((long)data["id"], (string)data["name"])
+        {
+        }
 
         public override string ToString()
-            => Name;
+        {
+            return Name;
+        }
     }
 }

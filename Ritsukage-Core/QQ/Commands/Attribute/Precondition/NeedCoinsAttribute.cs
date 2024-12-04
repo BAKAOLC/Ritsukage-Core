@@ -28,6 +28,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"<Need coins: {Coins}{(DisableFree ? " (not free)" : "")}>";
+        {
+            return $"<Need coins: {Coins}{(DisableFree ? " (not free)" : "")}>";
+        }
     }
 }

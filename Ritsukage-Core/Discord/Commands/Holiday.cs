@@ -7,7 +7,8 @@ namespace Ritsukage.Discord.Commands
 {
     public class Holiday : ModuleBase<SocketCommandContext>
     {
-        [Command("最近节日"), Alias("holiday")]
+        [Command("最近节日")]
+        [Alias("holiday")]
         public async Task Normal()
         {
             var msg = await ReplyAsync("``数据检索中……``");

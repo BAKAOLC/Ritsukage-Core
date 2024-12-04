@@ -29,12 +29,16 @@ namespace Ritsukage.Library.Bank
             }
 
             public override string ToString()
-                => $"{Value:F2} {(From == "RMB" ? "CNY" : From)}({FromName}) = {Result:F2} {(To == "RMB" ? "CNY" : To)}({ToName})";
+            {
+                return
+                    $"{Value:F2} {(From == "RMB" ? "CNY" : From)}({FromName}) = {Result:F2} {(To == "RMB" ? "CNY" : To)}({ToName})";
+            }
         }
 
-        const string Api = "http://vip.stock.finance.sina.com.cn/forex/api/openapi.php/ForexService.getBankForex";
+        private const string Api =
+            "http://vip.stock.finance.sina.com.cn/forex/api/openapi.php/ForexService.getBankForex";
 
-        static readonly Dictionary<string, string> Currency = new()
+        private static readonly Dictionary<string, string> Currency = new()
         {
             { "AUD", "澳大利亚元" },
             { "BRL", "巴西雷亚尔" },
@@ -61,13 +65,13 @@ namespace Ritsukage.Library.Bank
             { "ZAR", "南非兰特" },
         };
 
-        static readonly Dictionary<string, double> ExchangeRate = new();
+        private static readonly Dictionary<string, double> ExchangeRate = new();
 
-        static bool _updating = false;
-        static DateTime LastUpdateTime;
-        static readonly double UpdateDelay = 60 * 20;
+        private static bool _updating = false;
+        private static DateTime LastUpdateTime;
+        private static readonly double UpdateDelay = 60 * 20;
 
-        static bool Update()
+        private static bool Update()
         {
             if (_updating) return false;
             _updating = true;
@@ -77,12 +81,8 @@ namespace Ritsukage.Library.Bank
                 var data = JObject.Parse(rawData);
                 var refer = data["result"]["data"]["refer"];
                 foreach (var kv in (JObject)refer)
-                {
                     if (Currency.ContainsKey(kv.Key) && kv.Key != "RMB")
-                    {
                         ExchangeRate[kv.Key] = (double)kv.Value;
-                    }
-                }
                 return true;
             }
             catch (Exception)
@@ -92,6 +92,7 @@ namespace Ritsukage.Library.Bank
             {
                 _updating = false;
             }
+
             return false;
         }
 
@@ -103,6 +104,7 @@ namespace Ritsukage.Library.Bank
                 while (!Update()) ;
                 LastUpdateTime = DateTime.Now;
             }
+
             to = to.ToUpper();
             if (to == "CNY") to = "RMB";
             if (Currency.ContainsValue(to))
@@ -110,14 +112,11 @@ namespace Ritsukage.Library.Bank
             if (Currency.ContainsKey(to))
             {
                 if (to == "RMB")
-                {
                     return new("RMB", to, value, value);
-                }
                 else
-                {
-                    return new("RMB", to, value, value * 100 / ExchangeRate[to]);
-                }
+                    return new("RMB", to, value, value * 10000 / ExchangeRate[to]);
             }
+
             return default;
         }
 
@@ -129,6 +128,7 @@ namespace Ritsukage.Library.Bank
                 while (!Update()) ;
                 LastUpdateTime = DateTime.Now;
             }
+
             from = from.ToUpper();
             if (from == "CNY") from = "RMB";
             if (Currency.ContainsValue(from))
@@ -136,17 +136,17 @@ namespace Ritsukage.Library.Bank
             if (Currency.ContainsKey(from))
             {
                 if (from == "RMB")
-                {
                     return new(from, "RMB", value, value);
-                }
                 else
-                {
-                    return new(from, "RMB", value, value * ExchangeRate[from] / 100);
-                }
+                    return new(from, "RMB", value, value * ExchangeRate[from] / 10000);
             }
+
             return default;
         }
 
-        public static Dictionary<string, string> GetForexList() => Currency.ToDictionary(x => x.Key, x => x.Value);
+        public static Dictionary<string, string> GetForexList()
+        {
+            return Currency.ToDictionary(x => x.Key, x => x.Value);
+        }
     }
 }

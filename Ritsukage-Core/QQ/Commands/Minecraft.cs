@@ -19,7 +19,8 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Minecraft")]
     public static partial class Minecraft
     {
-        const string Indent = "    ";
+        private const string Indent = "    ";
+
         public static string GetIssueInfo(string id)
         {
             var issue = Issue.GetIssue(id);
@@ -27,6 +28,7 @@ namespace Ritsukage.QQ.Commands
                 return $"未能获取到ID为 {issue.Id} 的issue";
             return GetIssueInfo(issue);
         }
+
         public static string GetIssueInfo(Issue issue)
         {
             var sb = new StringBuilder().AppendLine(issue.Title);
@@ -35,18 +37,22 @@ namespace Ritsukage.QQ.Commands
             sb.Append("状态: " + issue.Status).Append(Indent)
                 .AppendLine("解决方案: " + issue.Resolution);
             {
-                bool flag = false;
+                var flag = false;
                 if (!string.IsNullOrWhiteSpace(issue.ConfirmationStatus))
                 {
                     flag = true;
                     sb.Append("确认状态: " + issue.ConfirmationStatus);
                 }
+
                 if (!string.IsNullOrWhiteSpace(issue.MojangPriority))
                 {
                     if (flag) sb.Append(Indent);
                     sb.AppendLine("Mojang处理优先级: " + issue.MojangPriority);
                 }
-                else if (flag) sb.AppendLine();
+                else if (flag)
+                {
+                    sb.AppendLine();
+                }
             }
             foreach (var i in issue.IssueLinks)
                 sb.AppendLine(i.ToString());
@@ -71,11 +77,11 @@ namespace Ritsukage.QQ.Commands
         public static async void ServerStatus(SoraMessage e, string target)
         {
             var x = GetServerIPRegex().Match(target);
-            string host = x.Groups["host"].Value;
+            var host = x.Groups["host"].Value;
             ushort port = 25565;
-            if (ushort.TryParse(x.Groups["port"].Value, out ushort _port))
+            if (ushort.TryParse(x.Groups["port"].Value, out var _port))
                 port = _port;
-            ServerInfo info = new ServerInfo(host, port);
+            var info = new ServerInfo(host, port);
             await info.StartGetServerInfoAsync();
             if (info.State == ServerInfo.StateType.GOOD)
             {
@@ -92,10 +98,14 @@ namespace Ritsukage.QQ.Commands
                     await e.Reply(SoraSegment.Image(icon.ToBase64File()), Environment.NewLine, sb.ToString());
                 }
                 else
+                {
                     await e.Reply(sb.ToString());
+                }
             }
             else
+            {
                 await e.ReplyToOriginal("未能成功获取到目标服务器的数据，可能为参数输入错误或目标已离线");
+            }
         }
 
         [Command]
@@ -106,7 +116,6 @@ namespace Ritsukage.QQ.Commands
             if (!GetMOJIRAIDRegex().IsMatch(id))
                 await e.ReplyToOriginal($"不合法的ID指定：{id}");
             else
-            {
                 try
                 {
                     await e.ReplyToOriginal(GetIssueInfo(id));
@@ -118,7 +127,6 @@ namespace Ritsukage.QQ.Commands
                         .Append(ex.GetFormatString())
                         .ToString());
                 }
-            }
         }
 
         [Command("获取mc修复列表")]
@@ -139,6 +147,7 @@ namespace Ritsukage.QQ.Commands
                     .Append(ex.GetFormatString())
                     .ToString());
             }
+
             if (issues.Length > 0)
                 await e.ReplyToOriginal(new StringBuilder()
                     .AppendLine("[Minecraft Jira]")
@@ -173,6 +182,7 @@ namespace Ritsukage.QQ.Commands
                     .Append(ex.GetFormatString())
                     .ToString());
             }
+
             if (issues.Length > 0)
                 await e.ReplyToOriginal(new StringBuilder()
                     .AppendLine("[Minecraft Jira]")
@@ -202,11 +212,15 @@ namespace Ritsukage.QQ.Commands
                 subType = vm.Groups["subType"].Value;
                 subNum = vm.Groups["subNum"].Value;
             }
+
             string changelog = null;
             var articles = new ArticleList("snapshot");
             var article = articles.Articles.Where(x => x.Key.Contains(mainVersion)
-            && (subType == "snapshot" || (subType == "pre" ? x.Key.Contains("PRE-RELEASE")
-            : subType == "rc" && x.Key.Contains("Release Candidate")) && x.Key.Contains(subNum))).FirstOrDefault();
+                                                       && (subType == "snapshot" || ((subType == "pre"
+                                                               ? x.Key.Contains("PRE-RELEASE")
+                                                               : subType == "rc" &&
+                                                                 x.Key.Contains("Release Candidate")) &&
+                                                           x.Key.Contains(subNum)))).FirstOrDefault();
             if (!string.IsNullOrEmpty(article.Key))
                 changelog = article.Value;
             if (!string.IsNullOrEmpty(changelog))
@@ -227,7 +241,7 @@ namespace Ritsukage.QQ.Commands
                     await e.Reply(new StringBuilder()
                         .AppendLine(articles.Title)
                         .Append(string.Join(Environment.NewLine,
-                        articles.Articles.Select(x => x.Key + Environment.NewLine + "    " + x.Value).Take(5)))
+                            articles.Articles.Select(x => x.Key + Environment.NewLine + "    " + x.Value).Take(5)))
                         .ToString());
                 else
                     await e.ReplyToOriginal("无效的类型 (仅支持 beta/release/snapshot)");
@@ -250,6 +264,7 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("无效的目标文章网址");
                 return;
             }
+
             try
             {
                 var article = new Article(url);
@@ -258,6 +273,7 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("无效的目标文章网址");
                     return;
                 }
+
                 var bin = UbuntuPastebin.Paste(article.Markdown, "md", "Mojang");
                 await e.ReplyToOriginal(new StringBuilder()
                     .AppendLine("目标文章已格式化至以下地址暂存，请及时查阅以免数据过期")
@@ -271,26 +287,29 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        [Command("订阅minecraft更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("订阅minecraft更新")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void AddVersionListener(SoraMessage e)
         {
-            SubscribeList data = await Database.FindAsync<SubscribeList>(
+            var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "minecraft version"
-                && x.Target == "java"
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "minecraft version"
+                       && x.Target == "java"
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data != null)
             {
                 await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "minecraft version",
                 Target = "java",
-                Listener = e.SourceGroup.Id.ToString()
+                Listener = e.SourceGroup.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -305,20 +324,23 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("取消订阅minecraft更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("取消订阅minecraft更新")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void RemoveVersionListener(SoraMessage e)
         {
-            SubscribeList data = await Database.FindAsync<SubscribeList>(
+            var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "minecraft version"
-                && x.Target == "java"
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "minecraft version"
+                       && x.Target == "java"
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data == null)
             {
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -333,26 +355,29 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("订阅mojira更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("订阅mojira更新")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void AddJiraListener(SoraMessage e)
         {
-            SubscribeList data = await Database.FindAsync<SubscribeList>(
+            var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "minecraft jira"
-                && x.Target == "java"
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "minecraft jira"
+                       && x.Target == "java"
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data != null)
             {
                 await e.ReplyToOriginal("本群已订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.InsertAsync(new SubscribeList()
             {
                 Platform = "qq group",
                 Type = "minecraft jira",
                 Target = "java",
-                Listener = e.SourceGroup.Id.ToString()
+                Listener = e.SourceGroup.Id.ToString(),
             }).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -367,20 +392,23 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("取消订阅mojira更新"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("取消订阅mojira更新")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void RemoveJiraListener(SoraMessage e)
         {
-            SubscribeList data = await Database.FindAsync<SubscribeList>(
+            var data = await Database.FindAsync<SubscribeList>(
                 x
-                => x.Platform == "qq group"
-                && x.Type == "minecraft jira"
-                && x.Target == "java"
-                && x.Listener == e.SourceGroup.Id.ToString());
+                    => x.Platform == "qq group"
+                       && x.Type == "minecraft jira"
+                       && x.Target == "java"
+                       && x.Listener == e.SourceGroup.Id.ToString());
             if (data == null)
             {
                 await e.ReplyToOriginal("本群未订阅该目标，请检查输入是否正确");
                 return;
             }
+
             await Database.DeleteAsync(data).ContinueWith(async x =>
             {
                 if (x.Result > 0)
@@ -395,10 +423,12 @@ namespace Ritsukage.QQ.Commands
             });
         }
 
-        [Command("启用mojira智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("启用mojira智能解析")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void EnableAutoLink(SoraMessage e)
         {
-            QQGroupSetting data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
+            var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
             if (data != null)
             {
                 if (data.SmartMinecraftLink)
@@ -406,6 +436,7 @@ namespace Ritsukage.QQ.Commands
                     await e.ReplyToOriginal("本群已启用该功能，无需再次启用");
                     return;
                 }
+
                 data.SmartMinecraftLink = true;
                 await Database.UpdateAsync(data).ContinueWith(async x =>
                 {
@@ -425,7 +456,7 @@ namespace Ritsukage.QQ.Commands
                 await Database.InsertAsync(new QQGroupSetting()
                 {
                     Group = e.SourceGroup.Id,
-                    SmartMinecraftLink = true
+                    SmartMinecraftLink = true,
                 }).ContinueWith(async x =>
                 {
                     if (x.Result > 0)
@@ -441,15 +472,18 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        [Command("禁用mojira智能解析"), CanWorkIn(WorkIn.Group), LimitMemberRoleType(MemberRoleType.Owner)]
+        [Command("禁用mojira智能解析")]
+        [CanWorkIn(WorkIn.Group)]
+        [LimitMemberRoleType(MemberRoleType.Owner)]
         public static async void DisableAutoLink(SoraMessage e)
         {
-            QQGroupSetting data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
+            var data = await Database.FindAsync<QQGroupSetting>(x => x.Group == e.SourceGroup.Id);
             if (data == null || !data.SmartMinecraftLink)
             {
                 await e.ReplyToOriginal("本群未启用该功能，无需禁用");
                 return;
             }
+
             data.SmartMinecraftLink = false;
             await Database.UpdateAsync(data).ContinueWith(async x =>
             {

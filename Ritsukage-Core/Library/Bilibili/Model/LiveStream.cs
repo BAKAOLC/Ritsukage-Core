@@ -9,6 +9,7 @@ namespace Ritsukage.Library.Bilibili.Model
     public class LiveStream
     {
         #region 属性
+
         /// <summary>
         /// 用户uid
         /// </summary>
@@ -38,41 +39,52 @@ namespace Ritsukage.Library.Bilibili.Model
         /// 直播流
         /// </summary>
         public List<LiveStreamThread> Thread;
+
         #endregion
 
         #region 方法
-        public User GetUserInfo() => User.Get(UserId);
 
-        public LiveRoom GetLiveRoom() => LiveRoom.Get(Id);
+        public User GetUserInfo()
+        {
+            return User.Get(UserId);
+        }
+
+        public LiveRoom GetLiveRoom()
+        {
+            return LiveRoom.Get(Id);
+        }
 
         public static LiveStream Get(int id, LiveStreamType type = LiveStreamType.Web)
         {
             var info = JObject.Parse(Utils.HttpGET("https://api.live.bilibili.com/room/v1/Room/room_init?id=" + id));
             if ((int)info["code"] != 0)
-                throw new Exception((string)info["message"]);
+                throw new((string)info["message"]);
             var stream = new LiveStream()
             {
                 UserId = (int)info["data"]["uid"],
                 Id = (int)info["data"]["room_id"],
                 LiveStatus = (LiveStatus)(int)info["data"]["live_status"],
                 Type = type,
-                Thread = new()
+                Thread = new(),
             };
             if (stream.LiveStatus == LiveStatus.Live)
                 stream.LiveStartTime = Utils.GetDateTime((long)info["data"]["live_time"]);
             else
                 return stream;
-            string b = $"https://api.live.bilibili.com/xlive/web-room/v1/playUrl/playUrl?https_url_req=1&ptype=16&platform={(type == LiveStreamType.Web ? "web" : "h5")}&cid={stream.Id}";
+            var b =
+                $"https://api.live.bilibili.com/xlive/web-room/v1/playUrl/playUrl?https_url_req=1&ptype=16&platform={(type == LiveStreamType.Web ? "web" : "h5")}&cid={stream.Id}";
             var info2 = JObject.Parse(Utils.HttpGET(b));
             if ((int)info2["code"] != 0)
-                throw new Exception((string)info2["message"]);
+                throw new((string)info2["message"]);
             foreach (var data in (JArray)info2["data"]["quality_description"])
             {
                 var thread = JObject.Parse(Utils.HttpGET(b + "&qn=" + data["qn"]));
                 if ((int)thread["code"] != 0)
-                    throw new Exception((string)info2["message"]);
-                stream.Thread.Add(new LiveStreamThread((LiveStreamQuality)(int)thread["data"]["current_qn"], (JArray)thread["data"]["durl"]));
+                    throw new((string)info2["message"]);
+                stream.Thread.Add(new((LiveStreamQuality)(int)thread["data"]["current_qn"],
+                    (JArray)thread["data"]["durl"]));
             }
+
             return stream;
         }
 
@@ -83,13 +95,14 @@ namespace Ritsukage.Library.Bilibili.Model
                 s.AppendLine().Append(thread.ToString());
             return s.ToString();
         }
+
         #endregion
     }
 
     public enum LiveStreamType
     {
         Web,
-        H5
+        H5,
     }
 
     public enum LiveStreamQuality
@@ -97,7 +110,7 @@ namespace Ritsukage.Library.Bilibili.Model
         HD = 150,
         FHD = 250,
         BD = 400,
-        Origin = 10000
+        Origin = 10000,
     }
 
     public struct LiveStreamThread

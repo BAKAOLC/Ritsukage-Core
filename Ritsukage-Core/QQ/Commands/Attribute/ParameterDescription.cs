@@ -17,6 +17,8 @@ namespace Ritsukage.QQ.Commands
         }
 
         public override string ToString()
-            => $"Parameter#{Index} {Name}";
+        {
+            return $"Parameter#{Index} {Name}";
+        }
     }
 }

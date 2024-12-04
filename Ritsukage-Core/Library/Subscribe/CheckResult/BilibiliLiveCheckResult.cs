@@ -43,6 +43,6 @@ namespace Ritsukage.Library.Subscribe.CheckResult
         /// <summary>
         /// 更新了直播标题
         /// </summary>
-        Title
+        Title,
     }
 }

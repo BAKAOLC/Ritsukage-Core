@@ -5,7 +5,7 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Poem")]
     public static class Poem
     {
-        [Command("飞花令"), NeedCoins(2)]
+        [Command("飞花令")]
         [CommandDescription("搜索带有某个字的诗歌")]
         [ParameterDescription(1, "关键字")]
         public static async void FHL(SoraMessage e, string _char)
@@ -15,14 +15,18 @@ namespace Ritsukage.QQ.Commands
                 await e.ReplyToOriginal("参数错误，请检查后重试");
                 return;
             }
+
             var result = await Tools.Poem.Search(_char);
             if (result.Count <= 0)
             {
                 await e.ReplyToOriginal("没有搜索到任何结果，请检查后重试");
                 return;
             }
+
             if (result.Count <= 5)
+            {
                 await e.Reply($"带有「{_char}」字的诗句有：" + Environment.NewLine + string.Join(Environment.NewLine, result));
+            }
             else
             {
                 var s = new string[5];
@@ -33,12 +37,12 @@ namespace Ritsukage.QQ.Commands
                     s[i] = result[id];
                     result.RemoveAt(id);
                 }
+
                 await e.Reply($"带有「{_char}」字的诗句有(随机选取5句)：" + Environment.NewLine + string.Join(Environment.NewLine, s));
             }
-            await e.RemoveCoins(2);
         }
 
-        [Command("诗歌搜索"), NeedCoins(2)]
+        [Command("诗歌搜索")]
         [CommandDescription("搜索带有某个字段的诗歌")]
         [ParameterDescription(1, "关键字段")]
         public static async void SearchOrigin(SoraMessage e, string poem)
@@ -47,7 +51,6 @@ namespace Ritsukage.QQ.Commands
             {
                 var result = await Tools.Poem.GetOrigin(poem);
                 await e.ReplyToOriginal(result);
-                await e.RemoveCoins(2);
             }
             catch (Exception ex)
             {

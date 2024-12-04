@@ -6,7 +6,8 @@ namespace Ritsukage.Tools
 {
     public static partial class DateTimeReader
     {
-        static readonly Regex[] DateMatch = {
+        private static readonly Regex[] DateMatch =
+        {
             GetDateRegex1(),
             GetDateRegex2(),
             GetDateRegex3(),
@@ -15,7 +16,8 @@ namespace Ritsukage.Tools
             GetDateRegex6(),
             GetDateRegex7(),
         };
-        static DateTime? GetDate(string original)
+
+        private static DateTime? GetDate(string original)
         {
             var now = DateTime.Now;
             Match m = null;
@@ -28,38 +30,44 @@ namespace Ritsukage.Tools
                     break;
                 }
             }
+
             if (m != null)
             {
-                if (!int.TryParse(m.Groups["year"].Value, out int year))
+                if (!int.TryParse(m.Groups["year"].Value, out var year))
                     year = now.Year;
-                if (!int.TryParse(m.Groups["month"].Value, out int month))
+                if (!int.TryParse(m.Groups["month"].Value, out var month))
                     month = 1;
-                if (!int.TryParse(m.Groups["day"].Value, out int day))
+                if (!int.TryParse(m.Groups["day"].Value, out var day))
                     day = 1;
                 return new DateTime(year, month, day).Date;
             }
+
             return null;
         }
 
-        static readonly string[] TimeFormats = {
-            "%H'时'%m'分'%s'秒'",     //08时41分20秒
-            "%H':'%m':'%s",          //08:41:20
-            "%H'时'%m'分'",           //08时41分
-            "%H':'%m",               //08:41
-            "%m'分'%s'秒'",           //41分20秒
+        private static readonly string[] TimeFormats =
+        {
+            "%H'时'%m'分'%s'秒'", //08时41分20秒
+            "%H':'%m':'%s", //08:41:20
+            "%H'时'%m'分'", //08时41分
+            "%H':'%m", //08:41
+            "%m'分'%s'秒'", //41分20秒
         };
-        static readonly string[] TimeMatch = {
+
+        private static readonly string[] TimeMatch =
+        {
             @"\d+时\d+分\d+秒",
             @"\d+:\d+:\d+",
             @"\d+时\d+分",
             @"\d+:\d+",
             @"\d+分\d+秒",
         };
-        static TimeSpan? GetTime(string original)
+
+        private static TimeSpan? GetTime(string original)
         {
-            string time = string.Empty;
-            bool hour = false;
-            int index = 0;
+            var time = string.Empty;
+            var hour = false;
+            var index = 0;
             foreach (var tm in TimeMatch)
             {
                 var r = Regex.Match(original, tm);
@@ -70,16 +78,19 @@ namespace Ritsukage.Tools
                     time = r.Value;
                     break;
                 }
+
                 index++;
             }
+
             if (DateTime.TryParseExact(time, TimeFormats, CultureInfo.InvariantCulture,
-                DateTimeStyles.AllowWhiteSpaces, out var gotTime))
+                    DateTimeStyles.AllowWhiteSpaces, out var gotTime))
             {
                 if (!hour)
                     return gotTime.TimeOfDay + new TimeSpan(DateTime.Now.Hour, 0, 0);
                 else
                     return gotTime.TimeOfDay;
             }
+
             return null;
         }
 
@@ -100,16 +111,22 @@ namespace Ritsukage.Tools
 
         [GeneratedRegex("((?<year>\\d{4})年)?((?<month>\\d{1,2})月)?((?<day>\\d{1,2})日)?")]
         private static partial Regex GetDateRegex1();
+
         [GeneratedRegex("(?<year>\\d{4})/(?<month>\\d{1,2})/(?<day>\\d{1,2})")]
         private static partial Regex GetDateRegex2();
+
         [GeneratedRegex("(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})")]
         private static partial Regex GetDateRegex3();
+
         [GeneratedRegex("(?<year>\\d{4})/(?<month>\\d{1,2})")]
         private static partial Regex GetDateRegex4();
+
         [GeneratedRegex("(?<year>\\d{4})-(?<month>\\d{1,2})")]
         private static partial Regex GetDateRegex5();
+
         [GeneratedRegex("(?<month>\\d{1,2})/(?<day>\\d{1,2})")]
         private static partial Regex GetDateRegex6();
+
         [GeneratedRegex("(?<month>\\d{1,2})-(?<day>\\d{1,2})")]
         private static partial Regex GetDateRegex7();
     }

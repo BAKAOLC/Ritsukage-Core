@@ -11,9 +11,9 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
 {
     public class MinecraftVersionCheckMethod : Base.SubscribeCheckMethod
     {
-        const string type = "minecraft version";
+        private const string type = "minecraft version";
 
-        readonly MinecraftVersion Feed = new MinecraftVersion();
+        private readonly MinecraftVersion Feed = new();
 
         public override async Task<CheckResult.Base.SubscribeCheckResult> Check()
         {
@@ -28,6 +28,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 ConsoleLog.Error("Minecraft Version Checker", ConsoleLog.ErrorLogBuilder(e));
                 return new MinecraftVersionCheckResult();
             }
+
             if (version == null)
                 return new MinecraftVersionCheckResult();
             var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == "java");
@@ -41,23 +42,26 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                     {
                         Updated = true,
                         Title = version.Content,
-                        Time = (DateTime)version.PublishingDate
+                        Time = (DateTime)version.PublishingDate,
                     };
                 }
                 else
+                {
                     return new MinecraftVersionCheckResult();
+                }
             }
+
             await Database.InsertAsync(new SubscribeStatusRecord()
             {
                 Type = type,
                 Target = "java",
-                Status = version.Content
+                Status = version.Content,
             });
             return new MinecraftVersionCheckResult()
             {
                 Updated = true,
                 Title = version.Content,
-                Time = (DateTime)version.PublishingDate
+                Time = (DateTime)version.PublishingDate,
             };
         }
     }

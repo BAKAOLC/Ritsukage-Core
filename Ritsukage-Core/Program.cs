@@ -16,17 +16,17 @@ using System.Threading.Tasks;
 
 namespace Ritsukage
 {
-    class Program
+    internal class Program
     {
-        static class PixivAccountClient
+        private static class PixivAccountClient
         {
             public static PixivApiClient PixivApi { get; private set; }
             public static string PixivApiToken => PixivApi == null ? string.Empty : PixivApiAuthResponse.AccessToken;
-            static DateTimeOffset PixivApiAuthTime { get; set; }
-            static AuthResponse PixivApiAuthResponse { get; set; }
-            static DateTimeOffset PixivApiAuthExpiresIn { get; set; }
+            private static DateTimeOffset PixivApiAuthTime { get; set; }
+            private static AuthResponse PixivApiAuthResponse { get; set; }
+            private static DateTimeOffset PixivApiAuthExpiresIn { get; set; }
 
-            static void UpdatePixivApiToken(DateTimeOffset authTime, AuthResponse authResponse)
+            private static void UpdatePixivApiToken(DateTimeOffset authTime, AuthResponse authResponse)
             {
                 PixivApiAuthTime = authTime;
                 PixivApiAuthResponse = authResponse;
@@ -34,20 +34,20 @@ namespace Ritsukage
                 SavePixivApiToken();
             }
 
-            static void SavePixivApiToken()
+            private static void SavePixivApiToken()
             {
                 if (PixivApiAuthResponse != null)
                     File.WriteAllText("pixiv_refresh_token", PixivApiAuthResponse.RefreshToken);
             }
 
-            static async Task<bool> LoginWithLastAuthToken(PixivApiClient pixiv_api)
+            private static async Task<bool> LoginWithLastAuthToken(PixivApiClient pixiv_api)
             {
                 try
                 {
                     if (File.Exists("pixiv_refresh_token"))
                     {
                         var token = File.ReadAllText("pixiv_refresh_token");
-                        (var authTime, var authResponse) = await pixiv_api.AuthAsync(token);
+                        var (authTime, authResponse) = await pixiv_api.AuthAsync(token);
                         UpdatePixivApiToken(authTime, authResponse);
                         return true;
                     }
@@ -56,6 +56,7 @@ namespace Ritsukage
                 {
                     ConsoleLog.Error("Pixiv", ex.GetFormatString());
                 }
+
                 return false;
             }
 
@@ -71,12 +72,14 @@ namespace Ritsukage
                 }
                 else
                 {
-                    (string verify, string url) = pixiv_api.BeginAuth();
-                    File.WriteAllText("PixivLoginUrl.txt", "请在浏览器中打开并登录Pixiv，然后在F12的Network页面中获取其中 pixiv://....?code=xxx 的xxx部分粘贴在程序中" + Environment.NewLine + url);
+                    (var verify, var url) = pixiv_api.BeginAuth();
+                    File.WriteAllText("PixivLoginUrl.txt",
+                        "请在浏览器中打开并登录Pixiv，然后在F12的Network页面中获取其中 pixiv://....?code=xxx 的xxx部分粘贴在程序中" +
+                        Environment.NewLine + url);
                     Process.Start("notepad.exe", "PixivLoginUrl.txt");
                     await Task.Factory.StartNew(async () =>
                     {
-                        string key = Console.ReadLine();
+                        var key = Console.ReadLine();
                         try
                         {
                             File.Delete("PixivLoginUrl.txt");
@@ -84,15 +87,13 @@ namespace Ritsukage
                         catch
                         {
                         }
+
                         if (string.IsNullOrEmpty(key))
-                        {
                             ConsoleLog.Error("Pixiv", "Pixiv Api 已禁用，将在下一次启动时重新登录");
-                        }
                         else
-                        {
                             try
                             {
-                                (var authTime, var authResponse) = await pixiv_api.CompleteAuthAsync(key, verify);
+                                var (authTime, authResponse) = await pixiv_api.CompleteAuthAsync(key, verify);
                                 UpdatePixivApiToken(authTime, authResponse);
                                 KeepPixivApiAuth();
                                 PixivApi = pixiv_api;
@@ -103,12 +104,11 @@ namespace Ritsukage
                                 ConsoleLog.Error("Pixiv", ex.GetFormatString());
                                 ConsoleLog.Error("Pixiv", "Pixiv Api 已禁用，将在下一次启动时重新登录");
                             }
-                        }
                     });
                 }
             }
 
-            static void KeepPixivApiAuth()
+            private static void KeepPixivApiAuth()
             {
                 Task.Factory.StartNew(async () =>
                 {
@@ -116,14 +116,13 @@ namespace Ritsukage
                     {
                         await Task.Delay(1000);
                         if (PixivApi != null)
-                        {
                             if ((PixivApiAuthExpiresIn - DateTimeOffset.Now).TotalSeconds <= 60)
                             {
-                                (var authTime, var authResponse) = await PixivApi.AuthAsync(PixivApiAuthResponse.RefreshToken);
+                                var (authTime, authResponse) =
+                                    await PixivApi.AuthAsync(PixivApiAuthResponse.RefreshToken);
                                 UpdatePixivApiToken(authTime, authResponse);
                                 ConsoleLog.Info("Pixiv", "已更新Pixiv Api登录信息");
                             }
-                        }
                     }
                 });
             }
@@ -141,9 +140,9 @@ namespace Ritsukage
 
         public static bool Working = false;
 
-        static DateTime LaunchTime;
+        private static DateTime LaunchTime;
 
-        static void Main()
+        private static void Main()
         {
             Console.Title = "Ritsukage Core";
             var currentProcess = Process.GetCurrentProcess();
@@ -153,24 +152,26 @@ namespace Ritsukage
                 LaunchTime = DateTime.Now;
                 ConsoleLog.Info("Main", "Loading...");
                 InitUnhandledExceptionHandler();
-                InitWatchDog(currentProcess.Id, currentProcess.ProcessName);
+                //InitWatchDog(currentProcess.Id, currentProcess.ProcessName);
                 Launch();
                 while (Working)
                 {
                     UpdateTitle();
                     Thread.Sleep(100);
                 }
+
                 Shutdown();
             }
             else
             {
                 ConsoleLog.Error("Ritsukage Core", "本程序目前不支持同一架构多实例同时运行");
             }
+
             ConsoleLog.Info("Main", "程序主逻辑已结束，按任意键结束程序");
             Console.ReadKey();
         }
 
-        static void Launch()
+        private static void Launch()
         {
             var cfg = Config = Config.LoadConfig();
 #if DEBUG
@@ -186,7 +187,9 @@ namespace Ritsukage
                 ConsoleLog.Debug("Main", "！！DEBUG MODE 会导致程序运行速度降低，如果没有必要请不要保持开启！！");
             }
             else
+            {
                 ConsoleLog.SetLogLevel(LogLevel.Info);
+            }
 #endif
             ConsoleLog.Debug("Main", "Config:\r\n" + JsonConvert.SerializeObject(cfg, Formatting.Indented));
 
@@ -211,7 +214,7 @@ namespace Ritsukage
                 ConsoleLog.Info("Main", "Roll Api 已初始化");
             }
 
-            Task.Run(PixivAccountClient.PixivApiLogin);
+            //Task.Run(PixivAccountClient.PixivApiLogin);
 
             if (cfg.Discord)
             {
@@ -247,7 +250,7 @@ namespace Ritsukage
                             Port = cfg.Port,
                             AccessToken = cfg.AccessToken,
                             HeartBeatTimeOut = TimeSpan.FromMilliseconds(cfg.HeartBeatTimeOut),
-                            EnableSoraCommandManager = false
+                            EnableSoraCommandManager = false,
                         });
                         QQServer.Start();
                     }
@@ -261,7 +264,7 @@ namespace Ritsukage
             }
         }
 
-        static void Shutdown()
+        private static void Shutdown()
         {
             try
             {
@@ -270,6 +273,7 @@ namespace Ritsukage
             catch
             {
             }
+
             try
             {
                 DiscordServer?.Stop();
@@ -279,46 +283,51 @@ namespace Ritsukage
             }
         }
 
-        static void SetHttpProxy(string url)
+        private static void SetHttpProxy(string url)
         {
-            WebProxy = new WebProxy(url, true);
+            WebProxy = new(url, true);
             WebRequest.DefaultWebProxy = WebProxy;
         }
 
-        static void UpdateTitle() => Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}"
-            + (Config.IsDebug ? " | DEBUG MODE" : string.Empty);
+        private static void UpdateTitle()
+        {
+            Console.Title = $"Ritsukage Core | 启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss} | 运行时长 {DateTime.Now - LaunchTime}"
+                            + (Config.IsDebug ? " | DEBUG MODE" : string.Empty);
+        }
 
-        static bool _initedUnhandledExceptionHandler = false;
-        static void InitUnhandledExceptionHandler()
+        private static bool _initedUnhandledExceptionHandler = false;
+
+        private static void InitUnhandledExceptionHandler()
         {
             if (_initedUnhandledExceptionHandler) return;
             _initedUnhandledExceptionHandler = true;
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
         }
 
-        static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+        private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
         {
             var directory = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "crash-report"));
             var now = DateTime.Now;
             File.WriteAllText(
                 Path.Combine(directory.FullName, $"crash-{now:yyyyMMdd-HHmmss-ffff}.log"),
                 new StringBuilder()
-                .AppendLine($"[启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss.ffff}]")
-                .AppendLine($"[崩溃于 {now:yyyy-MM-dd HH:mm:ss.ffff}]")
-                .AppendLine($"[工作时长 {now - LaunchTime}]")
-                .Append(ConsoleLog.ErrorLogBuilder((Exception)args.ExceptionObject))
-                .ToString());
+                    .AppendLine($"[启动于 {LaunchTime:yyyy-MM-dd HH:mm:ss.ffff}]")
+                    .AppendLine($"[崩溃于 {now:yyyy-MM-dd HH:mm:ss.ffff}]")
+                    .AppendLine($"[工作时长 {now - LaunchTime}]")
+                    .Append(ConsoleLog.ErrorLogBuilder((Exception)args.ExceptionObject))
+                    .ToString());
         }
 
-        static bool _initedWatchDog = false;
-        static void InitWatchDog(int pid, string name)
+        private static bool _initedWatchDog = false;
+
+        private static void InitWatchDog(int pid, string name)
         {
             if (_initedWatchDog) return;
             _initedWatchDog = true;
             ConsoleLog.Info("Main", "初始化进程监视器……");
             var process = Process.Start(new ProcessStartInfo("SimpleWatchDog.exe", $"{pid} -n \"{name}\"")
             {
-                UseShellExecute = false
+                UseShellExecute = false,
             });
             SimpleWatchDog.SimpleIPC.Client ipcClient = new(name);
             var delay = TimeSpan.FromSeconds(20);
@@ -333,7 +342,7 @@ namespace Ritsukage
                 }
             })
             {
-                IsBackground = true
+                IsBackground = true,
             }.Start();
             ConsoleLog.Info("Main", "进程监视器初始化完成");
         }

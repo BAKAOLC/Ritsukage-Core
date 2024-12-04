@@ -7,8 +7,14 @@ namespace Ritsukage.QQ.Commands
     {
         public string Name { get; init; } = string.Empty;
 
-        public CommandGroupAttribute() { }
-        public CommandGroupAttribute(string name) => Name = name;
+        public CommandGroupAttribute()
+        {
+        }
+
+        public CommandGroupAttribute(string name)
+        {
+            Name = name;
+        }
 
         public override string ToString()
         {

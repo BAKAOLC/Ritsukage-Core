@@ -10,7 +10,7 @@ namespace Ritsukage.Discord.Commands
         {
             try
             {
-                double result = Tools.CalcTool.GetExprValue(expr.Replace(" ", ""));
+                var result = Tools.CalcTool.GetExprValue(expr.Replace(" ", ""));
                 await ReplyAsync($"{expr} = {result}");
             }
             catch

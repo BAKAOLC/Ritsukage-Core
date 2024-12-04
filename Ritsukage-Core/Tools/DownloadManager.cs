@@ -21,22 +21,17 @@ namespace Ritsukage.Tools
         public const string CacheFolder = "CacheFolder";
         public const string CacheRecordFile = "CacheRecord";
 
-        struct CacheData
+        private readonly struct CacheData
         {
-            [JsonProperty("url")]
-            public string Url { get; init; }
+            [JsonProperty("url")] public string Url { get; init; }
 
-            [JsonProperty("path")]
-            public string Path { get; init; }
+            [JsonProperty("path")] public string Path { get; init; }
 
-            [JsonProperty("time")]
-            public DateTime CacheTime { get; init; }
+            [JsonProperty("time")] public DateTime CacheTime { get; init; }
 
-            [JsonProperty("to")]
-            public DateTime ClearTime { get; init; }
+            [JsonProperty("to")] public DateTime ClearTime { get; init; }
 
-            [JsonIgnore]
-            public bool Exists => File.Exists(Path);
+            [JsonIgnore] public bool Exists => File.Exists(Path);
 
             public CacheData(string url, string path, DateTime cacheTime, int keepTime)
             {
@@ -59,13 +54,13 @@ namespace Ritsukage.Tools
         public static string CacheFileName
             => Path.GetFullPath(Path.Combine(CacheFolder, Guid.NewGuid().ToString() + ".cache"));
 
-        static readonly List<string> DownloadingList = new();
+        private static readonly List<string> DownloadingList = new();
 
-        static readonly ConcurrentDictionary<string, CacheData> CacheDataList = new();
+        private static readonly ConcurrentDictionary<string, CacheData> CacheDataList = new();
 
-        static bool _init = false;
+        private static bool _init = false;
 
-        static async void Init()
+        private static async void Init()
         {
             if (_init) return;
             _init = true;
@@ -97,7 +92,7 @@ namespace Ritsukage.Tools
             await AriaHttpAcquisition.InitializeAsync();
         }
 
-        static void Save()
+        private static void Save()
         {
             lock (CacheDataList)
             {
@@ -105,11 +100,15 @@ namespace Ritsukage.Tools
             }
         }
 
-        static void Aria2DebugLog(string text)
-            => ConsoleLog.Debug("Aria2", text);
+        private static void Aria2DebugLog(string text)
+        {
+            ConsoleLog.Debug("Aria2", text);
+        }
 
-        static void DebugLog(string text)
-            => ConsoleLog.Debug("Downloader", text);
+        private static void DebugLog(string text)
+        {
+            ConsoleLog.Debug("Downloader", text);
+        }
 
         public static async Task<string> GetCache(string url)
         {
@@ -119,7 +118,9 @@ namespace Ritsukage.Tools
             if (CacheDataList.TryGetValue(url, out var cache))
             {
                 if (cache.Exists)
+                {
                     return cache.Path;
+                }
                 else
                 {
                     CacheDataList.TryRemove(url, out _);
@@ -133,23 +134,26 @@ namespace Ritsukage.Tools
         public static async Task<string> Download(string url, string referer = null, int keepTime = 3600,
             Action<DownloadStartedEventArgs> DownloadStartedAction = null,
             Action<DownloadProgressChangedEventArgs> DownloadProgressChangedAction = null,
-            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000, bool enableSimpleDownload = false, bool enableAria2Download = false)
+            Action<DownloadFileCompletedEventArgs> DownloadFileCompletedAction = null, int UpdateInfoDelay = 1000,
+            bool enableSimpleDownload = false, bool enableAria2Download = false)
         {
             Init();
 
             #region 检查缓存
+
             var _cache = await GetCache(url);
             if (!string.IsNullOrEmpty(_cache))
                 return _cache;
+
             #endregion
 
             DownloadingList.Add(url);
 
             #region 下载
+
             Stream stream = null;
-            bool flag = false;
+            var flag = false;
             if (enableAria2Download)
-            {
                 try
                 {
                     var filename = Guid.NewGuid().ToString().Replace("-", string.Empty) + ".temp";
@@ -158,32 +162,37 @@ namespace Ritsukage.Tools
                     ac.DownloadStarted += (s, e) =>
                     {
                         Aria2DebugLog($"Start to download file from {url} ({e.FileSize} bytes)");
-                        DownloadStartedAction?.Invoke(new DownloadStartedEventArgs(e.FileName, e.FileSize));
+                        DownloadStartedAction?.Invoke(new(e.FileName, e.FileSize));
                     };
                     ac.DownloadProgressChanged += (s, e) =>
                     {
-                        Aria2DebugLog($"Downloading {url}... {e.ReceivedBytes}/{e.TotalBytes} ({e.DownloadPercentage:F2}%)");
-                        DownloadProgressChangedAction?.Invoke(new DownloadProgressChangedEventArgs(e.TotalBytes, e.ReceivedBytes, e.BytesPerSecondSpeed, e.DownloadDuration));
+                        Aria2DebugLog(
+                            $"Downloading {url}... {e.ReceivedBytes}/{e.TotalBytes} ({e.DownloadPercentage:F2}%)");
+                        DownloadProgressChangedAction?.Invoke(new(e.TotalBytes, e.ReceivedBytes, e.BytesPerSecondSpeed,
+                            e.DownloadDuration));
                     };
                     ac.DownloadFileCompleted += (s, e) =>
                     {
                         if (e.Status == AcquisitionResult.Error)
                         {
                             if (e.Exception != null)
-                                Aria2DebugLog($"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
+                                Aria2DebugLog($"Download {url} failed." + Environment.NewLine +
+                                              e.Exception.GetFormatString(true));
                             else
                                 Aria2DebugLog($"Download {url} failed with unknown exception.");
-                            DownloadFileCompletedAction?.Invoke(new DownloadFileCompletedEventArgs(DownloadTaskStatus.Error, e.DownloadDuration, null, e.Exception));
+                            DownloadFileCompletedAction?.Invoke(new(DownloadTaskStatus.Error, e.DownloadDuration, null,
+                                e.Exception));
                         }
                         else if (e.Status == AcquisitionResult.Cancelled)
                         {
                             Aria2DebugLog($"Download {url} cancelled.");
-                            DownloadFileCompletedAction?.Invoke(new DownloadFileCompletedEventArgs(DownloadTaskStatus.Cancelled, e.DownloadDuration));
+                            DownloadFileCompletedAction?.Invoke(new(DownloadTaskStatus.Cancelled, e.DownloadDuration));
                         }
                         else
                         {
                             Aria2DebugLog($"Download {url} completed.");
-                            DownloadFileCompletedAction?.Invoke(new DownloadFileCompletedEventArgs(DownloadTaskStatus.Completed, e.DownloadDuration, e.FileStream));
+                            DownloadFileCompletedAction?.Invoke(new(DownloadTaskStatus.Completed, e.DownloadDuration,
+                                e.FileStream));
                             stream = e.FileStream;
                         }
                     };
@@ -199,7 +208,7 @@ namespace Ritsukage.Tools
                         }
                         catch (UnauthorizedAccessException)
                         {
-                            FileAttributes attributes = File.GetAttributes(tempfile);
+                            var attributes = File.GetAttributes(tempfile);
                             if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                             {
                                 attributes &= ~FileAttributes.ReadOnly;
@@ -218,14 +227,15 @@ namespace Ritsukage.Tools
                 }
                 catch (Exception ex)
                 {
-                    ConsoleLog.Error("Download Manager", "Aria2方法下载失败，将使用dotnet方法下载" + Environment.NewLine + ex.GetFormatString());
+                    ConsoleLog.Error("Download Manager",
+                        "Aria2方法下载失败，将使用dotnet方法下载" + Environment.NewLine + ex.GetFormatString());
                 }
-            }
+
             if (!flag)
             {
                 var task = new DownloadTask(url, referer)
                 {
-                    UpdateInfoDelay = UpdateInfoDelay
+                    UpdateInfoDelay = UpdateInfoDelay,
                 };
                 task.DownloadStarted += (s, e) =>
                 {
@@ -242,14 +252,20 @@ namespace Ritsukage.Tools
                     if (e.Status == DownloadTaskStatus.Error)
                     {
                         if (e.Exception != null)
-                            DebugLog($"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
+                            DebugLog(
+                                $"Download {url} failed." + Environment.NewLine + e.Exception.GetFormatString(true));
                         else
                             DebugLog($"Download {url} failed with unknown exception.");
                     }
                     else if (e.Status == DownloadTaskStatus.Cancelled)
+                    {
                         DebugLog($"Download {url} cancelled.");
+                    }
                     else
+                    {
                         DebugLog($"Download {url} completed.");
+                    }
+
                     DownloadFileCompletedAction?.Invoke(e);
                 };
                 await task.WaitForDownloadCompleted();
@@ -257,16 +273,16 @@ namespace Ritsukage.Tools
                 if (task.FileSize == -1 || task.Status != DownloadTaskStatus.Completed)
                 {
                     if (enableSimpleDownload)
-                    {
                         try
                         {
                             stream = await Utils.GetFileAsync(url, referer);
                         }
                         catch (Exception ex)
                         {
-                            ConsoleLog.Error("Download Manager", "简易下载再次失败" + Environment.NewLine + ex.GetFormatString());
+                            ConsoleLog.Error("Download Manager",
+                                "简易下载再次失败" + Environment.NewLine + ex.GetFormatString());
                         }
-                    }
+
                     if (stream == null)
                     {
                         DownloadingList.Remove(url);
@@ -274,36 +290,41 @@ namespace Ritsukage.Tools
                     }
                 }
             }
+
             #endregion
 
             #region 储存
+
             var file = CacheFileName;
             stream.SaveToFile(file);
             stream.Dispose();
-            CacheDataList.TryAdd(url, new CacheData(url, file, DateTime.Now, keepTime));
+            CacheDataList.TryAdd(url, new(url, file, DateTime.Now, keepTime));
             Save();
+
             #endregion
 
             DownloadingList.Remove(url);
             return file;
         }
 
-        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600, bool enableSimpleDownload = false, bool enableAria2Download = false)
+        public static Task<string[]> Download(string[] urls, string referer = null, int keepTime = 3600,
+            bool enableSimpleDownload = false, bool enableAria2Download = false)
         {
             var result = new string[urls.Length];
             var tasks = new Task<string>[urls.Length];
-            for (int i = 0; i < urls.Length; i++)
+            for (var i = 0; i < urls.Length; i++)
                 tasks[i] = Download(urls[i], referer, keepTime,
                     enableAria2Download: enableAria2Download,
                     enableSimpleDownload: enableSimpleDownload);
             Task.WaitAll(tasks);
-            for (int i = 0; i < urls.Length; i++)
+            for (var i = 0; i < urls.Length; i++)
                 result[i] = tasks[i].Result;
             return Task.FromResult(result);
         }
 
-        const int SaveBufferSize = 4096;
-        static void SaveToFile(this Stream stream, string path)
+        private const int SaveBufferSize = 4096;
+
+        private static void SaveToFile(this Stream stream, string path)
         {
             var folder = Path.GetDirectoryName(path);
             if (!Directory.Exists(folder))
@@ -319,8 +340,9 @@ namespace Ritsukage.Tools
             fileStream.Dispose();
         }
 
-        const int ClearCacheDelay = 1000;
-        static void StartCacheCleanupThread()
+        private const int ClearCacheDelay = 1000;
+
+        private static void StartCacheCleanupThread()
         {
             new Thread(() =>
             {
@@ -334,12 +356,13 @@ namespace Ritsukage.Tools
                             data.Value.Delete();
                         CacheDataList.TryRemove(data.Key, out _);
                     }
+
                     Save();
                     Thread.Sleep(ClearCacheDelay);
                 }
             })
             {
-                IsBackground = true
+                IsBackground = true,
             }.Start();
         }
     }
@@ -352,7 +375,7 @@ namespace Ritsukage.Tools
             ChunkCount = 5,
             MaxTryAgainOnFailover = 5,
             ParallelDownload = true,
-            Timeout = 20000
+            Timeout = 20000,
         };
 
         public static int DefaultUpdateInfoDelay = 1000;
@@ -363,11 +386,13 @@ namespace Ritsukage.Tools
         public string Url { get; init; }
         public DownloadService Service { get; init; }
         public DownloadConfiguration DownloadConfig { get; init; }
+
         public RequestConfiguration RequestConfig
         {
             get => DownloadConfig.RequestConfiguration;
             set => DownloadConfig.RequestConfiguration = value;
         }
+
         public int UpdateInfoDelay = DefaultUpdateInfoDelay;
 
         public DateTime BeginTime { get; private set; }
@@ -381,7 +406,8 @@ namespace Ritsukage.Tools
         public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressChanged;
         public event EventHandler<DownloadFileCompletedEventArgs> DownloadFileCompleted;
 
-        public DownloadTask(string url, string referer = null, string cookie = null, DownloadConfiguration config = null)
+        public DownloadTask(string url, string referer = null, string cookie = null,
+            DownloadConfiguration config = null)
         {
             Url = url;
             DownloadConfig = config ?? DefaultDownloadConfig.Clone() as DownloadConfiguration;
@@ -392,7 +418,7 @@ namespace Ritsukage.Tools
                 RequestConfig.Referer = referer;
             if (!string.IsNullOrEmpty(cookie))
                 RequestConfig.Headers["cookie"] = cookie;
-            Service = new DownloadService(DownloadConfig);
+            Service = new(DownloadConfig);
             Service.DownloadStarted += DownloadStartedEventHandler;
             Service.DownloadProgressChanged += DownloadProgressChangedEventHandler;
             Service.DownloadFileCompleted += DownloadFileCompletedEventHandler;
@@ -407,6 +433,7 @@ namespace Ritsukage.Tools
                 case DownloadTaskStatus.Completed:
                     return;
             }
+
             Status = DownloadTaskStatus.Connecting;
             StartDownload();
         }
@@ -422,8 +449,9 @@ namespace Ritsukage.Tools
             }
         }
 
-        Task _downloadTask;
-        void StartDownload()
+        private Task _downloadTask;
+
+        private void StartDownload()
         {
             FileStream = null;
             Exception = null;
@@ -448,10 +476,11 @@ namespace Ritsukage.Tools
                         + Environment.NewLine
                         + ex.GetFormatString(true));
                 }
-                TimeSpan duration = TimeSpan.Zero;
+
+                var duration = TimeSpan.Zero;
                 if (DownloadStartedTime != default)
                     duration = DateTime.Now - DownloadStartedTime;
-                DownloadFileCompleted?.Invoke(Service, new DownloadFileCompletedEventArgs(Status, duration, stream, Exception));
+                DownloadFileCompleted?.Invoke(Service, new(Status, duration, stream, Exception));
             });
         }
 
@@ -467,12 +496,13 @@ namespace Ritsukage.Tools
                     StartDownload();
                     break;
             }
+
             await _downloadTask;
         }
 
-        DateTime _lastUpdateTime;
+        private DateTime _lastUpdateTime;
 
-        void DownloadStartedEventHandler(object sender, Downloader.DownloadStartedEventArgs eventArgs)
+        private void DownloadStartedEventHandler(object sender, Downloader.DownloadStartedEventArgs eventArgs)
         {
             var now = DateTime.Now;
             Status = DownloadTaskStatus.Downloading;
@@ -480,21 +510,24 @@ namespace Ritsukage.Tools
             _lastUpdateTime = now;
             FileName = eventArgs.FileName;
             FileSize = eventArgs.TotalBytesToReceive;
-            DownloadStarted?.Invoke(Service, new DownloadStartedEventArgs(eventArgs.FileName, eventArgs.TotalBytesToReceive));
+            DownloadStarted?.Invoke(Service, new(eventArgs.FileName, eventArgs.TotalBytesToReceive));
         }
 
-        void DownloadProgressChangedEventHandler(object sender, Downloader.DownloadProgressChangedEventArgs eventArgs)
+        private void DownloadProgressChangedEventHandler(object sender,
+            Downloader.DownloadProgressChangedEventArgs eventArgs)
         {
             var now = DateTime.Now;
             var dt = (now - _lastUpdateTime).TotalMilliseconds;
             if (dt >= UpdateInfoDelay)
             {
                 _lastUpdateTime = now;
-                DownloadProgressChanged?.Invoke(Service, new DownloadProgressChangedEventArgs(eventArgs.TotalBytesToReceive, eventArgs.ReceivedBytesSize, eventArgs.BytesPerSecondSpeed, now - DownloadStartedTime));
+                DownloadProgressChanged?.Invoke(Service,
+                    new(eventArgs.TotalBytesToReceive, eventArgs.ReceivedBytesSize, eventArgs.BytesPerSecondSpeed,
+                        now - DownloadStartedTime));
             }
         }
 
-        void DownloadFileCompletedEventHandler(object sender, AsyncCompletedEventArgs eventArgs)
+        private void DownloadFileCompletedEventHandler(object sender, AsyncCompletedEventArgs eventArgs)
         {
             DownloadCompletedTime = DateTime.Now;
             Status = DownloadTaskStatus.Completed;
@@ -515,7 +548,7 @@ namespace Ritsukage.Tools
         Downloading,
         Completed,
         Cancelled,
-        Error
+        Error,
     }
 
     public class DownloadStartedEventArgs : EventArgs
@@ -539,7 +572,8 @@ namespace Ritsukage.Tools
         public double DownloadPercentage { get; init; }
         public TimeSpan DownloadDuration { get; init; }
 
-        public DownloadProgressChangedEventArgs(long totalBytes, long receivedBytes, double bytesPerSecondSpeed, TimeSpan downloadDuration)
+        public DownloadProgressChangedEventArgs(long totalBytes, long receivedBytes, double bytesPerSecondSpeed,
+            TimeSpan downloadDuration)
         {
             TotalBytes = totalBytes;
             ReceivedBytes = receivedBytes;
@@ -560,7 +594,8 @@ namespace Ritsukage.Tools
 
         public TimeSpan DownloadDuration { get; init; }
 
-        public DownloadFileCompletedEventArgs(DownloadTaskStatus status, TimeSpan downloadDuration, Stream fileStream = null, Exception exception = null)
+        public DownloadFileCompletedEventArgs(DownloadTaskStatus status, TimeSpan downloadDuration,
+            Stream fileStream = null, Exception exception = null)
         {
             Status = status;
             FileStream = fileStream;

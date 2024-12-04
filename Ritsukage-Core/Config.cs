@@ -5,7 +5,7 @@ namespace Ritsukage
 {
     public class Config
     {
-        const string ConfigPath = "config.json";
+        private const string ConfigPath = "config.json";
 
         /// <summary>
         /// 数据库储存位置
@@ -28,14 +28,17 @@ namespace Ritsukage
         public bool IsDebug = false;
 
         #region Roll Api
+
         /// <summary>
         /// Roll Api Id (https://github.com/MZCretin/RollToolsApi)
         /// </summary>
         public string Roll_Api_Id = string.Empty;
+
         /// <summary>
         /// Roll Api Secret
         /// </summary>
         public string Roll_Api_Secret = string.Empty;
+
         #endregion
 
         /// <summary>
@@ -44,36 +47,45 @@ namespace Ritsukage
         public string SuoLinkToken = "";
 
         #region Mojang Jira
+
         /// <summary>
         /// Mojang Jira Username
         /// </summary>
         public string MoJiraUsername = "";
+
         /// <summary>
         /// Mojang Jira Password
         /// </summary>
         public string MoJiraPassword = "";
+
         #endregion
 
         #region Baidu
+
         /// <summary>
         /// 百度翻译Api App Id
         /// </summary>
         public string BaiduTranslateAppId = "";
+
         /// <summary>
         /// 百度翻译Api Key
         /// </summary>
         public string BaiduTranslateKey = "";
+
         #endregion
 
         #region
+
         /// <summary>
         /// OpenAI Api Key
         /// </summary>
         public string OpenAIApiKey = "";
+
         /// <summary>
         /// OpenAI Organization
         /// </summary>
         public string OpenAIOrganization = "";
+
         #endregion
 
         /// <summary>
@@ -81,7 +93,32 @@ namespace Ritsukage
         /// </summary>
         public string OCRSpaceToken = "";
 
+        #region Azure
+
+        /// <summary>
+        /// Azure TTS Key
+        /// </summary>
+        public string AzureSpeechKey = "";
+
+        /// <summary>
+        /// Azure TTS Region
+        /// </summary>
+        public string AzureSpeechRegion = "";
+
+        /// <summary>
+        /// Azure Content Moderator Key
+        /// </summary>
+        public string AzureContentModeratorKey = "";
+
+        /// <summary>
+        /// Azure Content Moderator End Point
+        /// </summary>
+        public string AzureContentModeratorEndPoint = "";
+
+        #endregion
+
         #region QQ
+
         /// <summary>
         /// 是否启用QQ相关功能
         /// </summary>
@@ -111,9 +148,11 @@ namespace Ritsukage
         /// QQ相关功能超级权限者
         /// </summary>
         public long QQSuperUser = -1;
+
         #endregion
 
         #region Discord
+
         /// <summary>
         /// 是否启用Discord相关功能
         /// </summary>
@@ -123,6 +162,7 @@ namespace Ritsukage
         /// Discord Bot Token
         /// </summary>
         public string DiscordToken = string.Empty;
+
         #endregion
 
         public static Config LoadConfig()
@@ -136,11 +176,13 @@ namespace Ritsukage
             catch
             {
             }
+
             if (cfg == null)
             {
-                cfg = new Config();
+                cfg = new();
                 File.WriteAllText(ConfigPath, JsonConvert.SerializeObject(cfg, Formatting.Indented));
             }
+
             return cfg;
         }
     }

@@ -12,7 +12,9 @@ namespace Ritsukage.QQ.Commands
         public static async void Info(SoraMessage e)
         {
             var sb = new StringBuilder();
+
             #region QQ
+
             {
                 sb.AppendLine("[Tencent QQ]");
                 if (e.IsGroupMessage)
@@ -20,11 +22,14 @@ namespace Ritsukage.QQ.Commands
                 else
                     sb.Append($"{e.PrivateSenderInfo.Nick}({e.Sender.Id})");
             }
+
             #endregion
+
             var data = await Database.FindAsync<UserData>(x => x.QQ == e.Sender.Id);
             if (data != null)
             {
                 #region Discord
+
                 {
                     sb.AppendLine();
                     sb.AppendLine("[Discord]");
@@ -33,31 +38,34 @@ namespace Ritsukage.QQ.Commands
                     else
                         sb.Append("未绑定Discord账户");
                 }
+
                 #endregion
+
                 #region Bilibili
+
                 {
                     sb.AppendLine();
                     sb.AppendLine("[Bilibili]");
                     if (data.BilibiliCookie != null)
-                    {
                         try
                         {
                             var info = new Library.Bilibili.Model.MyUserInfo(data.BilibiliCookie);
                             var birth = string.IsNullOrWhiteSpace(info.Birth) ? "保密" : info.Birth;
                             sb.Append($"{info.Name} (UID:{info.Id}) Lv{info.Level}" + "\n"
-                            + $"性别：{info.Sex}  生日：{birth}  关注：{info.Following}  粉丝：{info.Follower}" + "\n"
-                            + info.Sign);
+                                + $"性别：{info.Sex}  生日：{birth}  关注：{info.Following}  粉丝：{info.Follower}" + "\n"
+                                + info.Sign);
                         }
                         catch (Exception ex)
                         {
                             sb.Append("获取用户信息时发生错误：" + ex.Message);
                         }
-                    }
                     else
                         sb.Append("未登录B站账户");
                 }
+
                 #endregion
             }
+
             await e.Reply(sb.ToString());
         }
 

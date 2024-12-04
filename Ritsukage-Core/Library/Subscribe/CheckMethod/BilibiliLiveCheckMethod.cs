@@ -10,7 +10,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
 {
     public class BilibiliLiveCheckMethod : Base.SubscribeCheckMethod
     {
-        const string type = "bilibili live";
+        private const string type = "bilibili live";
 
         public int RoomId { get; init; }
 
@@ -31,7 +31,9 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
                 return new BilibiliLiveCheckResult();
             }
-            var record = await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == RoomId.ToString());
+
+            var record =
+                await Database.FindAsync<SubscribeStatusRecord>(x => x.Type == type && x.Target == RoomId.ToString());
             if (record != null)
             {
                 JObject status = null;
@@ -43,9 +45,10 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 {
                     ConsoleLog.Error("Bilibili Live Checker", ConsoleLog.ErrorLogBuilder(e));
                 }
+
                 if (status != null)
                 {
-                    BilibiliLiveUpdateType updated = BilibiliLiveUpdateType.None;
+                    var updated = BilibiliLiveUpdateType.None;
                     if ((int)status["LiveStatus"] != (int)room.LiveStatus)
                     {
                         updated = BilibiliLiveUpdateType.LiveStatus;
@@ -57,6 +60,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                         updated = BilibiliLiveUpdateType.Title;
                         status["Title"] = room.Title;
                     }
+
                     if (updated != BilibiliLiveUpdateType.None)
                     {
                         record.Status = status.ToString();
@@ -72,13 +76,16 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                             Online = room.Online,
                             Status = room.LiveStatus,
                             Cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
-                            Url = room.Url
+                            Url = room.Url,
                         };
                     }
                     else
+                    {
                         return new BilibiliLiveCheckResult();
+                    }
                 }
             }
+
             await Database.InsertAsync(new SubscribeStatusRecord()
             {
                 Type = type,
@@ -86,8 +93,8 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 Status = new JObject()
                 {
                     { "LiveStatus", (int)room.LiveStatus },
-                    { "Title", room.Title }
-                }.ToString()
+                    { "Title", room.Title },
+                }.ToString(),
             });
             return new BilibiliLiveCheckResult()
             {
@@ -100,7 +107,7 @@ namespace Ritsukage.Library.Subscribe.CheckMethod
                 Online = room.Online,
                 Status = room.LiveStatus,
                 Cover = string.IsNullOrWhiteSpace(room.UserCoverUrl) ? room.KeyFrame : room.UserCoverUrl,
-                Url = room.Url
+                Url = room.Url,
             };
         }
     }

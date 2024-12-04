@@ -9,6 +9,9 @@ namespace Ritsukage.QQ.Commands
     {
         public abstract Task<bool> CheckPermissionsAsync(BaseSoraEventArgs args);
 
-        public override string ToString() => $"<{GetType().Name}>";
+        public override string ToString()
+        {
+            return $"<{GetType().Name}>";
+        }
     }
 }
