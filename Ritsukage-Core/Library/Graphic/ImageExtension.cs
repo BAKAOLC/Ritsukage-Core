@@ -9,6 +9,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+using SixLabors.ImageSharp.Processing;
 using static Ritsukage.Library.Graphic.GraphicUtils;
 
 namespace Ritsukage.Library.Graphic
@@ -107,16 +109,26 @@ namespace Ritsukage.Library.Graphic
         private static Image<TPixel> Worker<TPixel>(Image<TPixel> image, Action<Image<TPixel>> action)
             where TPixel : unmanaged, IPixel<TPixel>
         {
-            if (action != null)
-                for (var i = 0; i < image.Frames.Count; i++)
+            if (action == null) return image;
+            var result = image.CloneEmpty();
+            var frames = new ImageFrame<TPixel>[image.Frames.Count];
+            var tasks = new Task[image.Frames.Count];
+            for (var i = 0; i < image.Frames.Count; i++)
+            {
+                var index = i;
+                var task = Task.Run(() =>
                 {
-                    var frame = image.Frames.CloneFrame(i);
-                    action?.Invoke(frame);
-                    image.Frames.InsertFrame(i, frame.Frames.RootFrame);
-                    image.Frames.RemoveFrame(i + 1);
-                }
+                    var frame = image.Frames.CloneFrame(index);
+                    action(frame);
+                    frames[index] = frame.Frames.RootFrame;
+                });
+                tasks[i] = task;
+            }
 
-            return image;
+            Task.WaitAll(tasks);
+            for (var i = 0; i < tasks.Length; i++) result.Frames.AddFrame(frames[i]);
+            result.Frames.RemoveFrame(0);
+            return result;
         }
 
         #region Color HSV Transform
@@ -176,6 +188,12 @@ namespace Ritsukage.Library.Graphic
                     f[x, y] = c;
                 }
             });
+        }
+
+        public static Image<TPixel> DetectEdges<TPixel>(this Image<TPixel> image)
+            where TPixel : unmanaged, IPixel<TPixel>
+        {
+            return Worker(image, f => { f.Mutate(x => x.DetectEdges()); });
         }
 
         #endregion

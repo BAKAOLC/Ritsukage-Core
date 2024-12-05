@@ -156,8 +156,9 @@ namespace Ritsukage.Tools
             if (enableAria2Download)
                 try
                 {
-                    var filename = Guid.NewGuid().ToString().Replace("-", string.Empty) + ".temp";
-                    var directory = Path.GetTempPath();
+                    var fullPath = Path.GetTempFileName();
+                    var filename = Path.GetFileName(fullPath);
+                    var directory = Path.GetDirectoryName(fullPath);
                     var ac = new AriaHttpAcquisition(url, referer, filename, directory);
                     ac.DownloadStarted += (s, e) =>
                     {
@@ -364,6 +365,14 @@ namespace Ritsukage.Tools
             {
                 IsBackground = true,
             }.Start();
+        }
+
+        public static void CleanAllCache()
+        {
+            foreach (var cache in CacheDataList)
+                if (cache.Value.Exists)
+                    cache.Value.Delete();
+            CacheDataList.Clear();
         }
     }
 

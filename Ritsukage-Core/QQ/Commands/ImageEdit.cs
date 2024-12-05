@@ -9,21 +9,60 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Sora.Entities;
+using Sora.Enumeration;
 using static Ritsukage.Library.Graphic.GraphicEdit;
 using static Ritsukage.Library.Graphic.GraphicUtils;
+using Sora.Entities.Segment.DataModel;
+using Sora.Enumeration.ApiType;
 
 namespace Ritsukage.QQ.Commands
 {
     [CommandGroup("Image Edit")]
     public static class ImageEdit
     {
+        private static async Task<string[]> GetReplyImageUrls(SoraMessage e)
+        {
+            var replySegment = e.Message.MessageBody.FirstOrDefault(x => x.MessageType == SegmentType.Reply);
+            if (replySegment == null)
+            {
+                await e.ReplyToOriginal("未检测到任何图片").ConfigureAwait(false);
+                return [];
+            }
+
+            if (replySegment.Data is not ReplySegment reply)
+            {
+                await e.ReplyToOriginal("检测到回复消息字段，但未能解析").ConfigureAwait(false);
+                return [];
+            }
+
+            var (apiStatus, message, _, _, _, _) = await e.SoraApi.GetMessage(reply.Target).ConfigureAwait(false);
+
+            if (apiStatus.RetCode != ApiStatusType.Ok)
+            {
+                await e.ReplyToOriginal("获取回复消息失败").ConfigureAwait(false);
+                return [];
+            }
+
+            var imglist = message.GetAllImage();
+            if (!imglist.Any())
+            {
+                await e.ReplyToOriginal("未检测到任何图片").ConfigureAwait(false);
+                return [];
+            }
+
+            await e.ReplyToOriginal("请稍后").ConfigureAwait(false);
+            return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
+        }
+
         private static async Task<string> GetImageUrl(SoraMessage e)
         {
             var imglist = e.Message.GetAllImage();
             if (!imglist.Any())
             {
-                await e.ReplyToOriginal("未检测到任何图片");
-                return null;
+                //await e.ReplyToOriginal("未检测到任何图片");
+                var replyImageUrls = await GetReplyImageUrls(e);
+                return replyImageUrls.Length == 0 ? null : replyImageUrls.FirstOrDefault();
             }
 
             await e.ReplyToOriginal("请稍后");
@@ -35,8 +74,9 @@ namespace Ritsukage.QQ.Commands
             var imglist = e.Message.GetAllImage();
             if (!imglist.Any())
             {
-                await e.ReplyToOriginal("未检测到任何图片");
-                return null;
+                //await e.ReplyToOriginal("未检测到任何图片");
+                var replyImageUrls = await GetReplyImageUrls(e);
+                return replyImageUrls.Length == 0 ? null : replyImageUrls;
             }
 
             await e.ReplyToOriginal("请稍后");
@@ -133,6 +173,14 @@ namespace Ritsukage.QQ.Commands
         public static async void WorkGraying(SoraMessage e)
         {
             await Worker(e, x => x.ColorGraying());
+        }
+
+        [Command("边缘检测")]
+        [CommandDescription("基于Sobel算子进行边缘检测")]
+        [ParameterDescription(1, "图像")]
+        public static async void WorkDetectEdges(SoraMessage e)
+        {
+            await Worker(e, x => x.DetectEdges());
         }
 
         [Command("外围消除")]

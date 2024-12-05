@@ -55,6 +55,17 @@ namespace Ritsukage.QQ.Commands
                             {
                                 sb.AppendLine().Append("= " + expr.EvalBoolean().ToString());
                             }
+                            else
+                            {
+                                if (expr.ToString().Contains("implies"))
+                                {
+                                    var result = MathS.SolveBooleanTable(expr, expr.Vars.ToArray());
+                                    if (result != null && result.Count() != 0)
+                                    {
+                                        sb.AppendLine().Append("= " + result.ToString());
+                                    }
+                                }
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -86,7 +97,7 @@ namespace Ritsukage.QQ.Commands
                         sb.AppendLine()
                             .AppendLine($"> Solve: {string.Join(" ", needSolveEntity)}")
                             .AppendLine("> Result:")
-                            .Append(equation.Solve(needSolveEntity.ToArray()));
+                            .Append(equation.Solve(needSolveEntity.ToArray()).Simplify());
                 }
                 else
                 {
@@ -104,7 +115,7 @@ namespace Ritsukage.QQ.Commands
                             sb.AppendLine()
                                 .AppendLine($"> Solve: {solve}")
                                 .AppendLine("> Result:")
-                                .Append(expr.Solve(needSolveEntity.First()));
+                                .Append(expr.Solve(needSolveEntity.First()).Simplify());
                         }
                     }
                 }
