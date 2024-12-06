@@ -310,7 +310,7 @@ namespace Ritsukage.Discord.Commands
         [Command("login")]
         public async Task Login()
         {
-            var msg = await ReplyAsync("请求已接受，请稍后……");
+            var msg = await ReplyAsync("请求已接受，请稍候……");
             var dm = await Context.User.CreateDMChannelAsync();
             IUserMessage qr = null;
             IUserMessage dmmsg = null;

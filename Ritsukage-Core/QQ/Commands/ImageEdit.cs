@@ -5,22 +5,45 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.Segment;
+using Sora.Entities.Segment.DataModel;
+using Sora.Enumeration;
+using Sora.Enumeration.ApiType;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Sora.Entities;
-using Sora.Enumeration;
 using static Ritsukage.Library.Graphic.GraphicEdit;
 using static Ritsukage.Library.Graphic.GraphicUtils;
-using Sora.Entities.Segment.DataModel;
-using Sora.Enumeration.ApiType;
 
 namespace Ritsukage.QQ.Commands
 {
     [CommandGroup("Image Edit")]
     public static class ImageEdit
     {
+        private static async Task<string[]> GetImageOriginalUrls(SoraMessage e, IEnumerable<ImageSegment> segments)
+        {
+            var imageSegments = segments as ImageSegment[] ?? segments.ToArray();
+            if (!imageSegments.Any()) return [];
+
+            var result = new List<string>();
+
+            foreach (var segment in imageSegments)
+                if (segment.ImgFile.ToLower().Trim() == "marketface")
+                {
+                    result.Add(segment.Url);
+                }
+                else
+                {
+                    var (apiStatus, _, _, url) = await e.SoraApi.GetImage(segment.ImgFile).ConfigureAwait(false);
+                    if (apiStatus.RetCode == ApiStatusType.Ok)
+                        result.Add(url);
+                    else if (!string.IsNullOrEmpty(segment.Url)) result.Add(segment.Url);
+                }
+
+            return result.ToArray();
+        }
+
         private static async Task<string[]> GetReplyImageUrls(SoraMessage e)
         {
             var replySegment = e.Message.MessageBody.FirstOrDefault(x => x.MessageType == SegmentType.Reply);
@@ -51,8 +74,8 @@ namespace Ritsukage.QQ.Commands
                 return [];
             }
 
-            await e.ReplyToOriginal("请稍后").ConfigureAwait(false);
-            return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
+            await e.ReplyToOriginal("请稍候").ConfigureAwait(false);
+            return await GetImageOriginalUrls(e, imglist).ConfigureAwait(false);
         }
 
         private static async Task<string> GetImageUrl(SoraMessage e)
@@ -65,8 +88,8 @@ namespace Ritsukage.QQ.Commands
                 return replyImageUrls.Length == 0 ? null : replyImageUrls.FirstOrDefault();
             }
 
-            await e.ReplyToOriginal("请稍后");
-            return (await e.SoraApi.GetImage(imglist.First().ImgFile)).url;
+            await e.ReplyToOriginal("请稍候");
+            return (await GetImageOriginalUrls(e, imglist).ConfigureAwait(false))?.FirstOrDefault();
         }
 
         private static async Task<string[]> GetImageUrls(SoraMessage e)
@@ -79,8 +102,14 @@ namespace Ritsukage.QQ.Commands
                 return replyImageUrls.Length == 0 ? null : replyImageUrls;
             }
 
-            await e.ReplyToOriginal("请稍后");
-            return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
+            await e.ReplyToOriginal("请稍候");
+            return await GetImageOriginalUrls(e, imglist).ConfigureAwait(false);
+        }
+
+        private static async Task<string> DownloadImage(SoraMessage e, string url)
+        {
+            var (apiStatus, filePath) = await e.SoraApi.DownloadFile(url, 1).ConfigureAwait(false);
+            return apiStatus.RetCode != ApiStatusType.Ok ? null : filePath;
         }
 
         private static async Task<string> DownloadImage(string url)
@@ -115,7 +144,9 @@ namespace Ritsukage.QQ.Commands
                 var url = await GetImageUrl(e);
                 if (url == null)
                     return;
-                var path = await DownloadImage(url);
+                var path = await DownloadImage(e, url);
+                if (path == null)
+                    throw new("下载图片失败");
                 var image = LoadImage(path, out var format);
                 var product = func.Invoke(image);
                 await SendImage(e, product, format);
@@ -205,7 +236,7 @@ namespace Ritsukage.QQ.Commands
                 var url = await GetImageUrl(e);
                 if (url == null)
                     return;
-                var path = await DownloadImage(url);
+                var path = await DownloadImage(e, url);
                 var image = LoadImage(path, out var format);
                 var product = Mosaic(image, size, px, py);
                 await SendImage(e, product, format);
@@ -240,7 +271,7 @@ namespace Ritsukage.QQ.Commands
                     var url = await GetImageUrl(e);
                     if (url == null)
                         return;
-                    var path = await DownloadImage(url);
+                    var path = await DownloadImage(e, url);
                     var image = LoadImage(path);
                     var product = GenerateRotateImageWithOriginalSize(image, repeat, frameDelay);
                     await SendImage(e, product, ImageFormat.Gif);
@@ -275,7 +306,7 @@ namespace Ritsukage.QQ.Commands
                     var url = await GetImageUrl(e);
                     if (url == null)
                         return;
-                    var path = await DownloadImage(url);
+                    var path = await DownloadImage(e, url);
                     var image = LoadImage(path);
                     var product = GenerateRotateImage(image, repeat, frameDelay);
                     await SendImage(e, product, ImageFormat.Gif);
@@ -311,7 +342,7 @@ namespace Ritsukage.QQ.Commands
                 var imgs = new Image<Rgba32>[9];
                 for (var i = 0; i < 9; i++)
                 {
-                    var path = await DownloadImage(urls[i]);
+                    var path = await DownloadImage(e, urls[i]);
                     imgs[i] = LoadImage(path);
                 }
 

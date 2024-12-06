@@ -6,9 +6,10 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Sora.Entities.Segment;
 using Sora.Entities.Segment.DataModel;
-using Sora.Enumeration.ApiType;
 using Sora.Enumeration;
+using Sora.Enumeration.ApiType;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,29 @@ namespace Ritsukage.QQ.Commands
     [CommandGroup("Gif Generator")]
     public static class GifGenerator
     {
+        private static async Task<string[]> GetImageOriginalUrls(SoraMessage e, IEnumerable<ImageSegment> segments)
+        {
+            var imageSegments = segments as ImageSegment[] ?? segments.ToArray();
+            if (!imageSegments.Any()) return [];
+
+            var result = new List<string>();
+
+            foreach (var segment in imageSegments)
+                if (segment.ImgFile.ToLower().Trim() == "marketface")
+                {
+                    result.Add(segment.Url);
+                }
+                else
+                {
+                    var (apiStatus, _, _, url) = await e.SoraApi.GetImage(segment.ImgFile).ConfigureAwait(false);
+                    if (apiStatus.RetCode == ApiStatusType.Ok)
+                        result.Add(url);
+                    else if (!string.IsNullOrEmpty(segment.Url)) result.Add(segment.Url);
+                }
+
+            return result.ToArray();
+        }
+
         private static async Task<string[]> GetReplyImageUrls(SoraMessage e)
         {
             var replySegment = e.Message.MessageBody.FirstOrDefault(x => x.MessageType == SegmentType.Reply);
@@ -51,8 +75,8 @@ namespace Ritsukage.QQ.Commands
                 return [];
             }
 
-            await e.ReplyToOriginal("请稍后").ConfigureAwait(false);
-            return imglist.Select(async x => (await e.SoraApi.GetImage(x.ImgFile)).url).Select(x => x.Result).ToArray();
+            await e.ReplyToOriginal("请稍候").ConfigureAwait(false);
+            return await GetImageOriginalUrls(e, imglist).ConfigureAwait(false);
         }
 
         private static async Task<string> GetImageUrl(SoraMessage e)
@@ -60,17 +84,24 @@ namespace Ritsukage.QQ.Commands
             var imglist = e.Message.GetAllImage();
             if (imglist.Any())
             {
-                await e.ReplyToOriginal("请稍后");
-                return (await e.SoraApi.GetImage(imglist.First().ImgFile)).url;
+                await e.ReplyToOriginal("请稍候");
+                return (await GetImageOriginalUrls(e, imglist).ConfigureAwait(false)).FirstOrDefault();
             }
 
             var replyImageUrls = await GetReplyImageUrls(e).ConfigureAwait(false);
             return replyImageUrls.Length == 0 ? null : replyImageUrls.FirstOrDefault();
         }
 
-        private static async Task<Image<Rgba32>> DownloadNormalImage(string url)
+        private static async Task<string> DownloadImage(SoraMessage e, string url)
         {
-            var path = await DownloadManager.Download(url, enableAria2Download: true);
+            var (apiStatus, filePath) = await e.SoraApi.DownloadFile(url, 1).ConfigureAwait(false);
+            return apiStatus.RetCode != ApiStatusType.Ok ? null : filePath;
+        }
+
+        private static async Task<Image<Rgba32>> DownloadNormalImage(SoraMessage e, string url)
+        {
+            //var path = await DownloadManager.Download(url, enableAria2Download: true);
+            var path = await DownloadImage(e, url).ConfigureAwait(false);
             if (path is null) throw new FileLoadException("图像下载失败");
             var img = LoadImage(path);
             if (img != null) return img;
@@ -79,9 +110,10 @@ namespace Ritsukage.QQ.Commands
             throw new FileLoadException("图像加载失败");
         }
 
-        private static async Task<Image<Rgba32>> DownloadGifImage(string url)
+        private static async Task<Image<Rgba32>> DownloadGifImage(SoraMessage e, string url)
         {
-            var path = await DownloadManager.Download(url, enableAria2Download: true);
+            //var path = await DownloadManager.Download(url, enableAria2Download: true);
+            var path = await DownloadImage(e, url).ConfigureAwait(false);
             if (path is null) throw new FileLoadException("Gif图像下载失败");
             var decoder = FindDecoder(ImageFormat.Gif);
             var img = LoadImage(path, decoder);
@@ -108,14 +140,14 @@ namespace Ritsukage.QQ.Commands
         {
             var url = await GetImageUrl(e);
             if (url is null) return null;
-            return await DownloadNormalImage(url);
+            return await DownloadNormalImage(e, url);
         }
 
         private static async Task<Image<Rgba32>> GetGifImage(SoraMessage e)
         {
             var url = await GetImageUrl(e);
             if (url is null) return null;
-            return await DownloadGifImage(url);
+            return await DownloadGifImage(e, url);
         }
 
         private static Image<Rgba32> ImageWorker(Image<Rgba32> image, Func<Image<Rgba32>, Image<Rgba32>> func)
@@ -208,7 +240,7 @@ namespace Ritsukage.QQ.Commands
 
         [Command("表情包模板")]
         [CommandDescription("获取表情包模板列表")]
-        public static async void GifGeneratorTemplate(SoraMessage e, string template = null)
+        public static async void GifGeneratorTemplate(SoraMessage e, string template = null, long qq = -1)
         {
             if (string.IsNullOrWhiteSpace(template))
             {
@@ -230,10 +262,10 @@ namespace Ritsukage.QQ.Commands
 
             try
             {
-                var at = e.Message.GetAllAtList().FirstOrDefault(0);
+                var at = qq <= 10000 ? e.Message.GetAllAtList().FirstOrDefault(0) : qq;
                 Image<Rgba32>? image = null;
                 if (at > 10000)
-                    image = await DownloadNormalImage(Utils.GetQQHeadImageUrl(at));
+                    image = await DownloadNormalImage(e, Utils.GetQQHeadImageUrl(at));
                 else
                     image = await GetNormalImage(e);
                 if (image is null)

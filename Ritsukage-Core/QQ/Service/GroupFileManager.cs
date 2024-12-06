@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Ritsukage.QQ.Service
 {
@@ -83,7 +84,7 @@ namespace Ritsukage.QQ.Service
             public long UploadUserId { get; init; }
             public string UploadUserName { get; init; }
 
-            public GroupFileFolderBase Folder { get; init; }
+            [JsonIgnore] public GroupFileFolderBase Folder { get; init; }
 
             public static GroupFile ConvertFromInfo(GroupFileInfo info, GroupFileFolderBase folder = null)
             {
@@ -129,30 +130,23 @@ namespace Ritsukage.QQ.Service
 
         public static GroupFileFolderBase GetFileList(long group, string folder = null)
         {
-            if (Files.TryGetValue(group, out var root))
-            {
-                if (!string.IsNullOrWhiteSpace(folder))
-                    return root.Folders.FirstOrDefault(x => folder.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
-                else
-                    return root;
-            }
-
-            return null;
+            if (!Files.TryGetValue(group, out var root)) return null;
+            if (!string.IsNullOrWhiteSpace(folder))
+                return root.Folders.FirstOrDefault(x => folder.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            return root;
         }
 
         public static GroupFile FindFile(long group, string folder = null, Func<GroupFile, bool> predicate = null)
         {
-            GroupFile result = null;
             var root = GetFileList(group, folder);
-            if (root != null)
+            if (root == null) return null;
+            if (predicate == null) return null;
+            var result = root.Files.FirstOrDefault(predicate);
+            if (result != null) return result;
+            foreach (var subFolder in root.Folders)
             {
-                result = root.Files.FirstOrDefault(predicate);
-                if (result == null)
-                    foreach (var subFolder in root.Folders)
-                    {
-                        result = FindFile(group, subFolder.Name, predicate);
-                        if (result != null) break;
-                    }
+                result = FindFile(group, subFolder.Name, predicate);
+                if (result != null) break;
             }
 
             return result;
@@ -161,22 +155,18 @@ namespace Ritsukage.QQ.Service
         public static List<GroupFile> FindFiles(long group, string folder = null,
             Func<GroupFile, bool> predicate = null)
         {
-            List<GroupFile> result = new();
+            List<GroupFile> result = [];
             var root = GetFileList(group, folder);
-            if (root != null)
+            if (root == null) return result;
+            if (predicate != null)
             {
                 var files = root.Files.Where(predicate);
-                if (files.Any())
-                    foreach (var file in files)
-                        result.Add(file);
-                foreach (var subFolder in root.Folders)
-                {
-                    var subFiles = FindFiles(group, subFolder.Name, predicate);
-                    if (subFiles.Any())
-                        foreach (var file in subFiles)
-                            result.Add(file);
-                }
+                var groupFiles = files as GroupFile[] ?? files.ToArray();
+                if (groupFiles.Any()) result.AddRange(groupFiles);
             }
+
+            result.AddRange(root.Folders.Select(subFolder => FindFiles(group, subFolder.Name, predicate))
+                .Where(subFiles => subFiles.Any()).SelectMany(subFiles => subFiles));
 
             return result;
         }
@@ -201,7 +191,13 @@ namespace Ritsukage.QQ.Service
                 {
                     while (Updating.Contains(group))
                         Thread.Sleep(100);
-                });
+                }).ConfigureAwait(false);
+        }
+
+        public static async Task RequestInitGroupFileList(SoraApi api, long group)
+        {
+            if (!Files.ContainsKey(group))
+                await RequestUpdateGroupFileList(api, group, true).ConfigureAwait(false);
         }
 
         public static async Task RequestUpdateGroupFileList(SoraApi api, long group, bool wait = false)
@@ -216,51 +212,49 @@ namespace Ritsukage.QQ.Service
             }
 
             if (wait)
-                await WaitForGroupFileDictionaryUpdated(group);
+                await WaitForGroupFileDictionaryUpdated(group).ConfigureAwait(false);
         }
 
         [Event(typeof(ConnectEventArgs))]
         public static async void OnClientConnect(object sender, ConnectEventArgs args)
         {
-            var (status, groups) = await args.SoraApi.GetGroupList();
-            if (status.RetCode == ApiStatusType.Ok)
-                foreach (var group in groups)
-                {
-                    await RequestUpdateGroupFileList(args.SoraApi, group.GroupId);
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                }
+            var (status, groups) = await args.SoraApi.GetGroupList().ConfigureAwait(false);
+            if (status.RetCode != ApiStatusType.Ok) return;
+            foreach (var group in groups)
+                await RequestUpdateGroupFileList(args.SoraApi, group.GroupId).ConfigureAwait(false);
         }
 
         [Event(typeof(FileUploadEventArgs))]
         public static async void OnFileUpload(object sender, FileUploadEventArgs args)
         {
             ConsoleLog.Debug(nameof(GroupFileManager), $"有成员上传新的群文件  {args.FileInfo.Name}  上传者 {args.Sender.Id}");
-            await RequestUpdateGroupFileList(args.SoraApi, args.SourceGroup.Id);
+            _ = RequestUpdateGroupFileList(args.SoraApi, args.SourceGroup.Id);
         }
 
         #endregion
 
         #region 私有方法
 
-        private static void UpdateThread()
+        private static async void UpdateThread()
         {
             while (true)
             {
-                Thread.Sleep(1000);
-                if (Waiting.Count != 0)
-                    foreach (var group in Waiting.ToArray())
-                        if (!Updating.Contains(group))
+                Thread.Sleep(100);
+                if (Waiting.Count == 0) continue;
+                foreach (var group in Waiting.ToArray())
+                    if (!Updating.Contains(group))
+                    {
+                        Waiting.Remove(group);
+                        Updating.Add(group);
+                        await Task.Run(async () =>
                         {
-                            Waiting.Remove(group);
-                            Updating.Add(group);
-                            Task.Run(async () =>
-                            {
-                                ConsoleLog.Debug(nameof(GroupFileManager), $"开始更新群文件列表，目标群: {group}");
-                                await InternalUpdateGroupFileList(ApiRecord[group], group);
-                                ConsoleLog.Debug(nameof(GroupFileManager), $"更新群文件列表结束，目标群: {group}");
-                                Updating.Remove(group);
-                            });
-                        }
+                            ConsoleLog.Debug(nameof(GroupFileManager), $"开始更新群文件列表，目标群: {group}");
+                            await InternalUpdateGroupFileList(ApiRecord[group], group).ConfigureAwait(false);
+                            ConsoleLog.Debug(nameof(GroupFileManager), $"更新群文件列表结束，目标群: {group}");
+                            Updating.Remove(group);
+                            await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+                    }
             }
         }
 
@@ -272,7 +266,7 @@ namespace Ritsukage.QQ.Service
                 if (!Files.TryGetValue(group, out root)) Files.TryAdd(group, root = new());
             }
 
-            var (status, files, folders) = await api.GetGroupRootFiles(group);
+            var (status, files, folders) = await api.GetGroupRootFiles(group).ConfigureAwait(false);
             if (status.RetCode == ApiStatusType.Ok)
             {
                 root.Folders.Clear();
@@ -280,10 +274,11 @@ namespace Ritsukage.QQ.Service
                 foreach (var file in files) root.Files.Add(GroupFile.ConvertFromInfo(file, root));
                 foreach (var folder in folders)
                 {
-                    var (_status, _files, _folders) = await api.GetGroupFilesByFolder(group, folder.Id);
-                    if (_status.RetCode == ApiStatusType.Ok)
+                    var (apiStatus, fileInfos, folderInfos) =
+                        await api.GetGroupFilesByFolder(group, folder.Id).ConfigureAwait(false);
+                    if (apiStatus.RetCode == ApiStatusType.Ok)
                     {
-                        root.Folders.Add(GroupFileFolder.ConvertFromInfo(folder, _folders, _files));
+                        root.Folders.Add(GroupFileFolder.ConvertFromInfo(folder, folderInfos, fileInfos));
                     }
                     else
                     {
