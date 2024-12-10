@@ -22,7 +22,7 @@ namespace Ritsukage.Discord.Commands
         }
 
         [Command("av2bv")]
-        public async Task AV2BV(long av)
+        public async Task AV2BV(ulong av)
         {
             await ReplyAsync($"[Bilibili][AV→BV] {av} → {BilibiliAVBVConverter.ToBV(av)}");
         }
@@ -85,7 +85,7 @@ namespace Ritsukage.Discord.Commands
         }
 
         [Command("获取b站视频信息")]
-        public async Task VideoInfo(int av)
+        public async Task VideoInfo(ulong av)
         {
             var msg = await ReplyAsync($"[Bilibili]正在搜索中……(av{av})");
             Video video = null;

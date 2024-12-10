@@ -16,7 +16,7 @@ namespace Ritsukage.Library.Bilibili.Model
         /// <summary>
         /// AV号
         /// </summary>
-        public long AV;
+        public ulong AV;
 
         /// <summary>
         /// BV号
@@ -139,7 +139,7 @@ namespace Ritsukage.Library.Bilibili.Model
 
         #region 构造
 
-        public static Video Get(long av)
+        public static Video Get(ulong av)
         {
             //var info = Hibi.HibiBilibili.GetVideoInfo(av);
             var info = JObject.Parse(Utils.HttpGET("http://api.bilibili.com/x/web-interface/view?aid=" + av));
@@ -166,8 +166,8 @@ namespace Ritsukage.Library.Bilibili.Model
             */
             var video = new Video()
             {
-                AV = (long)data["aid"],
-                BV = (string)data["bvid"] ?? BilibiliAVBVConverter.ToBV((long)data["aid"]),
+                AV = (ulong)data["aid"],
+                BV = (string)data["bvid"] ?? BilibiliAVBVConverter.ToBV((ulong)data["aid"]),
                 CID = (long)data["cid"],
                 PicUrl = (string)data["pic"],
                 Title = (string)data["title"],
@@ -286,7 +286,7 @@ namespace Ritsukage.Library.Bilibili.Model
             return PutCoin(BilibiliAVBVConverter.ToAV(bv), cookie);
         }
 
-        public static string PutCoin(long av, string cookie)
+        public static string PutCoin(ulong av, string cookie)
         {
             var jct = Bilibili.GetJCT(cookie);
             var param = string.Join("&",
@@ -314,7 +314,7 @@ namespace Ritsukage.Library.Bilibili.Model
             return await ShamWatchVideo(BilibiliAVBVConverter.ToAV(bv), cookie);
         }
 
-        public static async Task<bool> ShamWatchVideo(long av, string cookie)
+        public static async Task<bool> ShamWatchVideo(ulong av, string cookie)
         {
             var jct = Bilibili.GetJCT(cookie);
             var cookies = GetCookieItemRegex().Matches(cookie.Replace(" ", string.Empty));

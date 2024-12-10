@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Ritsukage.Tools
@@ -7,36 +8,38 @@ namespace Ritsukage.Tools
     public static partial class BilibiliAVBVConverter
     {
         private static readonly char[] CharSet =
-            "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF".ToCharArray();
+            "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf".ToCharArray();
 
-        private static readonly Dictionary<char, int> CharValue = new();
-        private static readonly int[] Pos = new int[] { 11, 10, 3, 8, 4, 6, 2, 9, 5, 7 };
-        private const long XOR = 177451812;
-        private const long ADD = 8728348608;
+        private static readonly Dictionary<char, int> CharValue = [];
+        private const ulong XOR = 23442827791579UL;
+        private const ulong MASK = 2251799813685247UL;
+        private const ulong AID = 1UL << 51;
+        private const ulong BASE = 58UL;
 
-        public static string ToBV(string av)
-        {
-            if (av.ToLower().StartsWith("av"))
-                av = av[2..];
-            return ToBV(long.Parse(av));
-        }
-
-        public static string ToBV(long av)
+        public static string ToBV(ulong av)
         {
             if (av <= 0)
                 throw new("AV号应为正整数");
 
-            av ^= XOR;
-            av += ADD;
 
-            string[] result = { "B", "V", "1", "", "", "4", "", "1", "", "7", "", "" };
-            for (var i = 0; i <= 5; ++i)
-                result[Pos[i]] = CharSet[av / (long)Math.Pow(58, i) % 58].ToString();
+            char[] result = ['B', 'V', '1', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
+            var idx = result.Length - 1;
+            var tmp = (AID | av) ^ XOR;
+
+            while (tmp > 0)
+            {
+                result[idx] = CharSet[(int)(tmp % BASE)];
+                tmp /= BASE;
+                idx--;
+            }
+
+            (result[3], result[9]) = (result[9], result[3]);
+            (result[4], result[7]) = (result[7], result[4]);
 
             return string.Join("", result);
         }
 
-        public static long ToAV(string bv)
+        public static ulong ToAV(string bv)
         {
             lock (CharValue)
             {
@@ -48,28 +51,29 @@ namespace Ritsukage.Tools
             if (!GetBVCheckRegex1().IsMatch(bv))
             {
                 if (!GetBVCheckRegex2().IsMatch(bv))
-                    throw new("BV号格式非法，正确的BV号应是以 BV1..4.1.7.. 为格式且满足base58字符集设定的字符串");
-                else
-                    bv = "BV" + bv;
+                    throw new("BV号格式非法，正确的BV号应是以 BV1xxxxxxxxx 为格式且满足base58字符集设定的字符串");
+                bv = "BV" + bv;
             }
 
             var chars = bv.ToCharArray();
-            long av = 0;
-            for (var i = 0; i <= 5; ++i)
-                av += CharValue[chars[Pos[i]]] * (long)Math.Pow(58, i);
-            av = (av - ADD) ^ XOR;
 
-            if (av <= 0)
-                throw new($"得出错误的转换结果({av})");
+            (chars[3], chars[9]) = (chars[9], chars[3]);
+            (chars[4], chars[7]) = (chars[7], chars[4]);
+
+            chars = chars[3..];
+
+            var av = chars.Aggregate(0UL, (current, c) => current * BASE + (ulong)CharValue[c]);
+
+            av = (av & MASK) ^ XOR;
 
             return av;
         }
 
         [GeneratedRegex(
-            "^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
+            "^[Bb][Vv]1[1-9a-km-zA-HJ-NP-Z]{9}$")]
         private static partial Regex GetBVCheckRegex1();
 
-        [GeneratedRegex("^1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2}$")]
+        [GeneratedRegex("^1[1-9a-km-zA-HJ-NP-Z]{9}$")]
         private static partial Regex GetBVCheckRegex2();
     }
 }

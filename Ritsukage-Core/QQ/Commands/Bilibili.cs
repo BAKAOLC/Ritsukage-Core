@@ -189,7 +189,7 @@ namespace Ritsukage.QQ.Commands
             {
                 if (id.ToLower().StartsWith("av"))
                     id = id[2..];
-                if (long.TryParse(id, out var av))
+                if (ulong.TryParse(id, out var av))
                     video = Video.Get(av);
                 else
                     video = Video.Get(id);
@@ -221,7 +221,7 @@ namespace Ritsukage.QQ.Commands
             {
                 if (id.ToLower().StartsWith("av"))
                     id = id[2..];
-                if (long.TryParse(id, out var av))
+                if (ulong.TryParse(id, out var av))
                     video = Video.Get(av);
                 else
                     video = Video.Get(id);
@@ -819,7 +819,11 @@ namespace Ritsukage.QQ.Commands
             {
                 if (av.ToLower().StartsWith("av"))
                     av = av[2..];
-                var id = long.Parse(av);
+                if (!ulong.TryParse(av, out var id))
+                {
+                    await e.ReplyToOriginal("参数错误，请重新输入");
+                    return;
+                }
                 string msg;
                 try
                 {

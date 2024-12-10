@@ -110,7 +110,7 @@ namespace Ritsukage.QQ.Events
             if (m.Success)
             {
                 var av = m.Groups["av"].Value;
-                if (int.TryParse(m.Groups["av"].Value, out var _av))
+                if (ulong.TryParse(m.Groups["av"].Value, out var _av))
                     try
                     {
                         if (!record["video"].ContainsKey(av) ||
@@ -275,7 +275,7 @@ namespace Ritsukage.QQ.Events
                     if (m.Success)
                     {
                         var av = m.Groups["av"].Value;
-                        if (int.TryParse(m.Groups["av"].Value, out var _av))
+                        if (ulong.TryParse(m.Groups["av"].Value, out var _av))
                             try
                             {
                                 if (!record["video"].ContainsKey(av) ||
@@ -456,7 +456,7 @@ namespace Ritsukage.QQ.Events
         private static partial Regex GetAVRegex();
 
         [GeneratedRegex(
-            "^\\s*[Bb][Vv](?<bv>1[1-9a-km-zA-HJ-NP-Z]{2}4[1-9a-km-zA-HJ-NP-Z]1[1-9a-km-zA-HJ-NP-Z]7[1-9a-km-zA-HJ-NP-Z]{2})\\s*$")]
+            "^\\s*[Bb][Vv](?<bv>1[1-9a-km-zA-HJ-NP-Z]{9})\\s*$")]
         private static partial Regex GetBVRegex();
 
         [GeneratedRegex("((https?://)?www\\.bilibili\\.com/video/)(?<id>[0-9a-zA-Z]+)")]
