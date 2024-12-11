@@ -1,10 +1,10 @@
-﻿using System.IO;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace Ritsukage.Tools
 {
@@ -59,6 +59,61 @@ namespace Ritsukage.Tools
             new("58002", false, "服务当前已关闭", "请前往管理控制台开启服务"),
             new("90107", false, "认证未通过或未生效", "请前往我的认证查看认证进度"),
         };
+
+        public static string Translate(string appId, string secretKey, string salt,
+            string str, string from = "auto", string to = "zh")
+        {
+            var sign = EncryptString(appId + str + salt + secretKey);
+            var url = "http://api.fanyi.baidu.com/api/trans/vip/translate?";
+            url += "q=" + HttpUtility.UrlEncode(str);
+            url += "&from=" + from;
+            url += "&to=" + to;
+            url += "&appid=" + appId;
+            url += "&salt=" + salt;
+            url += "&sign=" + sign;
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+            request.ContentType = "text/html;charset=UTF-8";
+            request.UserAgent = null;
+            request.Timeout = 6000;
+            var response = (HttpWebResponse)request.GetResponse();
+            var myResponseStream = response.GetResponseStream();
+            var myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
+            var retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            myResponseStream.Close();
+            return retString;
+        }
+
+        public static string Translate(string str, string from = "auto", string to = "zh")
+        {
+            return Translate(Program.Config.BaiduTranslateAppId,
+                Program.Config.BaiduTranslateKey,
+                new Rand().Int(100000000, 999999999).ToString(),
+                str, from, to);
+        }
+
+        public static TranslateResult GetTranslateResult(string appId, string secretKey, string salt,
+            string str, string from = "auto", string to = "zh")
+        {
+            return new(JObject.Parse(Translate(appId, secretKey, salt, str, from, to)));
+        }
+
+        public static TranslateResult GetTranslateResult(string str, string from = "auto", string to = "zh")
+        {
+            return new(JObject.Parse(Translate(str, from, to)));
+        }
+
+        public static string EncryptString(string str)
+        {
+            var md5 = MD5.Create();
+            var byteOld = Encoding.UTF8.GetBytes(str);
+            var byteNew = md5.ComputeHash(byteOld);
+            var sb = new StringBuilder();
+            foreach (var b in byteNew)
+                sb.Append(b.ToString("x2"));
+            return sb.ToString();
+        }
 
         public struct Language
         {
@@ -138,61 +193,6 @@ namespace Ritsukage.Tools
                     TranslateString = (string)data["trans_result"][0]["dst"];
                 }
             }
-        }
-
-        public static string Translate(string appId, string secretKey, string salt,
-            string str, string from = "auto", string to = "zh")
-        {
-            var sign = EncryptString(appId + str + salt + secretKey);
-            var url = "http://api.fanyi.baidu.com/api/trans/vip/translate?";
-            url += "q=" + HttpUtility.UrlEncode(str);
-            url += "&from=" + from;
-            url += "&to=" + to;
-            url += "&appid=" + appId;
-            url += "&salt=" + salt;
-            url += "&sign=" + sign;
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            request.ContentType = "text/html;charset=UTF-8";
-            request.UserAgent = null;
-            request.Timeout = 6000;
-            var response = (HttpWebResponse)request.GetResponse();
-            var myResponseStream = response.GetResponseStream();
-            var myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
-            var retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            myResponseStream.Close();
-            return retString;
-        }
-
-        public static string Translate(string str, string from = "auto", string to = "zh")
-        {
-            return Translate(Program.Config.BaiduTranslateAppId,
-                Program.Config.BaiduTranslateKey,
-                new Rand().Int(100000000, 999999999).ToString(),
-                str, from, to);
-        }
-
-        public static TranslateResult GetTranslateResult(string appId, string secretKey, string salt,
-            string str, string from = "auto", string to = "zh")
-        {
-            return new(JObject.Parse(Translate(appId, secretKey, salt, str, from, to)));
-        }
-
-        public static TranslateResult GetTranslateResult(string str, string from = "auto", string to = "zh")
-        {
-            return new(JObject.Parse(Translate(str, from, to)));
-        }
-
-        public static string EncryptString(string str)
-        {
-            var md5 = MD5.Create();
-            var byteOld = Encoding.UTF8.GetBytes(str);
-            var byteNew = md5.ComputeHash(byteOld);
-            var sb = new StringBuilder();
-            foreach (var b in byteNew)
-                sb.Append(b.ToString("x2"));
-            return sb.ToString();
         }
     }
 }
