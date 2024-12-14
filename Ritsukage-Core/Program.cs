@@ -1,132 +1,29 @@
-﻿using Meowtrix.PixivApi;
-using Meowtrix.PixivApi.Json;
-using Newtonsoft.Json;
-using Ritsukage.Discord;
-using Ritsukage.Library.Data;
-using Ritsukage.Library.Subscribe;
-using Ritsukage.QQ;
-using Ritsukage.Tools.Console;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Meowtrix.PixivApi;
+using Meowtrix.PixivApi.Json;
+using Newtonsoft.Json;
+using Ritsukage.Discord;
+using Ritsukage.Library.Data;
+using Ritsukage.Library.Roll;
+using Ritsukage.Library.Subscribe;
+using Ritsukage.QQ;
+using Ritsukage.Tools.Console;
 
 namespace Ritsukage
 {
     internal class Program
     {
-        private static class PixivAccountClient
-        {
-            public static PixivApiClient PixivApi { get; private set; }
-            public static string PixivApiToken => PixivApi == null ? string.Empty : PixivApiAuthResponse.AccessToken;
-            private static DateTimeOffset PixivApiAuthTime { get; set; }
-            private static AuthResponse PixivApiAuthResponse { get; set; }
-            private static DateTimeOffset PixivApiAuthExpiresIn { get; set; }
+        public static bool Working;
 
-            private static void UpdatePixivApiToken(DateTimeOffset authTime, AuthResponse authResponse)
-            {
-                PixivApiAuthTime = authTime;
-                PixivApiAuthResponse = authResponse;
-                PixivApiAuthExpiresIn = authTime.AddSeconds(authResponse.ExpiresIn);
-                SavePixivApiToken();
-            }
+        private static DateTime LaunchTime;
 
-            private static void SavePixivApiToken()
-            {
-                if (PixivApiAuthResponse != null)
-                    File.WriteAllText("pixiv_refresh_token", PixivApiAuthResponse.RefreshToken);
-            }
-
-            private static async Task<bool> LoginWithLastAuthToken(PixivApiClient pixiv_api)
-            {
-                try
-                {
-                    if (File.Exists("pixiv_refresh_token"))
-                    {
-                        var token = File.ReadAllText("pixiv_refresh_token");
-                        var (authTime, authResponse) = await pixiv_api.AuthAsync(token);
-                        UpdatePixivApiToken(authTime, authResponse);
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ConsoleLog.Error("Pixiv", ex.GetFormatString());
-                }
-
-                return false;
-            }
-
-            public static async void PixivApiLogin()
-            {
-                var pixiv_api = new PixivApiClient();
-                if (await LoginWithLastAuthToken(pixiv_api))
-                {
-                    KeepPixivApiAuth();
-                    PixivApi = pixiv_api;
-                    ConsoleLog.Info("Main", "Pixiv Api 已初始化");
-                    return;
-                }
-                else
-                {
-                    (var verify, var url) = pixiv_api.BeginAuth();
-                    File.WriteAllText("PixivLoginUrl.txt",
-                        "请在浏览器中打开并登录Pixiv，然后在F12的Network页面中获取其中 pixiv://....?code=xxx 的xxx部分粘贴在程序中" +
-                        Environment.NewLine + url);
-                    Process.Start("notepad.exe", "PixivLoginUrl.txt");
-                    await Task.Factory.StartNew(async () =>
-                    {
-                        var key = Console.ReadLine();
-                        try
-                        {
-                            File.Delete("PixivLoginUrl.txt");
-                        }
-                        catch
-                        {
-                        }
-
-                        if (string.IsNullOrEmpty(key))
-                            ConsoleLog.Error("Pixiv", "Pixiv Api 已禁用，将在下一次启动时重新登录");
-                        else
-                            try
-                            {
-                                var (authTime, authResponse) = await pixiv_api.CompleteAuthAsync(key, verify);
-                                UpdatePixivApiToken(authTime, authResponse);
-                                KeepPixivApiAuth();
-                                PixivApi = pixiv_api;
-                                ConsoleLog.Info("Main", "Pixiv Api 已初始化");
-                            }
-                            catch (Exception ex)
-                            {
-                                ConsoleLog.Error("Pixiv", ex.GetFormatString());
-                                ConsoleLog.Error("Pixiv", "Pixiv Api 已禁用，将在下一次启动时重新登录");
-                            }
-                    });
-                }
-            }
-
-            private static void KeepPixivApiAuth()
-            {
-                Task.Factory.StartNew(async () =>
-                {
-                    while (true)
-                    {
-                        await Task.Delay(1000);
-                        if (PixivApi != null)
-                            if ((PixivApiAuthExpiresIn - DateTimeOffset.Now).TotalSeconds <= 60)
-                            {
-                                var (authTime, authResponse) =
-                                    await PixivApi.AuthAsync(PixivApiAuthResponse.RefreshToken);
-                                UpdatePixivApiToken(authTime, authResponse);
-                                ConsoleLog.Info("Pixiv", "已更新Pixiv Api登录信息");
-                            }
-                    }
-                });
-            }
-        }
+        private static bool _initedUnhandledExceptionHandler;
 
         public static Config Config { get; private set; }
 
@@ -138,10 +35,6 @@ namespace Ritsukage
         public static PixivApiClient PixivApi => PixivAccountClient.PixivApi;
         public static string PixivApiToken => PixivAccountClient.PixivApiToken;
 
-        public static bool Working = false;
-
-        private static DateTime LaunchTime;
-
         private static void Main()
         {
             Console.Title = "Ritsukage Core";
@@ -152,7 +45,6 @@ namespace Ritsukage
                 LaunchTime = DateTime.Now;
                 ConsoleLog.Info("Main", "Loading...");
                 InitUnhandledExceptionHandler();
-                //InitWatchDog(currentProcess.Id, currentProcess.ProcessName);
                 Launch();
                 while (Working)
                 {
@@ -210,7 +102,7 @@ namespace Ritsukage
 
             if (!string.IsNullOrWhiteSpace(Config.Roll_Api_Id) && !string.IsNullOrWhiteSpace(Config.Roll_Api_Secret))
             {
-                Library.Roll.RollApi.Init(Config.Roll_Api_Id, Config.Roll_Api_Secret);
+                RollApi.Init(Config.Roll_Api_Id, Config.Roll_Api_Secret);
                 ConsoleLog.Info("Main", "Roll Api 已初始化");
             }
 
@@ -295,8 +187,6 @@ namespace Ritsukage
                             + (Config.IsDebug ? " | DEBUG MODE" : string.Empty);
         }
 
-        private static bool _initedUnhandledExceptionHandler = false;
-
         private static void InitUnhandledExceptionHandler()
         {
             if (_initedUnhandledExceptionHandler) return;
@@ -318,33 +208,112 @@ namespace Ritsukage
                     .ToString());
         }
 
-        private static bool _initedWatchDog = false;
-
-        private static void InitWatchDog(int pid, string name)
+        private static class PixivAccountClient
         {
-            if (_initedWatchDog) return;
-            _initedWatchDog = true;
-            ConsoleLog.Info("Main", "初始化进程监视器……");
-            var process = Process.Start(new ProcessStartInfo("SimpleWatchDog.exe", $"{pid} -n \"{name}\"")
+            public static PixivApiClient PixivApi { get; private set; }
+            public static string PixivApiToken => PixivApi == null ? string.Empty : PixivApiAuthResponse.AccessToken;
+            private static DateTimeOffset PixivApiAuthTime { get; set; }
+            private static AuthResponse PixivApiAuthResponse { get; set; }
+            private static DateTimeOffset PixivApiAuthExpiresIn { get; set; }
+
+            private static void UpdatePixivApiToken(DateTimeOffset authTime, AuthResponse authResponse)
             {
-                UseShellExecute = false,
-            });
-            SimpleWatchDog.SimpleIPC.Client ipcClient = new(name);
-            var delay = TimeSpan.FromSeconds(20);
-            new Thread(() =>
+                PixivApiAuthTime = authTime;
+                PixivApiAuthResponse = authResponse;
+                PixivApiAuthExpiresIn = authTime.AddSeconds(authResponse.ExpiresIn);
+                SavePixivApiToken();
+            }
+
+            private static void SavePixivApiToken()
             {
-                while (!Working)
-                    Thread.Sleep(100);
-                while (Working)
+                if (PixivApiAuthResponse != null)
+                    File.WriteAllText("pixiv_refresh_token", PixivApiAuthResponse.RefreshToken);
+            }
+
+            private static async Task<bool> LoginWithLastAuthToken(PixivApiClient pixiv_api)
+            {
+                try
                 {
-                    ipcClient.SendMessage("HeartBeat");
-                    Thread.Sleep(delay);
+                    if (File.Exists("pixiv_refresh_token"))
+                    {
+                        var token = File.ReadAllText("pixiv_refresh_token");
+                        var (authTime, authResponse) = await pixiv_api.AuthAsync(token);
+                        UpdatePixivApiToken(authTime, authResponse);
+                        return true;
+                    }
                 }
-            })
+                catch (Exception ex)
+                {
+                    ConsoleLog.Error("Pixiv", ex.GetFormatString());
+                }
+
+                return false;
+            }
+
+            public static async void PixivApiLogin()
             {
-                IsBackground = true,
-            }.Start();
-            ConsoleLog.Info("Main", "进程监视器初始化完成");
+                var pixiv_api = new PixivApiClient();
+                if (await LoginWithLastAuthToken(pixiv_api))
+                {
+                    KeepPixivApiAuth();
+                    PixivApi = pixiv_api;
+                    ConsoleLog.Info("Main", "Pixiv Api 已初始化");
+                    return;
+                }
+
+                var (verify, url) = pixiv_api.BeginAuth();
+                File.WriteAllText("PixivLoginUrl.txt",
+                    "请在浏览器中打开并登录Pixiv，然后在F12的Network页面中获取其中 pixiv://....?code=xxx 的xxx部分粘贴在程序中" +
+                    Environment.NewLine + url);
+                Process.Start("notepad.exe", "PixivLoginUrl.txt");
+                await Task.Factory.StartNew(async () =>
+                {
+                    var key = Console.ReadLine();
+                    try
+                    {
+                        File.Delete("PixivLoginUrl.txt");
+                    }
+                    catch
+                    {
+                    }
+
+                    if (string.IsNullOrEmpty(key))
+                        ConsoleLog.Error("Pixiv", "Pixiv Api 已禁用，将在下一次启动时重新登录");
+                    else
+                        try
+                        {
+                            var (authTime, authResponse) = await pixiv_api.CompleteAuthAsync(key, verify);
+                            UpdatePixivApiToken(authTime, authResponse);
+                            KeepPixivApiAuth();
+                            PixivApi = pixiv_api;
+                            ConsoleLog.Info("Main", "Pixiv Api 已初始化");
+                        }
+                        catch (Exception ex)
+                        {
+                            ConsoleLog.Error("Pixiv", ex.GetFormatString());
+                            ConsoleLog.Error("Pixiv", "Pixiv Api 已禁用，将在下一次启动时重新登录");
+                        }
+                });
+            }
+
+            private static void KeepPixivApiAuth()
+            {
+                Task.Factory.StartNew(async () =>
+                {
+                    while (true)
+                    {
+                        await Task.Delay(1000);
+                        if (PixivApi != null)
+                            if ((PixivApiAuthExpiresIn - DateTimeOffset.Now).TotalSeconds <= 60)
+                            {
+                                var (authTime, authResponse) =
+                                    await PixivApi.AuthAsync(PixivApiAuthResponse.RefreshToken);
+                                UpdatePixivApiToken(authTime, authResponse);
+                                ConsoleLog.Info("Pixiv", "已更新Pixiv Api登录信息");
+                            }
+                    }
+                });
+            }
         }
     }
 }

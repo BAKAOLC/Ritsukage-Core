@@ -29,7 +29,7 @@ namespace Ritsukage.QQ.Commands
                     .AppendLine("[Double Ping Result]")
                     .AppendLine($"Receive: {receive:F0} ms")
                     .AppendLine($"Send: {send:F0} ms")
-                    .Append($"Send Status: {status}")
+                    .Append($"Send Status: {status.RetCode}")
                     .ToString());
         }
 
@@ -112,22 +112,31 @@ namespace Ritsukage.QQ.Commands
             var day = System.Math.Floor((target - now).TotalDays);
             if (day < -90)
             {
-                target.AddYears(1);
+                target = target.AddYears(1);
                 day = System.Math.Floor((target - now).TotalDays);
             }
 
-            if (day > 3)
-                await e.Reply($"距离高考还有 {day} 天");
-            else if (day == 3)
-                await e.Reply("距离高考还有 3 天，冲冲冲");
-            else if (day == 2)
-                await e.Reply("距离高考还有 2 天，加油啊");
-            else if (day == 1)
-                await e.Reply("明天就开始高考啦，祝你们好运！");
-            else if (day < 1 && day > -4)
-                await e.Reply("已经在高考期间啦，考个好成绩回来哦！");
-            else
-                await e.Reply("考完啦，放松一下吧");
+            switch (day)
+            {
+                case > 3:
+                    await e.Reply($"距离高考还有 {day} 天");
+                    break;
+                case 3:
+                    await e.Reply("距离高考还有 3 天，冲冲冲");
+                    break;
+                case 2:
+                    await e.Reply("距离高考还有 2 天，加油啊");
+                    break;
+                case 1:
+                    await e.Reply("明天就开始高考啦，祝你们好运！");
+                    break;
+                case < 1 and > -4:
+                    await e.Reply("已经在高考期间啦，考个好成绩回来哦！");
+                    break;
+                default:
+                    await e.Reply("考完啦，放松一下吧");
+                    break;
+            }
         }
 
         [Command("日期测试")]

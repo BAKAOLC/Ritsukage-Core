@@ -198,7 +198,7 @@ namespace Ritsukage.Tools
                         }
                     };
                     await ac.StartDownloadAsync();
-                    await ac.WaitForDownloadCompleted();
+                    await ac.WaitForDownloadCompletedAsync();
                     flag = stream != null;
                     if (flag)
                     {
