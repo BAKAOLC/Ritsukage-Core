@@ -1,18 +1,14 @@
-﻿using Ritsukage.Library.FFXIV;
-using Ritsukage.Library.FFXIV.Data;
+﻿using System;
+using Ritsukage.Library.FFXIV.CharacterPanel.Structs;
 using Ritsukage.Library.FFXIV.Struct;
-using Ritsukage.Library.FFXIV.WanaHome;
-using Ritsukage.Library.FFXIV.WanaHome.Enum;
-using Ritsukage.Tools;
-using System;
-using System.Linq;
-using System.Text;
 
 namespace Ritsukage.QQ.Commands
 {
     [CommandGroup("FFXIV")]
     public static class FFXIV
     {
+        private const int DefaultLevel = 100;
+
         [Command("艾欧泽亚时间", "et")]
         [CommandDescription("获取当前的艾欧泽亚时间", "1ET分钟=175/60秒")]
         public static async void ET(SoraMessage e)
@@ -24,127 +20,208 @@ namespace Ritsukage.QQ.Commands
         [Command("暴击")]
         [CommandDescription("求指定暴击属性的信息")]
         [ParameterDescription(1, "属性值")]
-        public static async void CalcCriticalHit(SoraMessage e, int value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcCriticalHit(SoraMessage e, int value, int level = 0)
         {
-            await e.Reply(StatusCalculator.CriticalHit(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(new CriticalHit(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("根据暴击率求值")]
         [CommandDescription("根据指定暴击率求对应的暴击属性应该是多少")]
         [ParameterDescription(1, "暴击率", "不带百分号的百分比数值")]
-        public static async void CalcCriticalHitFromRate(SoraMessage e, double value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcCriticalHitFromRate(SoraMessage e, double value, int level = 0)
         {
-            await e.Reply(StatusCalculator.CriticalHitResult.GetFromRate(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(CriticalHit.FromRate(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("根据暴击伤害求值")]
         [CommandDescription("根据指定暴击伤害倍率求对应的暴击属性应该是多少")]
         [ParameterDescription(1, "伤害倍率")]
-        public static async void CalcCriticalHitFromBonus(SoraMessage e, double value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcCriticalHitFromBonus(SoraMessage e, double value, int level = 0)
         {
-            await e.Reply(StatusCalculator.CriticalHitResult.GetFromBonus(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(CriticalHit.FromBonus(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("直击")]
         [CommandDescription("求指定直击属性的信息")]
         [ParameterDescription(1, "属性值")]
-        public static async void CalcDirectHit(SoraMessage e, int value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcDirectHit(SoraMessage e, int value, int level = 0)
         {
-            await e.Reply(StatusCalculator.DirectHit(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(new DirectHit(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("根据直击率求值")]
         [CommandDescription("根据指定直击率求对应的直击属性应该是多少")]
         [ParameterDescription(1, "直击率", "不带百分号的百分比数值")]
-        public static async void CalcDirectHitFromRate(SoraMessage e, double value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcDirectHitFromRate(SoraMessage e, double value, int level = 0)
         {
-            await e.Reply(StatusCalculator.DirectHitResult.GetFromRate(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(DirectHit.FromRate(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("信念")]
         [CommandDescription("求指定信念属性的信息")]
         [ParameterDescription(1, "属性值")]
-        public static async void CalcDetermination(SoraMessage e, int value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcDetermination(SoraMessage e, int value, int level = 0)
         {
-            await e.Reply(StatusCalculator.Determination(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(new Determination(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
+        }
+
+        [Command("信仰")]
+        [CommandDescription("求指定信仰属性的信息")]
+        [ParameterDescription(1, "属性值")]
+        [ParameterDescription(2, "等级")]
+        public static async void CalcPiety(SoraMessage e, int value, int level = 0)
+        {
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(new Piety(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
+        }
+
+        [Command("根据回蓝量求值")]
+        [CommandDescription("根据指定回蓝量求对应的信仰属性应该是多少")]
+        [ParameterDescription(1, "回蓝量")]
+        [ParameterDescription(2, "等级")]
+        public static async void CalcPietyFromResult(SoraMessage e, double value, int level = 0)
+        {
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(Piety.FromResult(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("坚韧")]
         [CommandDescription("求指定坚韧属性的信息")]
         [ParameterDescription(1, "属性值")]
-        public static async void CalcTenacity(SoraMessage e, int value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcTenacity(SoraMessage e, int value, int level = 0)
         {
-            await e.Reply(StatusCalculator.Tenacity(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(new Tenacity(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("根据受击伤害求值")]
         [CommandDescription("根据指定受伤比率求对应的坚韧属性应该是多少")]
         [ParameterDescription(1, "受伤比率", "不带百分号的百分比数值")]
-        public static async void CalcTenacityFromRate(SoraMessage e, double value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcTenacityFromRate(SoraMessage e, double value, int level = 0)
         {
-            await e.Reply(StatusCalculator.TenacityResult.GetFromDamageRate(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(Tenacity.FromRate(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("技速", "技能速度", "咏速", "咏唱速度", "速度")]
         [CommandDescription("求指定技能速度/咏唱速度属性的信息")]
         [ParameterDescription(1, "属性值")]
-        public static async void CalcSpeed(SoraMessage e, int value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcSpeed(SoraMessage e, int value, int level = 0)
         {
-            await e.Reply(StatusCalculator.Speed(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(new Speed(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
         [Command("根据GCD求值")]
         [CommandDescription("根据指定GCD长度求对应的技能速度/咏唱速度属性应该是多少")]
         [ParameterDescription(1, "2.5sGCD长度")]
-        public static async void CalcSpeedFromGCD(SoraMessage e, double value)
+        [ParameterDescription(2, "等级")]
+        public static async void CalcSpeedFromGCD(SoraMessage e, double value, int level = 0)
         {
-            await e.Reply(StatusCalculator.SpeedResult.GetFromGCD25(value).ToString());
+            try
+            {
+                if (level == 0) level = DefaultLevel;
+                await e.Reply(Speed.FromGcd25(level, value).ToString()).ConfigureAwait(false);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await e.ReplyToOriginal("无效的等级").ConfigureAwait(false);
+            }
         }
 
-        [Command("检查房区")]
-        [CommandDescription("获取指定房区的当前状态")]
-        [ParameterDescription(1, "服务器名称")]
-        public static async void CheckHouseList(SoraMessage e, string server_name)
-        {
-            var server = Server.Unknown;
-            server = WanaHomeApi.MatchServer(server_name);
-            if (server == Server.Unknown)
-            {
-                await e.ReplyToOriginal("#未能识别服务器名称：" + server_name);
-                return;
-            }
-
-            var result = WanaHomeApi.GetTerritoryState(server);
-            var sb = new StringBuilder();
-            sb.AppendLine($"### {server} ###");
-            if (result.OnSale.Any())
-            {
-                sb.Append("> 空闲房屋：");
-                foreach (var house in result.OnSale)
-                {
-                    sb.AppendLine();
-                    sb.Append($"[{house.HouseName}] 房型：{house.Size} 价格：{house.Price}Gil 空闲时长：{house.SellTimeSpan}");
-                }
-            }
-            else
-            {
-                sb.Append("> 当前没有空闲房屋");
-            }
-
-            sb.AppendLine();
-            sb.Append("> 历史记录（仅显示最新的10条动态）");
-            foreach (var change in result.Changes.Take(10))
-            {
-                sb.AppendLine();
-                sb.Append(change.ToString());
-            }
-
-            sb.AppendLine();
-            sb.Append($"数据更新时间：{result.LastUpdate.ToLocalTime():yyyy年MM月dd日 HH:mm:ss}");
-
-            await e.ReplyToOriginal(sb.ToString());
-        }
-
+        /*
         [Command("获取天气", "查询天气")]
         [CommandDescription("查询指定区域的当前天气")]
         [ParameterDescription(1, "区域名称")]
@@ -261,5 +338,6 @@ namespace Ritsukage.QQ.Commands
 
             await e.ReplyToOriginal(sb.ToString());
         }
+        */
     }
 }

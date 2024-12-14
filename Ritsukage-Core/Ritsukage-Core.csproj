@@ -36,7 +36,6 @@
     <Compile Remove="QQ\Commands\BingChat.cs" />
     <Compile Remove="QQ\Commands\ChatGPT.cs" />
     <Compile Remove="QQ\Commands\ContentModerator.cs" />
-    <Compile Remove="QQ\Commands\FFXIV.cs" />
     <Compile Remove="QQ\Commands\NeteaseCloudMusic.cs" />
     <Compile Remove="QQ\Commands\OCR.cs" />
     <Compile Remove="QQ\Commands\Pixiv.cs" />
@@ -52,7 +51,7 @@
     <PackageReference Include="DnsClient" Version="1.8.0" />
     <PackageReference Include="Downloader" Version="3.3.1" />
     <PackageReference Include="Meowtrix.PixivApi" Version="0.3.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0-3.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
     <PackageReference Include="NetCoreHTMLToImage" Version="1.1.1.7" />
     <PackageReference Include="NeteaseCloudMusicApi" Version="3.25.3.10000" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3">
@@ -73,9 +72,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Acquisition\Acquisition.csproj" />
     <ProjectReference Include="..\GifCompress\GifCompress.csproj" />
-    <ProjectReference Include="..\SimpleWatchDog\SimpleWatchDog.csproj" />
     <ProjectReference Include="..\Sora\Sora\Sora.csproj" />
-    <ProjectReference Include="..\SteamAuth\SteamAuth\SteamAuth.csproj" />
   </ItemGroup>
 
   <ItemGroup>
