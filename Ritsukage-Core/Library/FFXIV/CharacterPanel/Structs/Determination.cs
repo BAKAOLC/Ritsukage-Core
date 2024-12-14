@@ -33,7 +33,7 @@ namespace Ritsukage.Library.FFXIV.CharacterPanel.Structs
             Div = modifier.Div;
 
             CalcValue = Math.Floor(Fn * ((double)Value - Main) / Div);
-            Bonus = (1000 + CalcValue) / 1000;
+            Bonus = CalcValue / 10;
             PrevValue = (int)Math.Ceiling(Main + Div * CalcValue / Fn);
             NextValue = (int)Math.Ceiling(Main + Div * (1 + CalcValue) / Fn);
         }
@@ -50,7 +50,7 @@ namespace Ritsukage.Library.FFXIV.CharacterPanel.Structs
             return new StringBuilder()
                 .AppendLine($"版本 {LevelModifiers.Version}  Lv{Level}  等级基数: {Div}")
                 .AppendLine($"信念 {Value} (基数: {Main})")
-                .AppendLine($"伤害增幅　　　{Bonus}倍")
+                .AppendLine($"伤害增幅　　　{Bonus}%")
                 .AppendLine($"上一临界点　　{PrevValue}")
                 .Append($"下一临界点　　{NextValue}")
                 .ToString();
