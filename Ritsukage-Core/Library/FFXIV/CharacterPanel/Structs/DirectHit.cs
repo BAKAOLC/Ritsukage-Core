@@ -39,7 +39,7 @@ namespace Ritsukage.Library.FFXIV.CharacterPanel.Structs
             CalcValue = Math.Floor(Fn * ((double)Value - Sub) / Div);
             Rate = CalcValue / 10;
             Bonus = 125;
-            Expected = Rate * 25;
+            Expected = Rate * 0.25;
             PrevValue = (int)Math.Floor(Sub + Div * CalcValue / Fn);
             NextValue = (int)Math.Ceiling(Sub + Div * (1 + CalcValue) / Fn);
         }
