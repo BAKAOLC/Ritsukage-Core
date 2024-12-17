@@ -217,10 +217,19 @@ namespace Ritsukage.QQ.Commands
         [Command("外围消除")]
         [CommandDescription("将图像指定范围外的像素修改为透明色")]
         [ParameterDescription(1, "范围(<=0时取图像短轴作为半径范围)")]
-        [ParameterDescription(1, "图像")]
+        [ParameterDescription(2, "图像")]
         public static async void WorkFillCircleOutRangeColor(SoraMessage e, int size = 0)
         {
             await Worker(e, x => FillCircleOutRangeColor(x, size, TransparentColor));
+        }
+        
+        [Command("旋转对称")]
+        [CommandDescription("修改为旋转对称的图像")]
+        [ParameterDescription(1, "基准角度")]
+        [ParameterDescription(2, "图像")]
+        public static async void WorkRotateSymmetry(SoraMessage e, float angle = 90)
+        {
+            await Worker(e, x => RotateSymmetry(x, angle));
         }
 
         [Command("马赛克")]

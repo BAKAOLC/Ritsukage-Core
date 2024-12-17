@@ -1,8 +1,8 @@
-﻿using SixLabors.ImageSharp;
+﻿using System;
+using System.Linq;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using System;
-using System.Linq;
 
 namespace Ritsukage.Library.Graphic
 {
@@ -103,6 +103,11 @@ namespace Ritsukage.Library.Graphic
             return Worker(image, x => _FillCircleOutRangeColor(x, size, color));
         }
 
+        public static Image<Rgba32> RotateSymmetry(Image<Rgba32> image, float degrees = 90)
+        {
+            return Worker(image, x => _RotateSymmetry(x, degrees));
+        }
+
         public static Image<Rgba32> Mosaic(Image<Rgba32> image, int size = 2, int px = 0, int py = 0)
         {
             return Worker(image, x => _Mosaic(x, size, px, py));
@@ -123,14 +128,14 @@ namespace Ritsukage.Library.Graphic
             return _Rotate270(image);
         }
 
-        public static Image<Rgba32> Rotate(Image<Rgba32> image, float degress)
+        public static Image<Rgba32> Rotate(Image<Rgba32> image, float degrees)
         {
-            return _Rotate(image, degress);
+            return _Rotate(image, degrees);
         }
 
-        public static Image<Rgba32> RotateWithOriginalSize(Image<Rgba32> image, float degress)
+        public static Image<Rgba32> RotateWithOriginalSize(Image<Rgba32> image, float degrees)
         {
-            return _RotateWithOriginalSize(image, degress);
+            return _RotateWithOriginalSize(image, degrees);
         }
 
         public static Image<Rgba32> GenerateRotateImage(Image<Rgba32> image, int repeat = 1, int frameDelay = 1)
@@ -138,7 +143,7 @@ namespace Ritsukage.Library.Graphic
             var total = image.Frames.Count * repeat;
             var size = new Size(GetRotateMaxBound(image.Size));
             var oimg = image.Clone();
-            oimg.Mutate(x => x.Resize(new ResizeOptions()
+            oimg.Mutate(x => x.Resize(new ResizeOptions
             {
                 Mode = ResizeMode.BoxPad,
                 Position = AnchorPositionMode.Center,
@@ -148,10 +153,10 @@ namespace Ritsukage.Library.Graphic
             var img = new Image<Rgba32>(oimg.Width, oimg.Height);
             for (var i = 0; i < total; i++)
             {
-                var degress = 360f * i / total;
+                var degrees = 360f * i / total;
                 var fn = Mod(i, image.Frames.Count);
                 var pimg = oimg.Frames.CloneFrame(fn);
-                pimg.Mutate(x => x.Rotate(degress));
+                pimg.Mutate(x => x.Rotate(degrees));
                 var dx = (pimg.Width - oimg.Width) / 2;
                 var dy = (pimg.Height - oimg.Height) / 2;
                 pimg.Mutate(x => x.Crop(new(dx, dy, oimg.Width, oimg.Height)));
@@ -172,7 +177,7 @@ namespace Ritsukage.Library.Graphic
             var total = image.Frames.Count * repeat;
             var size = new Size(GetRotateMaxBound(image.Size));
             var oimg = image.Clone();
-            oimg.Mutate(x => x.Resize(new ResizeOptions()
+            oimg.Mutate(x => x.Resize(new ResizeOptions
             {
                 Mode = ResizeMode.BoxPad,
                 Position = AnchorPositionMode.Center,
@@ -182,10 +187,10 @@ namespace Ritsukage.Library.Graphic
             var img = new Image<Rgba32>(image.Width, image.Height);
             for (var i = 0; i < total; i++)
             {
-                var degress = 360f * i / total;
+                var degrees = 360f * i / total;
                 var fn = Mod(i, image.Frames.Count);
                 var pimg = oimg.Frames.CloneFrame(fn);
-                pimg.Mutate(x => x.Rotate(degress));
+                pimg.Mutate(x => x.Rotate(degrees));
                 var dx = (pimg.Width - image.Width) / 2;
                 var dy = (pimg.Height - image.Height) / 2;
                 pimg.Mutate(x => x.Crop(new(dx, dy, image.Width, image.Height)));
@@ -258,10 +263,8 @@ namespace Ritsukage.Library.Graphic
 
                 return img;
             }
-            else
-            {
-                return func.Invoke(image);
-            }
+
+            return func.Invoke(image);
         }
 
         private static Image<Rgba32> _MirrorLeft(Image<Rgba32> image)
@@ -363,17 +366,42 @@ namespace Ritsukage.Library.Graphic
             return img;
         }
 
-        private static Image<Rgba32> _Rotate(Image<Rgba32> image, float degress)
+        private static Image<Rgba32> _Rotate(Image<Rgba32> image, float degrees)
         {
             var img = image.Clone();
-            img.Mutate(x => x.Rotate(degress));
+            img.Mutate(x => x.Rotate(degrees));
             return img;
         }
 
-        private static Image<Rgba32> _RotateWithOriginalSize(Image<Rgba32> image, float degress)
+        private static Image<Rgba32> _RotateSymmetry(Image<Rgba32> image, float degrees)
+        {
+            var rad = degrees * Math.PI / 180;
+            var img = image.Clone();
+            var cx = img.Width / 2;
+            var cy = img.Height / 2;
+            for (var x = 0; x < img.Width; x++)
+            for (var y = 0; y < img.Height; y++)
+            {
+                var dx = x - cx;
+                var dy = y - cy;
+                var rx = dx * Math.Cos(rad) - dy * Math.Sin(rad);
+                var ry = dx * Math.Sin(rad) + dy * Math.Cos(rad);
+                if (ry <= 0) continue;
+                (rx, ry) = (-rx, -ry);
+                (rx, ry) = (rx * Math.Cos(-rad) - ry * Math.Sin(-rad),
+                    rx * Math.Sin(-rad) + ry * Math.Cos(-rad));
+                (dx, dy) = (Convert.ToInt32(rx) + cx, Convert.ToInt32(ry) + cy);
+                if (dx < 0 || dx >= img.Width || dy < 0 || dy >= img.Height) continue;
+                img[x, y] = image[dx, dy];
+            }
+
+            return img;
+        }
+
+        private static Image<Rgba32> _RotateWithOriginalSize(Image<Rgba32> image, float degrees)
         {
             var img = image.Clone();
-            img.Mutate(x => x.Rotate(degress));
+            img.Mutate(x => x.Rotate(degrees));
             var dx = (img.Width - image.Width) / 2;
             var dy = (img.Height - image.Height) / 2;
             img.Mutate(x => x.Crop(new(dx, dy, image.Width, image.Height)));

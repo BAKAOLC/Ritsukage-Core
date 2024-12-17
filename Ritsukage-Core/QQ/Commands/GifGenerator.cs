@@ -173,7 +173,7 @@ namespace Ritsukage.QQ.Commands
             }
         }
 
-        [Command("gif倒流")]
+        [Command("gif倒流", "gif倒放", "倒放")]
         [CommandDescription("生成倒序播放的gif")]
         [ParameterDescription(1, "图像")]
         public static async void Reverse(SoraMessage e)
